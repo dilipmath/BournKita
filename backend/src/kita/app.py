@@ -11,12 +11,10 @@ from sqlalchemy.exc import OperationalError
 
 from kita.clock import Clock, SystemClock
 from kita.crash import (
-    CrashReport,
     CrashReportSink,
-    LogCrashReportSink,
-    MailCrashReportSink,
     WebCrashReport,
-    code_frames,
+    api_crash_report,
+    default_crash_sink,
     send_safely,
 )
 from kita.mail import LogMailer, Mailer
@@ -37,12 +35,7 @@ def create_app(
 ) -> FastAPI:
     clock = clock or SystemClock()
     mailer = mailer or LogMailer()
-    if crash_sink is None:
-        crash_sink = (
-            MailCrashReportSink(mailer, settings.crash_report_email)
-            if settings.crash_report_email
-            else LogCrashReportSink()
-        )
+    crash_sink = crash_sink or default_crash_sink(settings, mailer)
     app_version = version("kita")
     engine = create_engine(
         settings.database_url,
@@ -60,35 +53,12 @@ def create_app(
 
     @app.exception_handler(Exception)
     async def report_crash(request: Request, error: Exception) -> JSONResponse:
-        # The route template, not the URL, so IDs and query strings stay out of the report.
-        route = request.scope.get("route")
-        route_path = getattr(route, "path", "<unmatched>")
-        send_safely(
-            crash_sink,
-            CrashReport(
-                source="api",
-                error_type=type(error).__name__,
-                location=f"{request.method} {route_path}",
-                version=app_version,
-                frames=code_frames(error),
-                occurred_at=clock.now(),
-            ),
-        )
+        send_safely(crash_sink, api_crash_report(request, error, app_version, clock.now()))
         return JSONResponse({"detail": "Internal Server Error"}, status_code=500)
 
     @app.post("/api/crash-reports", status_code=status.HTTP_202_ACCEPTED)
     def receive_web_crash_report(report: WebCrashReport) -> None:
-        send_safely(
-            crash_sink,
-            CrashReport(
-                source="web",
-                error_type=report.error_type,
-                location=report.page,
-                version=report.version,
-                frames=tuple(report.frames),
-                occurred_at=clock.now(),
-            ),
-        )
+        send_safely(crash_sink, report.to_crash_report(clock.now()))
 
     @app.get("/api/health")
     def health(response: Response) -> Health:

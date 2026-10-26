@@ -71,7 +71,7 @@ def test_api_reports_never_contain_the_data_involved(
 def web_report(**overrides: object) -> dict[str, object]:
     return {
         "errorType": "TypeError",
-        "page": "/groups/3",
+        "page": "/groups/*",
         "version": "0.0.0",
         "frames": ["/assets/index-a1b2c3.js:1:2345", "/assets/index-a1b2c3.js:1:678"],
         **overrides,
@@ -89,7 +89,7 @@ def test_frontend_error_report_reaches_the_sink(
     [report] = crash_sink.reports
     assert report.source == "web"
     assert report.error_type == "TypeError"
-    assert report.location == "/groups/3"
+    assert report.location == "/groups/*"
     assert report.version == "0.0.0"
     assert report.frames == ("/assets/index-a1b2c3.js:1:2345", "/assets/index-a1b2c3.js:1:678")
     assert report.occurred_at == clock.now_value
@@ -126,7 +126,7 @@ def test_reports_are_emailed_to_the_developer_when_an_address_is_configured(
     [email] = mailer.outbox
     assert email.to == "developer@example.org"
     assert "TypeError" in email.subject
-    assert "/groups/3" in email.body
+    assert "/groups/*" in email.body
     assert "/assets/index-a1b2c3.js:1:2345" in email.body
 
 
@@ -143,3 +143,23 @@ def test_a_failing_sink_does_not_turn_a_report_into_another_crash(
         response = client.post("/api/crash-reports", json=web_report())
 
     assert response.status_code == 202
+
+
+def test_frontend_reports_with_more_than_a_page_section_are_rejected(
+    client: TestClient, crash_sink: RecordingCrashSink
+) -> None:
+    response = client.post("/api/crash-reports", json=web_report(page="/children/anna-mueller"))
+
+    assert response.status_code == 422
+    assert crash_sink.reports == []
+
+
+def test_reports_are_still_logged_in_full_when_emailed(
+    clock: FixedClock, mailer: CapturingMailer, caplog: pytest.LogCaptureFixture
+) -> None:
+    app_settings = Settings(crash_report_email="developer@example.org")
+    with TestClient(create_app(app_settings, clock=clock, mailer=mailer)) as client:
+        client.post("/api/crash-reports", json=web_report())
+
+    assert "TypeError" in caplog.text
+    assert "/assets/index-a1b2c3.js:1:2345" in caplog.text

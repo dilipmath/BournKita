@@ -12,7 +12,7 @@ docker compose up -d --build --wait
 
 Open http://localhost:8080.
 
-Crash reports from the browser and the API are logged by the `api` service. Setting `KITA_CRASH_REPORT_EMAIL` sends them to that address through the Mailer instead. Until an SMTP Mailer exists, the development Mailer only logs each email's subject, so leave it unset for now. Reports never contain error messages, query strings or other free text, so no names, addresses or health data.
+Crash reports from the browser and the API are always logged by the `api` service. Setting `KITA_CRASH_REPORT_EMAIL` also sends them to that address through the Mailer. Until an SMTP Mailer exists, the development Mailer only logs each email's subject. Reports never contain error messages, query strings, deeper page paths or other free text, so no names, addresses or health data.
 
 ## Develop
 
