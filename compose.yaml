@@ -19,6 +19,7 @@ services:
     build: ./backend
     environment:
       KITA_DATABASE_URL: postgresql+psycopg://kita:kita@db:5432/kita
+      KITA_CRASH_REPORT_EMAIL: ${KITA_CRASH_REPORT_EMAIL:-}
     depends_on:
       db:
         condition: service_healthy

@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
+from kita.crash import CrashReport
 from kita.mail import Email
 
 
@@ -22,3 +23,13 @@ class CapturingMailer:
 
     def send(self, email: Email) -> None:
         self.outbox.append(email)
+
+
+@dataclass
+class RecordingCrashSink:
+    """A CrashReportSink that keeps reports in memory instead of forwarding them."""
+
+    reports: list[CrashReport] = field(default_factory=list)
+
+    def send(self, report: CrashReport) -> None:
+        self.reports.append(report)

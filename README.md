@@ -12,6 +12,8 @@ docker compose up -d --build --wait
 
 Open http://localhost:8080.
 
+Crash reports from the browser and the API are logged by the `api` service. Setting `KITA_CRASH_REPORT_EMAIL` sends them to that address through the Mailer instead. Until an SMTP Mailer exists, the development Mailer only logs each email's subject, so leave it unset for now. Reports never contain error messages, query strings or other free text, so no names, addresses or health data.
+
 ## Develop
 
 Backend (Python, FastAPI) — needs the database from Compose (`docker compose up -d --wait db`):
@@ -33,5 +35,6 @@ npm install
 npm run dev        # http://localhost:5173, proxies /api to the backend on port 8000
 npm run build
 npm run lint
+npm test           # Vitest unit tests
 npm run test:e2e   # Playwright on a tablet viewport, against http://localhost:8080 (full stack)
 ```
