@@ -8,5 +8,7 @@ COPY src ./src
 RUN uv sync --frozen
 RUN useradd --system --no-create-home kita
 USER kita
+ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000
-CMD ["/app/.venv/bin/uvicorn", "kita.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Bring the schema up to date before serving.
+CMD ["sh", "-c", "kita-admin migrate && exec uvicorn kita.main:app --host 0.0.0.0 --port 8000"]

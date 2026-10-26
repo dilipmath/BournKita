@@ -20,6 +20,9 @@ services:
     environment:
       KITA_DATABASE_URL: postgresql+psycopg://kita:kita@db:5432/kita
       KITA_CRASH_REPORT_EMAIL: ${KITA_CRASH_REPORT_EMAIL:-}
+      # This stack serves plain HTTP, where browsers drop Secure cookies (except on localhost).
+      # The production stack with HTTPS (#31) turns it back on.
+      KITA_SESSION_COOKIE_SECURE: ${KITA_SESSION_COOKIE_SECURE:-false}
     depends_on:
       db:
         condition: service_healthy
