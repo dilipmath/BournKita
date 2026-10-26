@@ -11,6 +11,7 @@ from sqlalchemy.exc import OperationalError
 
 from kita.clock import Clock, SystemClock
 from kita.crash import (
+    CrashReportingMailer,
     CrashReportSink,
     WebCrashReport,
     api_crash_report,
@@ -19,7 +20,7 @@ from kita.crash import (
 )
 from kita.identity import Identity
 from kita.identity_api import email_verification_router, identity_router
-from kita.mail import LogMailer, Mailer
+from kita.mail import Mailer, mailer_from_settings
 from kita.settings import Settings
 from kita.staff_api import staff_router
 
@@ -37,9 +38,10 @@ def create_app(
     crash_sink: CrashReportSink | None = None,
 ) -> FastAPI:
     clock = clock or SystemClock()
-    mailer = mailer or LogMailer()
+    mailer = mailer or mailer_from_settings(settings)
     crash_sink = crash_sink or default_crash_sink(settings, mailer)
     app_version = version("kita")
+    reporting_mailer = CrashReportingMailer(mailer, crash_sink, clock, app_version)
     engine = create_engine(
         settings.database_url,
         pool_pre_ping=True,
@@ -53,7 +55,7 @@ def create_app(
 
     app = FastAPI(title="Kita Kids Database", lifespan=lifespan)
     app.state.mailer = mailer
-    identity = Identity.from_settings(engine, clock, mailer, settings)
+    identity = Identity.from_settings(engine, clock, reporting_mailer, settings)
     app.include_router(identity_router(identity, settings))
     app.include_router(email_verification_router(identity))
     app.include_router(staff_router(identity))

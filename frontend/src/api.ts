@@ -33,6 +33,7 @@ const refusals = {
   not_invited: 'notInvited',
   invalid_link: 'invalidLink',
   password_too_short: 'passwordTooShort',
+  mail_not_sent: 'mailNotSent',
 } as const
 
 export type Refusal = (typeof refusals)[keyof typeof refusals]
@@ -67,11 +68,14 @@ export async function fetchStaffAccounts(): Promise<StaffAccount[] | Refusal> {
   return (await response.json()) as StaffAccount[]
 }
 
+// emailSent is false when the account exists but its verification email could not be sent.
+export type CreatedStaffAccount = StaffAccount & { emailSent: boolean }
+
 /** Creates an invited account; the API emails a link for choosing a password. */
-export async function createStaffMember(email: string, role: Role): Promise<StaffAccount | Refusal> {
+export async function createStaffMember(email: string, role: Role): Promise<CreatedStaffAccount | Refusal> {
   const response = await sendJson('/api/staff', 'POST', { email, role })
   if (!response.ok) return refusalOf(response, 'Creating the account')
-  return (await response.json()) as StaffAccount
+  return (await response.json()) as CreatedStaffAccount
 }
 
 async function changeStaffAccount(id: number, change: 'role' | 'active', body: object): Promise<StaffAccount | Refusal> {

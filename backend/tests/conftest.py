@@ -9,7 +9,7 @@ from kita.app import create_app
 from kita.db import metadata, migrate
 from kita.settings import Settings
 from tests.accounts import create_admin, log_in
-from tests.fakes import CapturingMailer, FixedClock, RecordingCrashSink
+from tests.fakes import FixedClock, OutageMailer, RecordingCrashSink
 
 
 @pytest.fixture(scope="session")
@@ -46,8 +46,8 @@ def clock() -> FixedClock:
 
 
 @pytest.fixture
-def mailer() -> CapturingMailer:
-    return CapturingMailer()
+def mailer() -> OutageMailer:
+    return OutageMailer()
 
 
 @pytest.fixture
@@ -59,7 +59,7 @@ def crash_sink() -> RecordingCrashSink:
 def app(
     settings: Settings,
     clock: FixedClock,
-    mailer: CapturingMailer,
+    mailer: OutageMailer,
     crash_sink: RecordingCrashSink,
 ) -> FastAPI:
     return create_app(settings, clock=clock, mailer=mailer, crash_sink=crash_sink)

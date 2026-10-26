@@ -23,14 +23,29 @@ services:
       # This stack serves plain HTTP, where browsers drop Secure cookies (except on localhost).
       # The production stack with HTTPS (#31) turns it back on.
       KITA_SESSION_COOKIE_SECURE: ${KITA_SESSION_COOKIE_SECURE:-false}
+      # Outgoing email goes to Mailpit, which catches it instead of delivering it:
+      # read it at http://localhost:8025. Point these at a real mail server to send for real.
+      KITA_SMTP_HOST: ${KITA_SMTP_HOST:-mailpit}
+      KITA_SMTP_PORT: ${KITA_SMTP_PORT:-1025}
+      KITA_SMTP_SECURITY: ${KITA_SMTP_SECURITY:-none}
+      KITA_SMTP_USERNAME: ${KITA_SMTP_USERNAME:-}
+      KITA_SMTP_PASSWORD: ${KITA_SMTP_PASSWORD:-}
+      KITA_MAIL_FROM: ${KITA_MAIL_FROM:-Kita Kids Database <kita@localhost>}
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 2s
       timeout: 5s
       retries: 30
+
+  mailpit:
+    image: axllent/mailpit:v1.20.0
+    ports:
+      - "8025:8025"
 
   web:
     build: ./frontend

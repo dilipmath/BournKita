@@ -11,7 +11,8 @@ import {
   type StaffAccount,
 } from './api'
 
-type Problem = Refusal | 'somethingWentWrong' | null
+// What went wrong, as a translation key, with the account concerned where the message names it.
+type Problem = { key: Refusal | 'somethingWentWrong' | 'accountCreatedEmailNotSent'; email?: string } | null
 
 const roles: Role[] = ['admin', 'teacher']
 const roleLabel = { admin: 'roleAdmin', teacher: 'roleTeacher' } as const
@@ -37,8 +38,8 @@ export default function StaffPage() {
 
   useEffect(() => {
     fetchStaffAccounts()
-      .then((result) => (result === 'adminsOnly' || Array.isArray(result) ? setAccounts(result) : setProblem(result)))
-      .catch(() => setProblem('somethingWentWrong'))
+      .then((result) => (result === 'adminsOnly' || Array.isArray(result) ? setAccounts(result) : setProblem({ key: result })))
+      .catch(() => setProblem({ key: 'somethingWentWrong' }))
   }, [])
 
   /** Runs an API call; a refusal is shown, and losing Admin rights (e.g. after demoting
@@ -49,15 +50,15 @@ export default function StaffPage() {
     try {
       const result = await call()
       if (result === 'adminsOnly') setAccounts('adminsOnly')
-      else if (typeof result === 'string') setProblem(result as Refusal)
+      else if (typeof result === 'string') setProblem({ key: result as Refusal })
       else return result
     } catch {
-      setProblem('somethingWentWrong')
+      setProblem({ key: 'somethingWentWrong' })
     }
     return null
   }
 
-  async function applyAccountChange(call: () => Promise<StaffAccount | Refusal>) {
+  async function applyAccountChange<T extends StaffAccount>(call: () => Promise<T | Refusal>) {
     const changed = await run(call)
     if (changed) {
       setAccounts((current) => {
@@ -72,7 +73,8 @@ export default function StaffPage() {
     event.preventDefault()
     const created = await applyAccountChange(() => createStaffMember(email, role))
     if (created) {
-      setNotice(t('verificationSent', { email: created.email }))
+      if (created.emailSent) setNotice(t('verificationSent', { email: created.email }))
+      else setProblem({ key: 'accountCreatedEmailNotSent', email: created.email })
       setEmail('')
     }
   }
@@ -90,7 +92,7 @@ export default function StaffPage() {
       <h2>{t('staffAccounts')}</h2>
       {problem && (
         <p className="status status-problem" role="alert">
-          {t(problem)}
+          {t(problem.key, { email: problem.email })}
         </p>
       )}
       {notice && (

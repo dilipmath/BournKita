@@ -9,7 +9,8 @@ from fastapi import Request
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 from pydantic.alias_generators import to_camel
 
-from kita.mail import Email, Mailer
+from kita.clock import Clock
+from kita.mail import Email, Mailer, MailNotSent
 from kita.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,8 @@ class CrashReport:
 
     source: Literal["api", "web"]
     error_type: str
-    # "METHOD /route/{template}" for the API, the page section for the web app.
+    # "METHOD /route/{template}" for the API, the page section for the web app, or the outside
+    # service that failed (e.g. "SMTP").
     location: str
     version: str
     frames: tuple[str, ...]
@@ -89,12 +91,43 @@ def default_crash_sink(settings: Settings, mailer: Mailer) -> CrashReportSink:
     return LogCrashReportSink()
 
 
+class CrashReportingMailer:
+    """Wraps a Mailer so failed sends are reported like crashes, then raised as before."""
+
+    def __init__(self, mailer: Mailer, sink: CrashReportSink, clock: Clock, version: str) -> None:
+        self._mailer = mailer
+        self._sink = sink
+        self._clock = clock
+        self._version = version
+
+    def send(self, email: Email) -> None:
+        try:
+            self._mailer.send(email)
+        except MailNotSent as error:
+            # The cause (e.g. ConnectionRefusedError) says more than MailNotSent itself.
+            cause = error.__cause__ or error
+            send_safely(
+                self._sink,
+                CrashReport(
+                    source="api",
+                    error_type=type(cause).__name__,
+                    location="SMTP",
+                    version=self._version,
+                    frames=code_frames(error),
+                    occurred_at=self._clock.now(),
+                ),
+            )
+            raise
+
+
 def send_safely(sink: CrashReportSink, report: CrashReport) -> None:
     """Sends a report. A failing sink is logged, never raised, so reporting cannot cause a crash."""
     try:
         sink.send(report)
     except Exception:
-        logger.exception("Crash report could not be sent: %s in %s", report.error_type, report.location)
+        logger.exception(
+            "Crash report could not be sent: %s in %s", report.error_type, report.location
+        )
 
 
 def api_crash_report(

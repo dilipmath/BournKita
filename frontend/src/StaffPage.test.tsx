@@ -26,7 +26,7 @@ describe('staff accounts page', () => {
   it('creates a Staff member, who appears as invited', async () => {
     const calls = fakeApi({
       'GET /api/staff': { status: 200, body: [leitung] },
-      'POST /api/staff': { status: 201, body: erzieherin },
+      'POST /api/staff': { status: 201, body: { ...erzieherin, emailSent: true } },
     })
     renderAt('/staff', <StaffPage />)
     await screen.findByRole('row', { name: /leitung@kita.example/ })
@@ -42,6 +42,38 @@ describe('staff accounts page', () => {
     })
     expect(screen.getByRole('status')).toHaveTextContent(
       'A verification email has been sent to erzieherin@kita.example.',
+    )
+  })
+
+  it('says when the account was created but its email could not be sent', async () => {
+    fakeApi({
+      'GET /api/staff': { status: 200, body: [leitung] },
+      'POST /api/staff': { status: 201, body: { ...erzieherin, emailSent: false } },
+    })
+    renderAt('/staff', <StaffPage />)
+    await screen.findByRole('row', { name: /leitung@kita.example/ })
+
+    await userEvent.type(screen.getByLabelText('Email address'), 'erzieherin@kita.example')
+    await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The account for erzieherin@kita.example was created, but the email could not be sent. Try "Send new link" later.',
+    )
+    expect(row('erzieherin@kita.example')).toHaveTextContent(/Invited/)
+  })
+
+  it('says when a new link could not be sent', async () => {
+    fakeApi({
+      'GET /api/staff': { status: 200, body: [leitung, erzieherin] },
+      'POST /api/staff/2/invitation': { status: 503, body: { detail: 'mail_not_sent' } },
+    })
+    renderAt('/staff', <StaffPage />)
+    await screen.findByRole('row', { name: /erzieherin@kita.example/ })
+
+    await userEvent.click(within(row('erzieherin@kita.example')).getByRole('button', { name: 'Send new link' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The email could not be sent. Please try again later.',
     )
   })
 

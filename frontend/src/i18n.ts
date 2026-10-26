@@ -37,6 +37,9 @@ export const resources = {
       createAccount: 'Create account',
       verificationSent: 'A verification email has been sent to {{email}}.',
       emailTaken: 'This email address already has an account.',
+      mailNotSent: 'The email could not be sent. Please try again later.',
+      accountCreatedEmailNotSent:
+        'The account for {{email}} was created, but the email could not be sent. Try "Send new link" later.',
       invalidEmail: 'This is not a valid email address.',
       ownAccount: 'You cannot deactivate your own account. Another Admin has to do it.',
       notInvited: 'This account has already verified its email address.',
@@ -91,6 +94,9 @@ export const resources = {
       createAccount: 'Konto anlegen',
       verificationSent: 'Eine Bestätigungs-E-Mail wurde an {{email}} gesendet.',
       emailTaken: 'Für diese E-Mail-Adresse gibt es schon ein Konto.',
+      mailNotSent: 'Die E-Mail konnte nicht gesendet werden. Bitte später erneut versuchen.',
+      accountCreatedEmailNotSent:
+        'Das Konto für {{email}} wurde angelegt, aber die E-Mail konnte nicht gesendet werden. Später „Neuen Link senden“ versuchen.',
       invalidEmail: 'Das ist keine gültige E-Mail-Adresse.',
       ownAccount: 'Das eigene Konto kann nicht deaktiviert werden. Das muss ein anderer Admin tun.',
       notInvited: 'Dieses Konto hat seine E-Mail-Adresse schon bestätigt.',

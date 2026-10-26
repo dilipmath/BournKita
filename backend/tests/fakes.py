@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from kita.crash import CrashReport
-from kita.mail import Email
+from kita.mail import Email, MailNotSent
 
 
 @dataclass
@@ -33,3 +33,15 @@ class RecordingCrashSink:
 
     def send(self, report: CrashReport) -> None:
         self.reports.append(report)
+
+
+@dataclass
+class OutageMailer(CapturingMailer):
+    """A CapturingMailer whose mail server can go down (`down = True`) and come back."""
+
+    down: bool = False
+
+    def send(self, email: Email) -> None:
+        if self.down:
+            raise MailNotSent("mail server unreachable") from ConnectionRefusedError()
+        super().send(email)

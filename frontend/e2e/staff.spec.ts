@@ -1,13 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { e2eAdmin } from './credentials.ts'
+import { e2eAdmin, logInAsAdmin } from './credentials.ts'
 
 test('an Admin creates a Staff member, changes the role and deactivates the account', async ({ page }) => {
   // Unique per run, since the stack's database keeps accounts between runs.
   const email = `teacher-${Date.now()}@kita.example`
-  await page.goto('/')
-  await page.getByLabel('Email address').fill(e2eAdmin.email)
-  await page.getByLabel('Password').fill(e2eAdmin.password)
-  await page.getByRole('button', { name: 'Log in' }).tap()
+  await logInAsAdmin(page)
 
   await page.getByRole('link', { name: 'Staff accounts' }).tap()
   await expect(page.getByRole('row', { name: new RegExp(e2eAdmin.email) })).toContainText('Active')

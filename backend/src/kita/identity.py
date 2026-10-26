@@ -32,7 +32,7 @@ from sqlalchemy.exc import IntegrityError
 from kita.clock import Clock
 from kita.db import metadata
 from kita.identity_emails import verification_email
-from kita.mail import Mailer
+from kita.mail import Mailer, MailNotSent
 from kita.settings import Settings
 
 Role = Literal["admin", "teacher"]
@@ -96,6 +96,12 @@ class StaffAccount:
     email: str
     role: Role
     status: AccountStatus
+
+
+@dataclass(frozen=True)
+class CreatedStaffAccount(StaffAccount):
+    # False when the verification email could not be sent; an Admin can send a new link later.
+    email_sent: bool
 
 
 class AccountsAlreadyExist(Exception):
@@ -281,8 +287,9 @@ class Identity:
             rows = connection.execute(select(*_ACCOUNT_COLUMNS).order_by(users.c.email)).all()
         return [_to_account(row) for row in rows]
 
-    def create_staff_member(self, email: str, role: Role) -> StaffAccount:
-        """Creates an invited account and emails a link for choosing a password."""
+    def create_staff_member(self, email: str, role: Role) -> "CreatedStaffAccount":
+        """Creates an invited account and emails a link for choosing a password. If the email
+        cannot be sent, the account still exists and an Admin can send a new link later."""
         email = _valid_email(email)
         try:
             with self._engine.begin() as connection:
@@ -296,17 +303,24 @@ class Identity:
         except IntegrityError:
             # The unique email constraint, also when two Admins add the same address at once.
             raise EmailTaken from None
-        self._send_verification_email(email, token)
-        return StaffAccount(user_id, email, role, "invited")
+        try:
+            self._send_verification_email(email, token)
+            email_sent = True
+        except MailNotSent:
+            email_sent = False
+        return CreatedStaffAccount(user_id, email, role, "invited", email_sent)
 
     def send_new_link(self, account_id: int) -> None:
-        """Replaces an invited account's verification link, e.g. after it expired."""
+        """Replaces an invited account's verification link, e.g. after it expired.
+        Raises MailNotSent if the email cannot be sent."""
         with self._engine.begin() as connection:
             account = self._account(connection, account_id)
             if account.status != "invited":
                 raise NotInvited
             token = self._new_verification_link(connection, account_id)
-        self._send_verification_email(account.email, token)
+            # Sent before the new link is committed: if sending fails, the transaction rolls
+            # back and the previous link, possibly still valid, keeps working.
+            self._send_verification_email(account.email, token)
 
     def verify_email(self, token: str, password: str) -> bool:
         """Sets the password and verifies the email address. False for an unknown, used or
