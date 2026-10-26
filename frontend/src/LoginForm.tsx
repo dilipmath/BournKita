@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { logIn, type Session } from './api'
+import { logIn, type Refusal, type Session } from './api'
 
-type Problem = 'invalidCredentials' | 'loginUnavailable' | null
+type Problem = Refusal | 'loginUnavailable' | null
 
 export default function LoginForm({ onLoggedIn }: { onLoggedIn: (session: Session) => void }) {
   const { t } = useTranslation()
@@ -17,8 +17,8 @@ export default function LoginForm({ onLoggedIn }: { onLoggedIn: (session: Sessio
     setProblem(null)
     try {
       const result = await logIn(email, password)
-      if (result === 'invalidCredentials') {
-        setProblem('invalidCredentials')
+      if (typeof result === 'string') {
+        setProblem(result)
         setPassword('')
       } else {
         onLoggedIn(result)

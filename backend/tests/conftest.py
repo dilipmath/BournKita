@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 import pytest
 from fastapi import FastAPI
@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, make_url, text
 from kita.app import create_app
 from kita.db import metadata, migrate
 from kita.settings import Settings
+from tests.accounts import create_admin, log_in
 from tests.fakes import CapturingMailer, FixedClock, RecordingCrashSink
 
 
@@ -67,5 +68,30 @@ def app(
 @pytest.fixture
 def client(app: FastAPI) -> Iterator[TestClient]:
     # Crashes must reach the app's error handling and come back as 500s, as they would in production.
-    with TestClient(app, base_url="https://testserver", raise_server_exceptions=False) as test_client:
+    with TestClient(
+        app, base_url="https://testserver", raise_server_exceptions=False
+    ) as test_client:
         yield test_client
+
+
+@pytest.fixture
+def new_client(app: FastAPI) -> Iterator[Callable[[], TestClient]]:
+    """Makes further clients, one per Staff member, each with its own cookies."""
+    clients: list[TestClient] = []
+
+    def make() -> TestClient:
+        test_client = TestClient(app, base_url="https://testserver", raise_server_exceptions=False)
+        clients.append(test_client.__enter__())
+        return test_client
+
+    yield make
+    for test_client in clients:
+        test_client.__exit__(None, None, None)
+
+
+@pytest.fixture
+def admin(settings: Settings, client: TestClient) -> TestClient:
+    """A client logged in as the first Admin."""
+    assert create_admin(settings) == 0
+    assert log_in(client).status_code == 200
+    return client

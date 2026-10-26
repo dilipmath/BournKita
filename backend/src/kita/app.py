@@ -18,9 +18,10 @@ from kita.crash import (
     send_safely,
 )
 from kita.identity import Identity
-from kita.identity_api import identity_router
+from kita.identity_api import email_verification_router, identity_router
 from kita.mail import LogMailer, Mailer
 from kita.settings import Settings
+from kita.staff_api import staff_router
 
 
 class Health(BaseModel):
@@ -52,8 +53,10 @@ def create_app(
 
     app = FastAPI(title="Kita Kids Database", lifespan=lifespan)
     app.state.mailer = mailer
-    identity = Identity.from_settings(engine, clock, settings)
+    identity = Identity.from_settings(engine, clock, mailer, settings)
     app.include_router(identity_router(identity, settings))
+    app.include_router(email_verification_router(identity))
+    app.include_router(staff_router(identity))
 
     @app.exception_handler(Exception)
     async def report_crash(request: Request, error: Exception) -> JSONResponse:

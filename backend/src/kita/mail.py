@@ -17,7 +17,13 @@ class Mailer(Protocol):
 
 
 class LogMailer:
-    """Development mailer: logs emails instead of sending them. Replaced by SMTP later."""
+    """Development mailer: logs emails, links included, instead of sending them, so a developer
+    can follow them from the server log. Replaced by SMTP later."""
 
     def send(self, email: Email) -> None:
-        logger.info("Email to %s: %s", email.to, email.subject)
+        logger.warning(
+            "Email NOT sent (no mail server configured)\nTo: %s\nSubject: %s\n\n%s",
+            email.to,
+            email.subject,
+            email.body,
+        )

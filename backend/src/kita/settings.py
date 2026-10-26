@@ -12,3 +12,5 @@ class Settings(BaseSettings):
     session_inactivity_minutes: int = 30
     # Off only for plain-HTTP development outside localhost; production runs behind HTTPS.
     session_cookie_secure: bool = True
+    # Where Staff members open the app; links in emails point here.
+    public_url: str = "http://localhost:8080"

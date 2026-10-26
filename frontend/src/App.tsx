@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { fetchCurrentSession, fetchHealth, logOut, type Session } from './api'
 import LoginForm from './LoginForm'
+import StaffPage from './StaffPage'
+import VerifyEmailPage from './VerifyEmailPage'
 
 type Status = 'checking' | 'ok' | 'databaseUnavailable' | 'unreachable'
 
@@ -12,6 +15,7 @@ const languages = [
 
 export default function App() {
   const { t, i18n } = useTranslation()
+  const { pathname } = useLocation()
   const [status, setStatus] = useState<Status>('checking')
   // undefined while the session is being checked, null when nobody is logged in.
   const [session, setSession] = useState<Session | null | undefined>(undefined)
@@ -71,22 +75,45 @@ export default function App() {
           ))}
         </nav>
       </header>
-      {session === null && <LoginForm onLoggedIn={setSession} />}
       {session && (
         <section className="session">
           <p>{t('loggedInAs', { email: session.email })}</p>
+          <nav aria-label={t('mainNavigation')}>
+            <NavLink to="/" end>
+              {t('start')}
+            </NavLink>
+            {session.role === 'admin' && <NavLink to="/staff">{t('staffAccounts')}</NavLink>}
+          </nav>
           {/* Even when the server cannot be reached, the logged-in view must not stay on screen. */}
           <button type="button" onClick={() => void logOut().catch(() => undefined).finally(() => setSession(null))}>
             {t('logOut')}
           </button>
         </section>
       )}
-      <section>
-        <h2>{t('systemStatus')}</h2>
-        <p className={`status ${status === 'ok' ? 'status-ok' : status === 'checking' ? '' : 'status-problem'}`} role="status">
-          {statusText}
-        </p>
-      </section>
+      <Routes>
+        {/* Opened from an email by someone who has no password yet, so no login needed. */}
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="*" element={session === null && <LoginForm onLoggedIn={setSession} />} />
+      </Routes>
+      {session && (
+        <Routes>
+          <Route
+            path="/staff"
+            element={
+              session.role === 'admin' ? <StaffPage /> : <p className="status status-problem">{t('adminsOnly')}</p>
+            }
+          />
+          <Route path="*" element={null} />
+        </Routes>
+      )}
+      {pathname === '/' && (
+        <section>
+          <h2>{t('systemStatus')}</h2>
+          <p className={`status ${status === 'ok' ? 'status-ok' : status === 'checking' ? '' : 'status-problem'}`} role="status">
+            {statusText}
+          </p>
+        </section>
+      )}
     </main>
   )
 }

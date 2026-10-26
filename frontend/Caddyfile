@@ -1,4 +1,6 @@
 :80 {
+	# Links carry tokens (e.g. email verification); never pass the address on to other sites.
+	header Referrer-Policy no-referrer
 	handle /api/* {
 		reverse_proxy api:8000
 	}

@@ -9,10 +9,9 @@ from sqlalchemy import create_engine
 
 from kita.clock import SystemClock
 from kita.db import migrate
-from kita.identity import AccountsAlreadyExist, Identity
+from kita.identity import MIN_PASSWORD_LENGTH, AccountsAlreadyExist, Identity, is_valid_email
+from kita.mail import LogMailer
 from kita.settings import Settings
-
-MIN_PASSWORD_LENGTH = 12
 
 
 def _read_password(prompt: str) -> str:
@@ -40,7 +39,7 @@ def main(
         migrate(settings.database_url)
         return 0
 
-    if "@" not in args.email:
+    if not is_valid_email(args.email):
         print("That is not an email address.", file=sys.stderr)
         return 1
     password = read_password("Password: ")
@@ -51,7 +50,7 @@ def main(
         print("The passwords do not match.", file=sys.stderr)
         return 1
     engine = create_engine(settings.database_url)
-    identity = Identity.from_settings(engine, SystemClock(), settings)
+    identity = Identity.from_settings(engine, SystemClock(), LogMailer(), settings)
     try:
         identity.create_first_admin(args.email, password)
     except AccountsAlreadyExist:

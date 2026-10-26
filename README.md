@@ -18,7 +18,7 @@ The `api` service applies database migrations when it starts. Create the first A
 docker compose exec api kita-admin create-admin --email you@example.com
 ```
 
-This only works while no accounts exist. Sessions end after 30 minutes without activity (`KITA_SESSION_INACTIVITY_MINUTES`). This development stack serves plain HTTP, so it turns off the session cookie's `Secure` flag (`KITA_SESSION_COOKIE_SECURE=false`); otherwise tablets on the network could not stay logged in. The production stack with HTTPS (#31) must leave it on.
+This only works while no accounts exist. Further Staff members are created by an Admin on the Staff accounts page; each gets an email with a link (valid 7 days) for choosing their password. There is no mail server yet, so emails are written to the `api` log instead (`docker compose logs api`). Links in emails point to `KITA_PUBLIC_URL` (default `http://localhost:8080`). Sessions end after 30 minutes without activity (`KITA_SESSION_INACTIVITY_MINUTES`). This development stack serves plain HTTP, so it turns off the session cookie's `Secure` flag (`KITA_SESSION_COOKIE_SECURE=false`); otherwise tablets on the network could not stay logged in. The production stack with HTTPS (#31) must leave it on.
 
 Crash reports from the browser and the API are always logged by the `api` service. Setting `KITA_CRASH_REPORT_EMAIL` also sends them to that address through the Mailer. Until an SMTP Mailer exists, the development Mailer only logs each email's subject. Reports never contain error messages, query strings, deeper page paths or other free text, so no names, addresses or health data.
 

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
-from kita.identity import Identity, Role, StaffMember
+from kita.identity import Identity, PasswordTooShort, Role, StaffMember
 from kita.settings import Settings
 
 SESSION_COOKIE = "kita_session"
@@ -17,6 +17,11 @@ SessionToken = Annotated[str | None, Cookie(alias=SESSION_COOKIE)]
 
 class Credentials(BaseModel):
     email: str
+    password: str
+
+
+class EmailVerification(BaseModel):
+    token: str
     password: str
 
 
@@ -43,6 +48,39 @@ def staff_member_dependency(identity: Identity) -> Callable[[str | None], StaffM
         return staff_member
 
     return current_staff_member
+
+
+_ROLE_ONLY: dict[Role, str] = {"admin": "admins_only", "teacher": "teachers_only"}
+
+
+def role_dependency(identity: Identity, role: Role) -> Callable[[str | None], StaffMember]:
+    """Like staff_member_dependency, but also answers 403 unless the Staff member has `role`."""
+    current_staff_member = staff_member_dependency(identity)
+
+    def staff_member_with_role(token: SessionToken = None) -> StaffMember:
+        staff_member = current_staff_member(token)
+        if staff_member.role != role:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, detail=_ROLE_ONLY[role])
+        return staff_member
+
+    return staff_member_with_role
+
+
+def email_verification_router(identity: Identity) -> APIRouter:
+    router = APIRouter(prefix="/api/email-verifications")
+
+    @router.post("", status_code=status.HTTP_204_NO_CONTENT)
+    def verify_email(verification: EmailVerification) -> None:
+        try:
+            verified = identity.verify_email(verification.token, verification.password)
+        except PasswordTooShort:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, detail="password_too_short"
+            ) from None
+        if not verified:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="invalid_link")
+
+    return router
 
 
 def identity_router(identity: Identity, settings: Settings) -> APIRouter:
