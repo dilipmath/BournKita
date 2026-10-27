@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { fetchCurrentSession, fetchHealth, logOut, type Session } from './api'
+import AuditLogPage from './AuditLogPage'
 import ChildForm from './ChildForm'
 import ChildProfilePage, { ChildEditPage } from './ChildProfilePage'
 import ChildrenPage from './ChildrenPage'
@@ -56,7 +57,7 @@ export default function App() {
   }, [session, checkSession])
 
   const isAdmin = session?.role === 'admin'
-  const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyChildren') => (
+  const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyChildren' | 'adminsOnlyAuditLog') => (
     <p className="status status-problem">{t(message)}</p>
   )
 
@@ -94,6 +95,7 @@ export default function App() {
             </NavLink>
             <NavLink to="/children">{t('children')}</NavLink>
             {isAdmin && <NavLink to="/staff">{t('staffAccounts')}</NavLink>}
+            {isAdmin && <NavLink to="/audit-log">{t('auditLog')}</NavLink>}
           </nav>
           {/* Even when the server cannot be reached, the logged-in view must not stay on screen. */}
           <button type="button" onClick={() => void logOut().catch(() => undefined).finally(() => setSession(null))}>
@@ -121,6 +123,7 @@ export default function App() {
           <Route path="/children/new" element={isAdmin ? <ChildForm /> : adminsOnly('adminsOnlyChildren')} />
           <Route path="/children/:id" element={<ChildProfilePage canEdit={isAdmin} />} />
           <Route path="/children/:id/edit" element={isAdmin ? <ChildEditPage /> : adminsOnly('adminsOnlyChildren')} />
+          <Route path="/audit-log" element={isAdmin ? <AuditLogPage /> : adminsOnly('adminsOnlyAuditLog')} />
           <Route path="*" element={null} />
         </Routes>
       )}

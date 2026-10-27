@@ -31,3 +31,10 @@ export function fakeApi(routes: Record<string, Reply | Handler>) {
 export function renderAt(path: string, ui: ReactNode) {
   return render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>)
 }
+
+// Replies for fakeApi: the API is up, and who is logged in.
+export const health = { status: 200, body: { status: 'ok', database: 'ok', time: '2027-01-04T08:00:00Z' } }
+
+export function sessionAs(role: 'admin' | 'teacher') {
+  return { status: 200, body: { email: `${role}@kita.example`, role, inactivityTimeoutMinutes: 30 } }
+}

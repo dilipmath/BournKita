@@ -141,6 +141,15 @@ export type ChildDetails = {
   interests: string
 }
 export type Child = ChildDetails & { id: number }
+// Each Child profile field's translation key, e.g. for the audit log's changed fields.
+export const childFieldLabel: Record<keyof ChildDetails, string> = {
+  firstName: 'firstName',
+  lastName: 'lastName',
+  gender: 'gender',
+  languages: 'languagesSpoken',
+  foodPreferences: 'foodPreferences',
+  interests: 'interests',
+}
 
 /** The Children, by first name; `search` keeps those whose name contains it. */
 export async function fetchChildren(search: string): Promise<ChildSummary[]> {
@@ -170,4 +179,37 @@ export async function deleteChild(id: number): Promise<true | Refusal> {
   const response = await fetch(`/api/children/${id}`, { method: 'DELETE' })
   if (!response.ok) return refusalOf(response, 'Deleting the Child profile')
   return true
+}
+
+export type AuditAction = 'viewed' | 'created' | 'changed' | 'deleted'
+// Who did what to which Child, and when; childName is null once the profile is deleted.
+export type AuditEntry = {
+  id: number
+  at: string
+  staffEmail: string
+  action: AuditAction
+  childId: number
+  childName: string | null
+  changedFields: string[]
+}
+// Which entries to show; since and until are instants (ISO), until not included.
+export type AuditFilter = {
+  childId?: number
+  staffEmail?: string
+  action?: AuditAction
+  since?: string
+  until?: string
+}
+export const AUDIT_PAGE_SIZE = 50
+
+/** A page of the audit log, newest first; `before` continues after the entry with that ID.
+ * Resolves to 'adminsOnly' for anyone but an Admin. */
+export async function fetchAuditLog(filter: AuditFilter, before?: number): Promise<AuditEntry[] | Refusal> {
+  const params = new URLSearchParams()
+  for (const [name, value] of Object.entries({ ...filter, before, limit: AUDIT_PAGE_SIZE })) {
+    if (value !== undefined) params.set(name, String(value))
+  }
+  const response = await fetch(`/api/audit-log?${params}`)
+  if (!response.ok) return refusalOf(response, 'Loading the audit log')
+  return (await response.json()) as AuditEntry[]
 }

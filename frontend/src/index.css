@@ -347,3 +347,55 @@ button.danger {
 .confirm p {
   margin-top: 0;
 }
+
+/* The audit log: filters in a row that wraps, then a table of entries. */
+.audit-log {
+  margin-top: 24px;
+}
+
+.audit-log h2 {
+  margin-top: 0;
+}
+
+.audit-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.audit-filter label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.audit-log table {
+  width: 100%;
+  margin-bottom: 16px;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.audit-log th,
+.audit-log td {
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 2px solid var(--border);
+}
+
+.audit-log .email {
+  overflow-wrap: anywhere;
+}
+
+/* The main navigation grows with each module: wrap whole links rather than squeezing them. */
+.session nav {
+  flex-wrap: wrap;
+}
+
+.session nav a {
+  white-space: nowrap;
+}

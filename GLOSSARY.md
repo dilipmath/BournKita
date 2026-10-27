@@ -57,3 +57,9 @@ _Avoid_: Recovery link, reset code
 **Lockout**:
 A temporary block on logging in to a Staff account after too many failed logins in a row. It ends by itself after the lockout period, or when the Staff member chooses a new password with a Password reset link. Not an account status.
 _Avoid_: Ban, suspension, deactivation
+
+## Data protection
+
+**Audit log**:
+The record of who viewed, created, changed or deleted which Child's data, and when. For a change it names the fields, never their old or new values. Only Admins read it, and nobody edits it.
+_Avoid_: History, activity log, Protokoll (in code and docs)

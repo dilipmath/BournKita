@@ -11,24 +11,23 @@ type LoadedChild = { child: Child | null | undefined; failed: boolean }
 
 function useChild(): LoadedChild {
   const id = Number(useParams().id)
-  const [loaded, setLoaded] = useState<LoadedChild>({ child: undefined, failed: false })
+  const [loaded, setLoaded] = useState<LoadedChild & { id: number }>()
 
   useEffect(() => {
-    setLoaded({ child: undefined, failed: false })
-    if (!Number.isInteger(id)) {
-      setLoaded({ child: null, failed: false })
-      return
-    }
+    if (!Number.isInteger(id)) return
     // After moving to another Child, a late answer about the previous one must not show.
     let latest = true
     fetchChild(id)
-      .then((child) => latest && setLoaded({ child, failed: false }))
-      .catch(() => latest && setLoaded({ child: undefined, failed: true }))
+      .then((child) => latest && setLoaded({ id, child, failed: false }))
+      .catch(() => latest && setLoaded({ id, child: undefined, failed: true }))
     return () => {
       latest = false
     }
   }, [id])
 
+  if (!Number.isInteger(id)) return { child: null, failed: false }
+  // Still loading this Child, even if another one was loaded before.
+  if (loaded?.id !== id) return { child: undefined, failed: false }
   return loaded
 }
 
@@ -123,6 +122,9 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
             <button type="button" onClick={() => setConfirming(true)}>
               {t('delete')}
             </button>
+            <Link className="button" to={`/audit-log?child=${child.id}`}>
+              {t('auditLogForChild')}
+            </Link>
           </div>
         ))}
     </section>

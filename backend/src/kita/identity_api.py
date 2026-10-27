@@ -3,7 +3,16 @@
 from collections.abc import Callable
 from typing import Annotated, Any
 
-from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, HTTPException, Response, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Cookie,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    status,
+)
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
@@ -44,28 +53,37 @@ class Session(BaseModel):
     inactivity_timeout_minutes: int
 
 
-def staff_member_dependency(identity: Identity) -> Callable[[str | None], StaffMember]:
+def staff_member_dependency(identity: Identity) -> Callable[..., StaffMember]:
     """A FastAPI dependency giving the logged-in Staff member; answers 401 when there is none.
-    Every endpoint that needs a login depends on this instead of reading the cookie itself."""
+    Every endpoint that needs a login depends on this instead of reading the cookie itself.
+    The Staff member is also kept as `request.state.staff_member`, e.g. for the audit log."""
 
-    def current_staff_member(token: SessionToken = None) -> StaffMember:
+    def current_staff_member(request: Request, token: SessionToken = None) -> StaffMember:
         staff_member = identity.current_staff_member(token) if token else None
         if staff_member is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="not_logged_in")
+        request.state.staff_member = staff_member
         return staff_member
 
     return current_staff_member
 
 
+def staff_member_of(request: Request) -> StaffMember:
+    """The logged-in Staff member of a request that passed staff_member_dependency."""
+    staff_member: StaffMember = request.state.staff_member
+    return staff_member
+
+
 _ROLE_ONLY: dict[Role, str] = {"admin": "admins_only", "teacher": "teachers_only"}
 
 
-def role_dependency(identity: Identity, role: Role) -> Callable[[str | None], StaffMember]:
+def role_dependency(identity: Identity, role: Role) -> Callable[..., StaffMember]:
     """Like staff_member_dependency, but also answers 403 unless the Staff member has `role`."""
     current_staff_member = staff_member_dependency(identity)
 
-    def staff_member_with_role(token: SessionToken = None) -> StaffMember:
-        staff_member = current_staff_member(token)
+    def staff_member_with_role(
+        staff_member: Annotated[StaffMember, Depends(current_staff_member)],
+    ) -> StaffMember:
         if staff_member.role != role:
             raise HTTPException(status.HTTP_403_FORBIDDEN, detail=_ROLE_ONLY[role])
         return staff_member

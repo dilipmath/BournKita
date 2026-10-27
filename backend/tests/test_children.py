@@ -3,21 +3,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-LENA = {
-    "firstName": "Lena",
-    "lastName": "Müller",
-    "gender": "girl",
-    "languages": "Deutsch, Türkisch",
-    "foodPreferences": "Vegetarisch",
-    "interests": "Malen, Dinosaurier",
-}
-
-
-def create_child(admin: TestClient, **changes: Any) -> int:
-    response = admin.post("/api/children", json={**LENA, **changes})
-    assert response.status_code == 201, response.text
-    child_id: int = response.json()["id"]
-    return child_id
+from tests.children import LENA, create_child
 
 
 def test_an_admin_creates_a_child_profile_and_reads_it_back(admin: TestClient) -> None:

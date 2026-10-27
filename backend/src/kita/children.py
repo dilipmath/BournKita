@@ -134,7 +134,7 @@ class Children:
         assert child_id is not None
         return ChildProfile(id=child_id, **asdict(details))
 
-    def list(self, search: str = "") -> list[ChildSummary]:
+    def summaries(self, search: str = "") -> list[ChildSummary]:
         """All Children, by first name. `search` keeps those whose first, last or full name
         contains it, ignoring case."""
         query = select(children.c.id, children.c.first_name, children.c.last_name).order_by(
@@ -153,6 +153,18 @@ class Children:
             rows = connection.execute(query).all()
         return [ChildSummary(**row._asdict()) for row in rows]
 
+    def names(self, child_ids: set[int]) -> dict[int, str]:
+        """The full names of those of these Children whose profiles still exist."""
+        if not child_ids:
+            return {}
+        with self._engine.connect() as connection:
+            rows = connection.execute(
+                select(children.c.id, children.c.first_name, children.c.last_name).where(
+                    children.c.id.in_(child_ids)
+                )
+            ).all()
+        return {row.id: f"{row.first_name} {row.last_name}" for row in rows}
+
     def profile(self, child_id: int) -> ChildProfile:
         with self._engine.connect() as connection:
             row = connection.execute(
@@ -162,17 +174,23 @@ class Children:
             raise ChildNotFound
         return _to_profile(row)
 
-    def update(self, child_id: int, details: ChildDetails) -> ChildProfile:
+    def update(self, child_id: int, details: ChildDetails) -> tuple[ChildProfile, list[str]]:
+        """Changes the profile; returns it with the names of the fields that changed."""
         details = _checked(details)
         with self._engine.begin() as connection:
-            updated = connection.execute(
+            row = connection.execute(
+                select(*_PROFILE_COLUMNS).where(children.c.id == child_id).with_for_update()
+            ).one_or_none()
+            if row is None:
+                raise ChildNotFound
+            before = asdict(_to_profile(row))
+            changed = [field for field, value in asdict(details).items() if before[field] != value]
+            connection.execute(
                 update(children)
                 .where(children.c.id == child_id)
                 .values(**asdict(details), updated_at=self._clock.now())
             )
-        if updated.rowcount != 1:
-            raise ChildNotFound
-        return ChildProfile(id=child_id, **asdict(details))
+        return ChildProfile(id=child_id, **asdict(details)), changed
 
     def delete(self, child_id: int) -> None:
         with self._engine.begin() as connection:

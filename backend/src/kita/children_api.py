@@ -2,10 +2,12 @@
 
 from dataclasses import asdict
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from pydantic import BaseModel
 
 from kita.api_support import CAMEL_CASE, Refusals, refusals_as_http_errors
+from kita.audit import Audit
+from kita.audit_api import audited_route, not_about_one_child, note_changed_fields
 from kita.children import (
     ChildDetails,
     ChildNotFound,
@@ -61,15 +63,19 @@ _REFUSALS: Refusals = {
 }
 
 
-def children_router(identity: Identity, children: Children) -> APIRouter:
+def children_router(identity: Identity, children: Children, audit: Audit) -> APIRouter:
     router = APIRouter(
-        prefix="/api/children", dependencies=[Depends(staff_member_dependency(identity))]
+        prefix="/api/children",
+        dependencies=[Depends(staff_member_dependency(identity))],
+        # Every view and change of a Child's data goes into the audit log.
+        route_class=audited_route(audit),
     )
     admin_only = [Depends(role_dependency(identity, "admin"))]
 
     @router.get("")
+    @not_about_one_child
     def list_children(search: str = "") -> list[ChildSummaryOut]:
-        return [ChildSummaryOut.of(summary) for summary in children.list(search)]
+        return [ChildSummaryOut.of(summary) for summary in children.summaries(search)]
 
     @router.post("", status_code=status.HTTP_201_CREATED, dependencies=admin_only)
     def create_child(child: ChildIn) -> ChildOut:
@@ -82,9 +88,11 @@ def children_router(identity: Identity, children: Children) -> APIRouter:
             return ChildOut.of(children.profile(child_id))
 
     @router.put("/{child_id}", dependencies=admin_only)
-    def update_child(child_id: int, child: ChildIn) -> ChildOut:
+    def update_child(child_id: int, child: ChildIn, request: Request) -> ChildOut:
         with refusals_as_http_errors(_REFUSALS):
-            return ChildOut.of(children.update(child_id, child.details()))
+            profile, changed = children.update(child_id, child.details())
+        note_changed_fields(request, changed)
+        return ChildOut.of(profile)
 
     @router.delete("/{child_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=admin_only)
     def delete_child(child_id: int) -> None:

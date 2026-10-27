@@ -3,13 +3,7 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import App from './App'
-import { fakeApi, renderAt } from './testing'
-
-const health = { status: 200, body: { status: 'ok', database: 'ok', time: '2027-01-04T08:00:00Z' } }
-
-function sessionAs(role: 'admin' | 'teacher') {
-  return { status: 200, body: { email: `${role}@kita.example`, role, inactivityTimeoutMinutes: 30 } }
-}
+import { fakeApi, health, renderAt, sessionAs } from './testing'
 
 const lena = {
   id: 7,
