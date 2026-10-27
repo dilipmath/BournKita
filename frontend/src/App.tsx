@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { fetchCurrentSession, fetchHealth, logOut, type Session } from './api'
+import ChildForm from './ChildForm'
+import ChildProfilePage, { ChildEditPage } from './ChildProfilePage'
+import ChildrenPage from './ChildrenPage'
 import ForgotPasswordPage from './ForgotPasswordPage'
 import LoginForm from './LoginForm'
 import ResetPasswordPage from './ResetPasswordPage'
@@ -52,6 +55,11 @@ export default function App() {
     return () => window.clearTimeout(timer)
   }, [session, checkSession])
 
+  const isAdmin = session?.role === 'admin'
+  const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyChildren') => (
+    <p className="status status-problem">{t(message)}</p>
+  )
+
   const statusText = {
     checking: t('checking'),
     ok: t('allWorking'),
@@ -84,7 +92,8 @@ export default function App() {
             <NavLink to="/" end>
               {t('start')}
             </NavLink>
-            {session.role === 'admin' && <NavLink to="/staff">{t('staffAccounts')}</NavLink>}
+            <NavLink to="/children">{t('children')}</NavLink>
+            {isAdmin && <NavLink to="/staff">{t('staffAccounts')}</NavLink>}
           </nav>
           {/* Even when the server cannot be reached, the logged-in view must not stay on screen. */}
           <button type="button" onClick={() => void logOut().catch(() => undefined).finally(() => setSession(null))}>
@@ -105,9 +114,13 @@ export default function App() {
           <Route
             path="/staff"
             element={
-              session.role === 'admin' ? <StaffPage /> : <p className="status status-problem">{t('adminsOnly')}</p>
+              isAdmin ? <StaffPage /> : adminsOnly('adminsOnly')
             }
           />
+          <Route path="/children" element={<ChildrenPage canEdit={isAdmin} />} />
+          <Route path="/children/new" element={isAdmin ? <ChildForm /> : adminsOnly('adminsOnlyChildren')} />
+          <Route path="/children/:id" element={<ChildProfilePage canEdit={isAdmin} />} />
+          <Route path="/children/:id/edit" element={isAdmin ? <ChildEditPage /> : adminsOnly('adminsOnlyChildren')} />
           <Route path="*" element={null} />
         </Routes>
       )}

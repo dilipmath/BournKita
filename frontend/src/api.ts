@@ -34,6 +34,9 @@ const refusals = {
   invalid_link: 'invalidLink',
   password_too_short: 'passwordTooShort',
   mail_not_sent: 'mailNotSent',
+  not_found: 'notFound',
+  name_required: 'nameRequired',
+  too_long: 'tooLong',
 } as const
 
 export type Refusal = (typeof refusals)[keyof typeof refusals]
@@ -120,5 +123,51 @@ export async function requestPasswordReset(email: string): Promise<void> {
 export async function resetPassword(token: string, password: string): Promise<true | Refusal> {
   const response = await sendJson('/api/password-resets', 'PUT', { token, password })
   if (!response.ok) return refusalOf(response, 'Resetting the password')
+  return true
+}
+
+export type Gender = 'girl' | 'boy' | 'diverse'
+// Each Gender's translation key.
+export const genderLabel = { girl: 'genderGirl', boy: 'genderBoy', diverse: 'genderDiverse' } as const
+// A Child as the list shows it: the name only.
+export type ChildSummary = { id: number; firstName: string; lastName: string }
+// What an Admin enters for a Child profile; gender is null when not stated.
+export type ChildDetails = {
+  firstName: string
+  lastName: string
+  gender: Gender | null
+  languages: string
+  foodPreferences: string
+  interests: string
+}
+export type Child = ChildDetails & { id: number }
+
+/** The Children, by first name; `search` keeps those whose name contains it. */
+export async function fetchChildren(search: string): Promise<ChildSummary[]> {
+  const response = await fetch(`/api/children?search=${encodeURIComponent(search)}`)
+  if (!response.ok) throw new Error(`Loading the Children failed: ${response.status}`)
+  return (await response.json()) as ChildSummary[]
+}
+
+/** A Child profile, or null when none has this ID (e.g. it was deleted). */
+export async function fetchChild(id: number): Promise<Child | null> {
+  const response = await fetch(`/api/children/${id}`)
+  if (response.status === 404) return null
+  if (!response.ok) throw new Error(`Loading the Child profile failed: ${response.status}`)
+  return (await response.json()) as Child
+}
+
+/** Creates a Child profile, or changes the one with `id`. Admins only. */
+export async function saveChild(details: ChildDetails, id?: number): Promise<Child | Refusal> {
+  const response =
+    id === undefined ? await sendJson('/api/children', 'POST', details) : await sendJson(`/api/children/${id}`, 'PUT', details)
+  if (!response.ok) return refusalOf(response, 'Saving the Child profile')
+  return (await response.json()) as Child
+}
+
+/** Deletes a Child profile for good. Admins only. Resolves to true once deleted. */
+export async function deleteChild(id: number): Promise<true | Refusal> {
+  const response = await fetch(`/api/children/${id}`, { method: 'DELETE' })
+  if (!response.ok) return refusalOf(response, 'Deleting the Child profile')
   return true
 }

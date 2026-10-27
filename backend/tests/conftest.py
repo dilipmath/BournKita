@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, make_url, text
 from kita.app import create_app
 from kita.db import metadata, migrate
 from kita.settings import Settings
-from tests.accounts import create_admin, log_in
+from tests.accounts import create_admin, log_in, onboard
 from tests.fakes import FixedClock, OutageMailer, RecordingCrashSink
 
 
@@ -95,3 +95,12 @@ def admin(settings: Settings, client: TestClient) -> TestClient:
     assert create_admin(settings) == 0
     assert log_in(client).status_code == 200
     return client
+
+
+@pytest.fixture
+def teacher(
+    admin: TestClient, new_client: Callable[[], TestClient], mailer: OutageMailer
+) -> TestClient:
+    """A client logged in as a Teacher, onboarded by the first Admin."""
+    _, teacher_client = onboard(admin, new_client, mailer)
+    return teacher_client

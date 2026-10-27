@@ -1,13 +1,11 @@
 """HTTP API for the Admin-only staff accounts page."""
 
-from collections.abc import Iterator
-from contextlib import contextmanager
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, ConfigDict
-from pydantic.alias_generators import to_camel
+from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel
 
+from kita.api_support import CAMEL_CASE, Refusals, refusals_as_http_errors
 from kita.identity import (
     AccountNotFound,
     AccountStatus,
@@ -39,13 +37,7 @@ class ActiveChange(BaseModel):
 
 
 class StaffAccountOut(BaseModel):
-    model_config = ConfigDict(
-        alias_generator=to_camel,
-        # Read attributes by their Python names too (email_sent), not only by alias.
-        validate_by_name=True,
-        serialize_by_alias=True,
-        from_attributes=True,
-    )
+    model_config = CAMEL_CASE
 
     id: int
     email: str
@@ -61,8 +53,7 @@ class CreatedStaffAccountOut(StaffAccountOut):
     email_sent: bool
 
 
-# Each rule an account change can break, with the error code the API answers.
-_REFUSALS: dict[type[Exception], tuple[int, str]] = {
+_REFUSALS: Refusals = {
     AccountNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
     EmailTaken: (status.HTTP_409_CONFLICT, "email_taken"),
     InvalidEmail: (status.HTTP_422_UNPROCESSABLE_CONTENT, "invalid_email"),
@@ -71,15 +62,6 @@ _REFUSALS: dict[type[Exception], tuple[int, str]] = {
     OwnAccount: (status.HTTP_409_CONFLICT, "own_account"),
     MailNotSent: (status.HTTP_503_SERVICE_UNAVAILABLE, "mail_not_sent"),
 }
-
-
-@contextmanager
-def _refusals_as_http_errors() -> Iterator[None]:
-    try:
-        yield
-    except tuple(_REFUSALS) as error:
-        status_code, detail = _REFUSALS[type(error)]
-        raise HTTPException(status_code, detail=detail) from None
 
 
 def staff_router(identity: Identity) -> APIRouter:
@@ -93,24 +75,24 @@ def staff_router(identity: Identity) -> APIRouter:
 
     @router.post("", status_code=status.HTTP_201_CREATED)
     def create_staff_member(new: NewStaffMember) -> CreatedStaffAccountOut:
-        with _refusals_as_http_errors():
+        with refusals_as_http_errors(_REFUSALS):
             return CreatedStaffAccountOut.model_validate(
                 identity.create_staff_member(new.email, new.role)
             )
 
     @router.put("/{account_id}/role")
     def change_role(account_id: int, change: RoleChange) -> StaffAccountOut:
-        with _refusals_as_http_errors():
+        with refusals_as_http_errors(_REFUSALS):
             return StaffAccountOut.of(identity.change_role(account_id, change.role))
 
     @router.put("/{account_id}/active")
     def change_active(account_id: int, change: ActiveChange, admin: Admin) -> StaffAccountOut:
-        with _refusals_as_http_errors():
+        with refusals_as_http_errors(_REFUSALS):
             return StaffAccountOut.of(identity.set_active(account_id, change.active, by=admin))
 
     @router.post("/{account_id}/invitation", status_code=status.HTTP_204_NO_CONTENT)
     def send_new_link(account_id: int) -> None:
-        with _refusals_as_http_errors():
+        with refusals_as_http_errors(_REFUSALS):
             identity.send_new_link(account_id)
 
     return router

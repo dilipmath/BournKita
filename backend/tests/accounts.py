@@ -1,6 +1,7 @@
 """Helpers for tests that need accounts and logins."""
 
 import re
+from collections.abc import Callable
 
 import httpx2
 from fastapi.testclient import TestClient
@@ -12,6 +13,7 @@ from tests.fakes import CapturingMailer
 ADMIN_EMAIL = "leitung@kita.example"
 PASSWORD = "correct horse battery"
 NEW_PASSWORD = "a brand new password"
+TEACHER_EMAIL = "erzieherin@kita.example"
 
 
 def create_admin(settings: Settings, email: str = ADMIN_EMAIL, *typed: str) -> int:
@@ -48,3 +50,29 @@ def reset_password_status(client: TestClient, token: str, password: str = NEW_PA
     """Resets the password with the token from a reset link; returns the status code."""
     response = client.put("/api/password-resets", json={"token": token, "password": password})
     return response.status_code
+
+
+def invite(admin: TestClient, email: str = TEACHER_EMAIL, role: str = "teacher") -> int:
+    response = admin.post("/api/staff", json={"email": email, "role": role})
+    assert response.status_code == 201, response.text
+    account_id: int = response.json()["id"]
+    return account_id
+
+
+def onboard(
+    admin: TestClient,
+    new_client: Callable[[], TestClient],
+    mailer: CapturingMailer,
+    email: str = TEACHER_EMAIL,
+    role: str = "teacher",
+) -> tuple[int, TestClient]:
+    """Invites a Staff member, verifies their email and logs them in."""
+    account_id = invite(admin, email, role)
+    staff_member = new_client()
+    verified = staff_member.post(
+        "/api/email-verifications",
+        json={"token": verification_token(mailer, email), "password": PASSWORD},
+    )
+    assert verified.status_code == 204
+    assert log_in(staff_member, email).status_code == 200
+    return account_id, staff_member

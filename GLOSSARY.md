@@ -8,6 +8,10 @@ The language of a kindergarten (Kita) whose staff keep children's profiles, safe
 A child cared for by the Kita, with a profile kept by Admins.
 _Avoid_: Kid, pupil, student
 
+**Child profile**:
+What the Kita records about one Child: name, gender, languages spoken, food preferences and interests (more safety data follows). Admins keep it; every Staff member can read it.
+_Avoid_: Record, file, Akte
+
 **Parent**:
 A contact person recorded for one or more Children; not someone who logs in.
 _Avoid_: Guardian (unless the law requires the distinction), user

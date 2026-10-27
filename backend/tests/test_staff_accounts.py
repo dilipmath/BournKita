@@ -3,36 +3,16 @@ from datetime import timedelta
 
 from fastapi.testclient import TestClient
 
-from tests.accounts import ADMIN_EMAIL, PASSWORD, log_in, verification_token
+from tests.accounts import (
+    ADMIN_EMAIL,
+    PASSWORD,
+    TEACHER_EMAIL,
+    invite,
+    log_in,
+    onboard,
+    verification_token,
+)
 from tests.fakes import CapturingMailer, FixedClock
-
-TEACHER_EMAIL = "erzieherin@kita.example"
-
-
-def invite(admin: TestClient, email: str = TEACHER_EMAIL, role: str = "teacher") -> int:
-    response = admin.post("/api/staff", json={"email": email, "role": role})
-    assert response.status_code == 201, response.text
-    account_id: int = response.json()["id"]
-    return account_id
-
-
-def onboard(
-    admin: TestClient,
-    new_client: Callable[[], TestClient],
-    mailer: CapturingMailer,
-    email: str = TEACHER_EMAIL,
-    role: str = "teacher",
-) -> tuple[int, TestClient]:
-    """Invites a Staff member, verifies their email and logs them in."""
-    account_id = invite(admin, email, role)
-    staff_member = new_client()
-    verified = staff_member.post(
-        "/api/email-verifications",
-        json={"token": verification_token(mailer, email), "password": PASSWORD},
-    )
-    assert verified.status_code == 204
-    assert log_in(staff_member, email).status_code == 200
-    return account_id, staff_member
 
 
 def test_new_staff_member_verifies_their_email_by_choosing_a_password_then_logs_in(

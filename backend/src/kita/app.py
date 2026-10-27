@@ -9,6 +9,8 @@ from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 
+from kita.children import Children
+from kita.children_api import children_router
 from kita.clock import Clock, SystemClock
 from kita.crash import (
     CrashReportingMailer,
@@ -64,6 +66,7 @@ def create_app(
     app.include_router(email_verification_router(identity))
     app.include_router(password_reset_router(identity))
     app.include_router(staff_router(identity))
+    app.include_router(children_router(identity, Children(engine, clock)))
 
     @app.exception_handler(Exception)
     async def report_crash(request: Request, error: Exception) -> JSONResponse:
