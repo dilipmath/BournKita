@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { logIn, type Refusal, type Session } from './api'
 
 type Problem = Refusal | 'loginUnavailable' | null
@@ -52,9 +53,12 @@ export default function LoginForm({ onLoggedIn }: { onLoggedIn: (session: Sessio
           {t(problem)}
         </p>
       )}
+      {/* The API answers a locked account like a wrong password, so always explain both. */}
+      {problem === 'invalidCredentials' && <p>{t('lockoutHint')}</p>}
       <button type="submit" className="primary" disabled={submitting}>
         {t('logIn')}
       </button>
+      <Link to="/forgot-password">{t('forgotPasswordLink')}</Link>
     </form>
   )
 }

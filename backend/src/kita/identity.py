@@ -4,7 +4,7 @@ import hashlib
 import re
 import secrets
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, Literal
 
 from argon2 import PasswordHasher
@@ -21,6 +21,7 @@ from sqlalchemy import (
     String,
     Table,
     UniqueConstraint,
+    case,
     delete,
     func,
     insert,
@@ -31,7 +32,7 @@ from sqlalchemy.exc import IntegrityError
 
 from kita.clock import Clock
 from kita.db import metadata
-from kita.identity_emails import verification_email
+from kita.identity_emails import password_reset_email, verification_email
 from kita.mail import Mailer, MailNotSent
 from kita.settings import Settings
 
@@ -41,6 +42,12 @@ AccountStatus = Literal["invited", "active", "deactivated"]
 
 MIN_PASSWORD_LENGTH = 12
 VERIFICATION_LINK_VALIDITY = timedelta(days=7)
+PASSWORD_RESET_LINK_VALIDITY = timedelta(hours=1)
+# This many failed logins in a row lock an account for LOCKOUT_PERIOD.
+MAX_FAILED_LOGINS = 5
+LOCKOUT_PERIOD = timedelta(minutes=15)
+# At most one password reset email per account this often.
+RESET_EMAIL_INTERVAL = timedelta(minutes=1)
 
 users = Table(
     "users",
@@ -52,6 +59,8 @@ users = Table(
     Column("created_at", DateTime(timezone=True), nullable=False),
     Column("email_verified_at", DateTime(timezone=True)),
     Column("deactivated_at", DateTime(timezone=True)),
+    Column("failed_logins", Integer, nullable=False, server_default="0"),
+    Column("locked_until", DateTime(timezone=True)),
     CheckConstraint("role IN ('admin', 'teacher')", name="role"),
     UniqueConstraint("email"),
 )
@@ -63,6 +72,14 @@ sessions = Table(
     Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
     Column("created_at", DateTime(timezone=True), nullable=False),
     Column("last_active_at", DateTime(timezone=True), nullable=False),
+)
+
+password_resets = Table(
+    "password_resets",
+    metadata,
+    Column("token_hash", String(64), primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("expires_at", DateTime(timezone=True), nullable=False),
 )
 
 email_verifications = Table(
@@ -222,25 +239,38 @@ class Identity:
 
     def log_in(self, email: str, password: str) -> tuple[str, StaffMember] | None:
         """Returns a new session token and the Staff member, or None for wrong credentials.
-        Invited and deactivated accounts cannot log in."""
+        Invited and deactivated accounts cannot log in. After MAX_FAILED_LOGINS failed logins
+        in a row the account is locked: even the right password gives None until
+        LOCKOUT_PERIOD has passed."""
+        now = self._clock.now()
         with self._engine.begin() as connection:
             user = connection.execute(
-                select(users.c.id, users.c.email, users.c.role, users.c.password_hash).where(
-                    users.c.email == normalise_email(email), *_IS_ACTIVE
+                select(
+                    users.c.id,
+                    users.c.email,
+                    users.c.role,
+                    users.c.password_hash,
+                    users.c.locked_until,
                 )
+                .where(users.c.email == normalise_email(email), *_IS_ACTIVE)
+                # Parallel logins to one account take turns, so a burst of guesses cannot all
+                # pass the lock check before the first failure is counted.
+                .with_for_update()
             ).one_or_none()
             password_hash = user.password_hash if user and user.password_hash else _DUMMY_HASH
-            if not _password_matches(password_hash, password) or user is None:
+            # Checked even when locked or unknown: every refusal takes as long as any other.
+            matches = _password_matches(password_hash, password)
+            if user is None or (user.locked_until is not None and user.locked_until > now):
                 return None
+            if not matches:
+                self._count_failed_login(connection, user.id, now)
+                return None
+            values: dict[str, Any] = {"failed_logins": 0, "locked_until": None}
             if _hasher.check_needs_rehash(password_hash):
                 # Hashing parameters got stronger since this password was set.
-                connection.execute(
-                    update(users)
-                    .where(users.c.id == user.id)
-                    .values(password_hash=_hasher.hash(password))
-                )
+                values["password_hash"] = _hasher.hash(password)
+            connection.execute(update(users).where(users.c.id == user.id).values(**values))
             token = secrets.token_urlsafe(32)
-            now = self._clock.now()
             # Housekeeping: sessions past their inactivity timeout can never be used again.
             connection.execute(
                 delete(sessions).where(sessions.c.last_active_at <= now - self._inactivity_timeout)
@@ -299,7 +329,9 @@ class Identity:
                     .returning(users.c.id)
                 )
                 assert user_id is not None
-                token = self._new_verification_link(connection, user_id)
+                token = self._store_link(
+                    connection, email_verifications, user_id, VERIFICATION_LINK_VALIDITY
+                )
         except IntegrityError:
             # The unique email constraint, also when two Admins add the same address at once.
             raise EmailTaken from None
@@ -317,7 +349,9 @@ class Identity:
             account = self._account(connection, account_id)
             if account.status != "invited":
                 raise NotInvited
-            token = self._new_verification_link(connection, account_id)
+            token = self._store_link(
+                connection, email_verifications, account_id, VERIFICATION_LINK_VALIDITY
+            )
             # Sent before the new link is committed: if sending fails, the transaction rolls
             # back and the previous link, possibly still valid, keeps working.
             self._send_verification_email(account.email, token)
@@ -326,24 +360,68 @@ class Identity:
         """Sets the password and verifies the email address. False for an unknown, used or
         expired link, or a deactivated account."""
         _check_password(password)
-        now = self._clock.now()
         with self._engine.begin() as connection:
-            user_id = connection.scalar(
-                delete(email_verifications)
-                .where(
-                    email_verifications.c.token_hash == _token_hash(token),
-                    email_verifications.c.expires_at > now,
-                )
-                .returning(email_verifications.c.user_id)
-            )
+            user_id = self._use_link(connection, email_verifications, token)
             if user_id is None:
                 return False
             verified = connection.execute(
                 update(users)
                 .where(users.c.id == user_id, users.c.deactivated_at.is_(None))
-                .values(password_hash=_hasher.hash(password), email_verified_at=now)
+                .values(password_hash=_hasher.hash(password), email_verified_at=self._clock.now())
             )
             return verified.rowcount == 1
+
+    def request_password_reset(self, email: str) -> None:
+        """Emails an active account a password reset link, replacing any earlier one. Does
+        nothing for unknown emails, accounts that cannot log in, or when the last link went out
+        less than RESET_EMAIL_INTERVAL ago. Raises MailNotSent if the email cannot be sent."""
+        email = normalise_email(email)
+        now = self._clock.now()
+        with self._engine.begin() as connection:
+            # Housekeeping: expired links can never be used again.
+            connection.execute(delete(password_resets).where(password_resets.c.expires_at <= now))
+            user_id = connection.scalar(
+                select(users.c.id).where(users.c.email == email, *_IS_ACTIVE).with_for_update()
+            )
+            if user_id is None:
+                return
+            just_sent = connection.scalar(
+                select(password_resets.c.user_id).where(
+                    password_resets.c.user_id == user_id,
+                    password_resets.c.expires_at
+                    > now + PASSWORD_RESET_LINK_VALIDITY - RESET_EMAIL_INTERVAL,
+                )
+            )
+            if just_sent is not None:
+                # Repeated requests must not flood the Staff member's mailbox.
+                return
+            token = self._store_link(
+                connection, password_resets, user_id, PASSWORD_RESET_LINK_VALIDITY
+            )
+            # Sent before the link is committed, so a link that never arrived is not stored.
+            link = f"{self._public_url}/reset-password?token={token}"
+            valid_minutes = int(PASSWORD_RESET_LINK_VALIDITY.total_seconds() // 60)
+            self._mailer.send(password_reset_email(email, link, valid_minutes))
+
+    def reset_password(self, token: str, password: str) -> bool:
+        """Sets a new password from a password reset link. False for an unknown, used or
+        expired link, or an account that cannot log in."""
+        _check_password(password)
+        with self._engine.begin() as connection:
+            user_id = self._use_link(connection, password_resets, token)
+            if user_id is None:
+                return False
+            reset = connection.execute(
+                update(users)
+                .where(users.c.id == user_id, *_IS_ACTIVE)
+                # Also ends a Lockout: having the email account shows who this is.
+                .values(password_hash=_hasher.hash(password), failed_logins=0, locked_until=None)
+            )
+            if reset.rowcount != 1:
+                return False
+            # Whoever knew the old password may still be logged in somewhere.
+            connection.execute(delete(sessions).where(sessions.c.user_id == user_id))
+            return True
 
     def change_role(self, account_id: int, role: Role) -> StaffAccount:
         with self._engine.begin() as connection:
@@ -355,8 +433,8 @@ class Identity:
             return self._account(connection, account_id)
 
     def set_active(self, account_id: int, active: bool, by: StaffMember) -> StaffAccount:
-        """Deactivating ends the account's sessions and voids its verification link at once;
-        its history stays. `by` is the Admin making the change."""
+        """Deactivating ends the account's sessions and voids its verification and password
+        reset links at once; its history stays. `by` is the Admin making the change."""
         with self._engine.begin() as connection:
             self._lock_accounts(connection)
             account = self._account(connection, account_id)
@@ -377,22 +455,50 @@ class Identity:
                 connection.execute(
                     delete(email_verifications).where(email_verifications.c.user_id == account_id)
                 )
+                connection.execute(
+                    delete(password_resets).where(password_resets.c.user_id == account_id)
+                )
             return self._account(connection, account_id)
 
-    def _new_verification_link(self, connection: Connection, user_id: int) -> str:
-        """Stores a fresh link token for the account, replacing any earlier one."""
-        token = secrets.token_urlsafe(32)
+    @staticmethod
+    def _count_failed_login(connection: Connection, user_id: int, now: datetime) -> None:
+        reaches_limit = users.c.failed_logins + 1 >= MAX_FAILED_LOGINS
         connection.execute(
-            delete(email_verifications).where(email_verifications.c.user_id == user_id)
+            update(users)
+            .where(users.c.id == user_id)
+            .values(
+                # Counting starts again once the lock is over.
+                failed_logins=case((reaches_limit, 0), else_=users.c.failed_logins + 1),
+                locked_until=case(
+                    (reaches_limit, now + LOCKOUT_PERIOD), else_=users.c.locked_until
+                ),
+            )
         )
+
+    def _store_link(
+        self, connection: Connection, links: Table, user_id: int, validity: timedelta
+    ) -> str:
+        """Stores a fresh link token for the account in `links`, replacing any earlier one."""
+        token = secrets.token_urlsafe(32)
+        connection.execute(delete(links).where(links.c.user_id == user_id))
         connection.execute(
-            insert(email_verifications).values(
+            insert(links).values(
                 token_hash=_token_hash(token),
                 user_id=user_id,
-                expires_at=self._clock.now() + VERIFICATION_LINK_VALIDITY,
+                expires_at=self._clock.now() + validity,
             )
         )
         return token
+
+    def _use_link(self, connection: Connection, links: Table, token: str) -> int | None:
+        """Uses up a link from `links`: the ID of its account, or None for an unknown, used or
+        expired link. Deleting it in one statement means two requests cannot both use it."""
+        user_id: int | None = connection.scalar(
+            delete(links)
+            .where(links.c.token_hash == _token_hash(token), links.c.expires_at > self._clock.now())
+            .returning(links.c.user_id)
+        )
+        return user_id
 
     def _send_verification_email(self, to: str, token: str) -> None:
         link = f"{self._public_url}/verify-email?token={token}"

@@ -57,6 +57,16 @@ export const resources = {
       invalidLink: 'This link is no longer valid. Please ask an Admin to send you a new one.',
       passwordSaved: 'Your password is saved. You can now log in.',
       toLogin: 'Go to login',
+      lockoutHint:
+        'After 5 failed logins in a row, the account is locked for 15 minutes. Choosing a new password unlocks it.',
+      forgotPasswordLink: 'Forgot your password?',
+      forgotPasswordHeading: 'Forgot your password',
+      sendLink: 'Send link',
+      resetLinkOnItsWay:
+        'If {{email}} has an account, a link for choosing a new password is on its way. It is valid for 1 hour.',
+      chooseNewPassword: 'Choose a new password',
+      linkNoLongerValid: 'This link is no longer valid.',
+      askForNewLink: 'Ask for a new link',
     },
   },
   de: {
@@ -114,6 +124,16 @@ export const resources = {
       invalidLink: 'Dieser Link ist nicht mehr gültig. Bitte einen Admin um einen neuen Link bitten.',
       passwordSaved: 'Ihr Passwort ist gespeichert. Sie können sich jetzt anmelden.',
       toLogin: 'Zur Anmeldung',
+      lockoutHint:
+        'Nach 5 fehlgeschlagenen Anmeldungen in Folge ist das Konto für 15 Minuten gesperrt. Ein neues Passwort entsperrt es.',
+      forgotPasswordLink: 'Passwort vergessen?',
+      forgotPasswordHeading: 'Passwort vergessen',
+      sendLink: 'Link senden',
+      resetLinkOnItsWay:
+        'Falls es für {{email}} ein Konto gibt, ist ein Link zum Wählen eines neuen Passworts unterwegs. Er ist 1 Stunde gültig.',
+      chooseNewPassword: 'Neues Passwort wählen',
+      linkNoLongerValid: 'Dieser Link ist nicht mehr gültig.',
+      askForNewLink: 'Neuen Link anfordern',
     },
   },
 } as const

@@ -231,3 +231,12 @@ select {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Secondary links in a form card, e.g. "Forgot your password?": big enough to tap on a tablet. */
+.login > a:not(.button) {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  color: var(--accent);
+}

@@ -11,6 +11,7 @@ from tests.fakes import CapturingMailer
 
 ADMIN_EMAIL = "leitung@kita.example"
 PASSWORD = "correct horse battery"
+NEW_PASSWORD = "a brand new password"
 
 
 def create_admin(settings: Settings, email: str = ADMIN_EMAIL, *typed: str) -> int:
@@ -33,3 +34,17 @@ def verification_token(mailer: CapturingMailer, to: str) -> str:
     match = re.search(r"/verify-email\?token=([\w-]+)", email.body)
     assert match, email.body
     return match.group(1)
+
+
+def reset_token(mailer: CapturingMailer, to: str) -> str:
+    """The token from the link in the last password reset email sent to `to`."""
+    [*_, email] = [email for email in mailer.outbox if email.to == to]
+    match = re.search(r"/reset-password\?token=([\w-]+)", email.body)
+    assert match, email.body
+    return match.group(1)
+
+
+def reset_password_status(client: TestClient, token: str, password: str = NEW_PASSWORD) -> int:
+    """Resets the password with the token from a reset link; returns the status code."""
+    response = client.put("/api/password-resets", json={"token": token, "password": password})
+    return response.status_code

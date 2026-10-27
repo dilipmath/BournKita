@@ -29,3 +29,34 @@ def verification_email(to: str, link: str, valid_days: int) -> Email:
         subject="Kita Kids Database: E-Mail-Adresse bestätigen / Verify your email address",
         body=body,
     )
+
+
+def password_reset_email(to: str, link: str, valid_minutes: int) -> Email:
+    body = "\n".join(
+        [
+            "Hallo,",
+            "",
+            "jemand hat ein neues Passwort für Ihren Zugang zur Kita Kids Database angefordert.",
+            f"Hier können Sie es wählen (Link {valid_minutes} Minuten gültig, nur einmal nutzbar):",
+            "",
+            link,
+            "",
+            "Waren Sie das nicht? Dann ignorieren Sie diese E-Mail; Ihr Passwort bleibt gleich.",
+            "",
+            "---",
+            "",
+            "Hello,",
+            "",
+            "someone asked for a new password for your Kita Kids Database account.",
+            f"Choose it here (link valid for {valid_minutes} minutes, works once):",
+            "",
+            link,
+            "",
+            "Wasn't you? Then ignore this email; your password stays the same.",
+        ]
+    )
+    return Email(
+        to=to,
+        subject="Kita Kids Database: Neues Passwort / New password",
+        body=body,
+    )

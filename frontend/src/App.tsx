@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { fetchCurrentSession, fetchHealth, logOut, type Session } from './api'
+import ForgotPasswordPage from './ForgotPasswordPage'
 import LoginForm from './LoginForm'
+import ResetPasswordPage from './ResetPasswordPage'
 import StaffPage from './StaffPage'
 import VerifyEmailPage from './VerifyEmailPage'
 
@@ -93,6 +95,9 @@ export default function App() {
       <Routes>
         {/* Opened from an email by someone who has no password yet, so no login needed. */}
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        {/* For whoever cannot log in, so no login needed either. */}
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="*" element={session === null && <LoginForm onLoggedIn={setSession} />} />
       </Routes>
       {session && (

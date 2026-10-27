@@ -46,7 +46,8 @@ async function refusalOf(response: Response, action: string): Promise<Refusal> {
   return refusal
 }
 
-/** Logs in; resolves to 'invalidCredentials' when the email address or password is wrong. */
+/** Logs in; resolves to 'invalidCredentials' when the email address or password is wrong, or the
+ * account is locked after too many failed logins (the API does not tell these apart). */
 export async function logIn(email: string, password: string): Promise<Session | Refusal> {
   const response = await sendJson('/api/session', 'POST', { email, password })
   if (!response.ok) return refusalOf(response, 'Login')
@@ -100,9 +101,24 @@ export async function sendNewLink(id: number): Promise<true | Refusal> {
   return true
 }
 
-/** Sets the password from the verification email's link, which also verifies the address. */
-export async function verifyEmail(token: string, password: string): Promise<'verified' | Refusal> {
+/** Sets the password from the verification email's link, which also verifies the address.
+ * Resolves to true once saved. */
+export async function verifyEmail(token: string, password: string): Promise<true | Refusal> {
   const response = await sendJson('/api/email-verifications', 'POST', { token, password })
   if (!response.ok) return refusalOf(response, 'Verifying the email address')
-  return 'verified'
+  return true
+}
+
+/** Asks for a password reset link. The API answers the same whether or not the address has an
+ * account, so this only fails when the API cannot be reached. */
+export async function requestPasswordReset(email: string): Promise<void> {
+  const response = await sendJson('/api/password-resets', 'POST', { email })
+  if (!response.ok) throw new Error(`Requesting a password reset failed: ${response.status}`)
+}
+
+/** Sets a new password from the reset email's link. Resolves to true once saved. */
+export async function resetPassword(token: string, password: string): Promise<true | Refusal> {
+  const response = await sendJson('/api/password-resets', 'PUT', { token, password })
+  if (!response.ok) return refusalOf(response, 'Resetting the password')
+  return true
 }

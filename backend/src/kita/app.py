@@ -19,7 +19,11 @@ from kita.crash import (
     send_safely,
 )
 from kita.identity import Identity
-from kita.identity_api import email_verification_router, identity_router
+from kita.identity_api import (
+    email_verification_router,
+    identity_router,
+    password_reset_router,
+)
 from kita.mail import Mailer, mailer_from_settings
 from kita.settings import Settings
 from kita.staff_api import staff_router
@@ -58,6 +62,7 @@ def create_app(
     identity = Identity.from_settings(engine, clock, reporting_mailer, settings)
     app.include_router(identity_router(identity, settings))
     app.include_router(email_verification_router(identity))
+    app.include_router(password_reset_router(identity))
     app.include_router(staff_router(identity))
 
     @app.exception_handler(Exception)

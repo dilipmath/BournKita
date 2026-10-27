@@ -45,3 +45,11 @@ _Avoid_: Enabled/disabled, pending, locked (locking is a different, temporary th
 **Verification link**:
 The link emailed to an invited Staff member for choosing a password, which verifies their email address. It works once and expires.
 _Avoid_: Invite code, activation link
+
+**Password reset link**:
+The link an active Staff member asks for when they forgot their password; it lets them choose a new one. It works once and expires after an hour.
+_Avoid_: Recovery link, reset code
+
+**Lockout**:
+A temporary block on logging in to a Staff account after too many failed logins in a row. It ends by itself after the lockout period, or when the Staff member chooses a new password with a Password reset link. Not an account status.
+_Avoid_: Ban, suspension, deactivation
