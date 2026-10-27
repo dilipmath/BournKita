@@ -143,6 +143,8 @@ export const resources = {
       noEmergencyContacts: 'No emergency contacts recorded.',
       addEmergencyContact: 'Add emergency contact',
       noPhone: 'No phone recorded',
+      // Also names a changed field in the audit log, like parents and emergencyContacts.
+      pickUpPersons: 'Pick-up persons',
       mayPickUpNamed: '{{name}} may pick up',
       mayNotPickUp: 'May not pick up.',
       name: 'Name',
@@ -293,6 +295,7 @@ export const resources = {
       noEmergencyContacts: 'Keine Notfallkontakte eingetragen.',
       addEmergencyContact: 'Notfallkontakt hinzufügen',
       noPhone: 'Keine Telefonnummer eingetragen',
+      pickUpPersons: 'Abholberechtigte',
       mayPickUpNamed: '{{name}} darf abholen',
       mayNotPickUp: 'Darf nicht abholen.',
       name: 'Name',

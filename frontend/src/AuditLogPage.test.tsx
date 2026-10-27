@@ -12,7 +12,7 @@ const changed = {
   action: 'changed',
   childId: 7,
   childName: 'Lena Müller',
-  changedFields: ['foodPreferences', 'languages'],
+  changedFields: ['foodPreferences', 'languages', 'pickUpPersons'],
 }
 const deleted = {
   id: 2,
@@ -38,7 +38,7 @@ describe('audit log', () => {
     const changeRow = await screen.findByRole('row', { name: /Changed/ })
     expect(changeRow).toHaveTextContent('leitung@kita.example')
     expect(within(changeRow).getByRole('link', { name: 'Lena Müller' })).toHaveAttribute('href', '/children/7')
-    expect(changeRow).toHaveTextContent('Food preferences, Languages spoken')
+    expect(changeRow).toHaveTextContent('Food preferences, Languages spoken, Pick-up persons')
     expect(screen.getByRole('row', { name: /Deleted/ })).toHaveTextContent('Deleted Child (no. 5)')
   })
 
