@@ -3,13 +3,17 @@ import { useTranslation } from 'react-i18next'
 import {
   changeRole,
   createStaffMember,
+  fetchGroups,
   fetchStaffAccounts,
   sendNewLink,
   setActive,
+  setStaffGroups,
+  type ListedGroup,
   type Refusal,
   type Role,
   type StaffAccount,
 } from './api'
+import GroupLabel from './GroupLabel'
 
 // What went wrong, as a translation key, with the account concerned where the message names it.
 type Problem = { key: Refusal | 'somethingWentWrong' | 'accountCreatedEmailNotSent'; email?: string } | null
@@ -35,6 +39,15 @@ export default function StaffPage() {
   const [notice, setNotice] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<Role>('teacher')
+  const [groups, setGroups] = useState<ListedGroup[]>([])
+  // The account whose Groups are being saved: one change at a time, as each sends all of them.
+  const [savingGroupsOf, setSavingGroupsOf] = useState<number | null>(null)
+
+  useEffect(() => {
+    fetchGroups()
+      .then(setGroups)
+      .catch(() => setProblem({ key: 'somethingWentWrong' }))
+  }, [])
 
   useEffect(() => {
     fetchStaffAccounts()
@@ -79,6 +92,12 @@ export default function StaffPage() {
     }
   }
 
+  async function saveGroups(accountId: number, groupIds: number[]) {
+    setSavingGroupsOf(accountId)
+    await applyAccountChange(() => setStaffGroups(accountId, groupIds))
+    setSavingGroupsOf(null)
+  }
+
   async function resendLink(account: StaffAccount) {
     if (await run(() => sendNewLink(account.id))) setNotice(t('verificationSent', { email: account.email }))
   }
@@ -109,6 +128,7 @@ export default function StaffPage() {
               <th scope="col">{t('emailAddress')}</th>
               <th scope="col">{t('role')}</th>
               <th scope="col">{t('status')}</th>
+              {groups.length > 0 && <th scope="col">{t('groups')}</th>}
               <th scope="col">
                 <span className="visually-hidden">{t('actions')}</span>
               </th>
@@ -130,6 +150,32 @@ export default function StaffPage() {
                   </select>
                 </td>
                 <td>{t(statusLabel[account.status])}</td>
+                {groups.length > 0 && (
+                  <td>
+                    <fieldset
+                      className="staff-groups"
+                      aria-label={t('groupsOf', { email: account.email })}
+                      disabled={savingGroupsOf === account.id}
+                    >
+                      {groups.map((group) => {
+                        const works = account.groupIds.includes(group.id)
+                        const groupIds = works
+                          ? account.groupIds.filter((id) => id !== group.id)
+                          : [...account.groupIds, group.id]
+                        return (
+                          <label key={group.id} className="checkbox">
+                            <input
+                              type="checkbox"
+                              checked={works}
+                              onChange={() => void saveGroups(account.id, groupIds)}
+                            />
+                            <GroupLabel group={group} />
+                          </label>
+                        )
+                      })}
+                    </fieldset>
+                  </td>
+                )}
                 <td className="actions">
                   {account.status === 'invited' && (
                     <button type="button" onClick={() => void resendLink(account)}>

@@ -317,6 +317,10 @@ class Identity:
             rows = connection.execute(select(*_ACCOUNT_COLUMNS).order_by(users.c.email)).all()
         return [_to_account(row) for row in rows]
 
+    def staff_account(self, account_id: int) -> StaffAccount:
+        with self._engine.connect() as connection:
+            return self._account(connection, account_id)
+
     def create_staff_member(self, email: str, role: Role) -> "CreatedStaffAccount":
         """Creates an invited account and emails a link for choosing a password. If the email
         cannot be sent, the account still exists and an Admin can send a new link later."""

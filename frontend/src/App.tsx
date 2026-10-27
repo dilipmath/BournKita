@@ -9,6 +9,9 @@ import ChildForm from './ChildForm'
 import ChildProfilePage, { ChildEditPage } from './ChildProfilePage'
 import ChildrenPage from './ChildrenPage'
 import ForgotPasswordPage from './ForgotPasswordPage'
+import GroupDashboard from './GroupDashboard'
+import GroupPicker from './GroupPicker'
+import GroupsPage from './GroupsPage'
 import LoginForm from './LoginForm'
 import ResetPasswordPage from './ResetPasswordPage'
 import StaffPage from './StaffPage'
@@ -59,7 +62,7 @@ export default function App() {
   }, [session, checkSession])
 
   const isAdmin = session?.role === 'admin'
-  const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyChildren' | 'adminsOnlyAuditLog') => (
+  const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyChildren' | 'adminsOnlyAuditLog' | 'adminsOnlyGroups') => (
     <p className="status status-problem">{t(message)}</p>
   )
 
@@ -96,6 +99,11 @@ export default function App() {
               {t('start')}
             </NavLink>
             <NavLink to="/children">{t('children')}</NavLink>
+            {isAdmin && (
+              <NavLink to="/groups" end>
+                {t('groups')}
+              </NavLink>
+            )}
             {isAdmin && <NavLink to="/staff">{t('staffAccounts')}</NavLink>}
             {isAdmin && <NavLink to="/audit-log">{t('auditLog')}</NavLink>}
           </nav>
@@ -129,6 +137,9 @@ export default function App() {
           <Route path="/parents/:id" element={<ParentPage canEdit={isAdmin} />} />
           <Route path="/parents/:id/edit" element={isAdmin ? <ParentEditPage /> : adminsOnly('adminsOnlyChildren')} />
           <Route path="/audit-log" element={isAdmin ? <AuditLogPage /> : adminsOnly('adminsOnlyAuditLog')} />
+          <Route path="/groups" element={isAdmin ? <GroupsPage /> : adminsOnly('adminsOnlyGroups')} />
+          <Route path="/groups/:id" element={<GroupDashboard />} />
+          <Route path="/" element={<GroupPicker />} />
           <Route path="*" element={null} />
         </Routes>
       )}

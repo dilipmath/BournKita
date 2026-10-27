@@ -32,6 +32,14 @@ _Avoid_: Permission, approval, Einwilligung (in code and docs)
 A Child who shares at least one Parent with another Child of the Kita.
 _Avoid_: Brother/sister (as terms in code), family member
 
+**Group**:
+A set of Children cared for together, with a name and an icon (e.g. Monkeys). A Child is in at most one Group; a Staff member can work in several.
+_Avoid_: Class, room, Gruppe (in code and docs)
+
+**Group dashboard**:
+The page a Staff member lands on after picking a Group: that Group's Children, and later its day.
+_Avoid_: Group page, overview
+
 **Staff member**:
 Any Kita employee who has a login.
 _Avoid_: User, employee, teacher (as a kind of person)

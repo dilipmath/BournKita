@@ -52,4 +52,5 @@ export const noProfileLists = {
   pickUpPersons: [],
   consents: { photo: [], excursion: [], dataProtection: [] },
   photos: [],
+  group: null,
 }

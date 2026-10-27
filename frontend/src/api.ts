@@ -44,6 +44,7 @@ const refusals = {
   not_an_image: 'notAnImage',
   too_large: 'photoTooLarge',
   no_photo_consent: 'noPhotoConsent',
+  group_name_taken: 'groupNameTaken',
 } as const
 
 export type Refusal = (typeof refusals)[keyof typeof refusals]
@@ -70,7 +71,14 @@ export async function logOut(): Promise<void> {
 }
 
 export type Role = Session['role']
-export type StaffAccount = { id: number; email: string; role: Role; status: 'invited' | 'active' | 'deactivated' }
+// groupIds: the Groups they work in.
+export type StaffAccount = {
+  id: number
+  email: string
+  role: Role
+  status: 'invited' | 'active' | 'deactivated'
+  groupIds: number[]
+}
 
 /** All staff accounts, or 'adminsOnly' when the logged-in Staff member is not an Admin. */
 export async function fetchStaffAccounts(): Promise<StaffAccount[] | Refusal> {
@@ -174,6 +182,7 @@ export type ChildProfile = Child & {
   consents: Consents
   // None while the photo Consent is not given.
   photos: Photo[]
+  group: Group | null
 }
 
 /** A Child profile, or null when none has this ID (e.g. it was deleted). */
@@ -395,4 +404,75 @@ export async function removePickUpPhoto(of: PickUpPhoto): Promise<true | Refusal
   const response = await fetch(pickUpPhotoBase(of), { method: 'DELETE' })
   if (!response.ok) return refusalOf(response, 'Removing the photo')
   return true
+}
+
+// The icons a Group can have, each drawn as an emoji.
+export const groupIcons = {
+  monkey: '🐒',
+  butterfly: '🦋',
+  bee: '🐝',
+  ladybird: '🐞',
+  frog: '🐸',
+  fox: '🦊',
+  bear: '🐻',
+  rabbit: '🐰',
+  owl: '🦉',
+  hedgehog: '🦔',
+  turtle: '🐢',
+  fish: '🐟',
+  sun: '☀️',
+  flower: '🌸',
+  tree: '🌳',
+  star: '⭐',
+} as const
+export type GroupIcon = keyof typeof groupIcons
+export type GroupDetails = { name: string; icon: GroupIcon }
+export type Group = GroupDetails & { id: number }
+// mine: whether the logged-in Staff member works in it.
+export type ListedGroup = Group & { mine: boolean }
+
+/** All Groups, by name. */
+export async function fetchGroups(): Promise<ListedGroup[]> {
+  const response = await fetch('/api/groups')
+  if (!response.ok) throw new Error(`Loading the Groups failed: ${response.status}`)
+  return (await response.json()) as ListedGroup[]
+}
+
+/** Creates a Group, or changes the one with `id`. Admins only. */
+export async function saveGroup(details: GroupDetails, id?: number): Promise<Group | Refusal> {
+  const response = id === undefined ? await sendJson('/api/groups', 'POST', details) : await sendJson(`/api/groups/${id}`, 'PUT', details)
+  if (!response.ok) return refusalOf(response, 'Saving the Group')
+  return (await response.json()) as Group
+}
+
+/** Removes a Group; its Children stay, in no Group. Admins only. Resolves to true once removed. */
+export async function removeGroup(id: number): Promise<true | Refusal> {
+  const response = await fetch(`/api/groups/${id}`, { method: 'DELETE' })
+  if (!response.ok) return refusalOf(response, 'Removing the Group')
+  return true
+}
+
+// A Group with its Children, by first name: what its dashboard shows.
+export type GroupDashboard = Group & { children: ChildSummary[] }
+
+/** A Group's dashboard, or null when there is no such Group. */
+export async function fetchGroupDashboard(id: number): Promise<GroupDashboard | null> {
+  const response = await fetch(`/api/groups/${id}`)
+  if (response.status === 404) return null
+  if (!response.ok) throw new Error(`Loading the Group dashboard failed: ${response.status}`)
+  return (await response.json()) as GroupDashboard
+}
+
+/** Puts a Child in a Group, or in none (null). Admins only. Resolves to true once done. */
+export async function putChildInGroup(childId: number, groupId: number | null): Promise<true | Refusal> {
+  const response = await sendJson(`/api/children/${childId}/group`, 'PUT', { groupId })
+  if (!response.ok) return refusalOf(response, 'Changing the Group')
+  return true
+}
+
+/** Says which Groups a Staff member works in. Admins only. */
+export async function setStaffGroups(accountId: number, groupIds: number[]): Promise<StaffAccount | Refusal> {
+  const response = await sendJson(`/api/staff/${accountId}/groups`, 'PUT', { groupIds })
+  if (!response.ok) return refusalOf(response, 'Changing the Groups')
+  return (await response.json()) as StaffAccount
 }

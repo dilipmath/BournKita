@@ -7,6 +7,7 @@ from kita import (  # noqa: F401
     children,
     consents,
     contacts,
+    groups,
     identity,
     parents,
     photos,

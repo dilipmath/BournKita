@@ -1,0 +1,35 @@
+import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
+import { fetchGroupDashboard } from './api'
+import GroupLabel from './GroupLabel'
+import { useRecordAtAddress } from './recordAtAddress'
+import RecordPlaceholder from './RecordPlaceholder'
+
+/** The Group dashboard: where a Staff member lands after picking their Group. */
+export default function GroupDashboard() {
+  const { t } = useTranslation()
+  const [loaded] = useRecordAtAddress(fetchGroupDashboard)
+  const dashboard = loaded.record
+  if (!dashboard) return <RecordPlaceholder {...loaded} backTo={{ to: '/', label: t('backToStart') }} />
+
+  return (
+    <section className="page dashboard">
+      <h2>
+        <GroupLabel group={dashboard} />
+      </h2>
+      {dashboard.children.length === 0 ? (
+        <p>{t('noChildrenInGroup')}</p>
+      ) : (
+        <ul className="children-list">
+          {dashboard.children.map((child) => (
+            <li key={child.id}>
+              <Link to={`/children/${child.id}`}>
+                {child.firstName} {child.lastName}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}

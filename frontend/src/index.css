@@ -667,3 +667,95 @@ button.danger {
   min-height: 0;
 }
 
+
+/* Groups: the Admins' page, the start page's drop-down and the dashboard. */
+.groups ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group {
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.group h3 {
+  margin: 0 0 8px;
+}
+
+.group-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.group-form > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+  border: none;
+  padding: 0;
+}
+
+.icons legend {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+/* Each icon is a large tap target; the picked one is outlined. */
+.icons label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  font-size: 1.75rem;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.icons label:has(input:checked) {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
+}
+
+.icons label:has(input:focus-visible) {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.icons input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.group-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.group-picker label {
+  flex-basis: 100%;
+  font-weight: 600;
+}
+
+.staff-groups {
+  border: none;
+  padding: 0;
+  margin: 0;
+}

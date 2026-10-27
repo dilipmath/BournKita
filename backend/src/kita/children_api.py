@@ -35,6 +35,8 @@ from kita.consents import (
     OutOfOrder,
 )
 from kita.contacts import Contact, ContactDetails, ContactKind, ContactNotFound, Contacts
+from kita.groups import GroupNotFound, Groups
+from kita.groups_api import GroupOut
 from kita.identity import Identity
 from kita.identity_api import role_dependency, staff_member_dependency
 from kita.parents import LinkedParent, ParentNotFound, Parents
@@ -157,6 +159,13 @@ class ConsentsOut(BaseModel):
         )
 
 
+class GroupChoiceIn(BaseModel):
+    model_config = CAMEL_CASE
+
+    # None: in no Group.
+    group_id: int | None
+
+
 class ConsentGivenIn(BaseModel):
     model_config = CAMEL_CASE
 
@@ -190,6 +199,7 @@ class ChildProfileOut(ChildOut):
     pick_up_persons: list[ContactOut]
     consents: ConsentsOut
     photos: list[PhotoOut]
+    group: GroupOut | None
 
 
 # The profile field naming each Consent in the audit log.
@@ -214,6 +224,7 @@ _REFUSALS: Refusals = {
     ParentNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
     ContactNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
     NoPhotoConsent: (status.HTTP_409_CONFLICT, "no_photo_consent"),
+    GroupNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
     **PHOTO_REFUSALS,
     AlreadyGiven: (status.HTTP_409_CONFLICT, "already_given"),
     NotGiven: (status.HTTP_409_CONFLICT, "not_given"),
@@ -229,6 +240,7 @@ def children_router(
     contacts: Contacts,
     consents: Consents,
     photos: Photos,
+    groups: Groups,
     audited_route_class: type[APIRoute],
 ) -> APIRouter:
     """`audited_route_class` comes from audited_route."""
@@ -277,6 +289,7 @@ def children_router(
             pick_up_persons=of_kind("pickUp"),
             consents=ConsentsOut.of(consents.of_child(child_id)),
             photos=[PhotoOut.of(photo) for photo in photos.of_child(child_id)],
+            group=None if (group := groups.of_child(child_id)) is None else GroupOut.of(group),
         )
 
     @router.put("/{child_id}", dependencies=admin_only)
@@ -383,6 +396,14 @@ def children_router(
             kind = contacts.kind_of(child_id, contact_id)
         note_changed_fields(request, [_CONTACT_FIELDS[kind]])
         background.add_task(photos.delete_files, removed)
+
+    @router.put(
+        "/{child_id}/group", status_code=status.HTTP_204_NO_CONTENT, dependencies=admin_only
+    )
+    def put_in_group(child_id: int, choice: GroupChoiceIn, request: Request) -> None:
+        with refusals_as_http_errors(_REFUSALS):
+            changed = groups.put_child(child_id, choice.group_id)
+        note_changed_fields(request, ["group"] if changed else [])
 
     @router.post(
         "/{child_id}/consents/{consent}/given",

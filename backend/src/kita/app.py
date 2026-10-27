@@ -25,6 +25,8 @@ from kita.crash import (
     send_safely,
 )
 from kita.encryption import FieldCipher
+from kita.groups import Groups
+from kita.groups_api import groups_router
 from kita.identity import Identity
 from kita.identity_api import (
     email_verification_router,
@@ -76,7 +78,6 @@ def create_app(
     app.include_router(identity_router(identity, settings))
     app.include_router(email_verification_router(identity))
     app.include_router(password_reset_router(identity))
-    app.include_router(staff_router(identity))
     children = Children(engine, clock)
     audit = Audit(engine, clock)
     audited_route_class = audited_route(audit, engine)
@@ -86,13 +87,16 @@ def create_app(
     photos = Photos(
         engine, clock, cipher, file_store or DiskFileStore(settings.photo_folder), consents
     )
+    groups = Groups(engine)
+    app.include_router(staff_router(identity, groups))
     app.include_router(
         children_router(
-            identity, children, parents, contacts, consents, photos, audited_route_class
+            identity, children, parents, contacts, consents, photos, groups, audited_route_class
         )
     )
     app.include_router(parents_router(identity, parents, photos, audited_route_class))
     app.include_router(audit_router(identity, audit, children))
+    app.include_router(groups_router(identity, groups, audited_route_class))
 
     @app.exception_handler(Exception)
     async def report_crash(request: Request, error: Exception) -> JSONResponse:

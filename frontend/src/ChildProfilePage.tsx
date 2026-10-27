@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { childPhotoUrl, deleteChild, fetchChild, genderLabel } from './api'
 import ChildForm from './ChildForm'
+import ChildGroup from './ChildGroup'
 import ConsentsSection from './ConsentsSection'
 import ContactsSection from './ContactsSection'
 import GallerySection from './GallerySection'
@@ -50,6 +51,7 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
         <h2>{name}</h2>
       </div>
       <dl>
+        <ChildGroup child={child} canEdit={canEdit} reload={reload} />
         <dt>{t('gender')}</dt>
         <dd>{t(child.gender ? genderLabel[child.gender] : 'genderNotStated')}</dd>
         <dt>{t('languagesSpoken')}</dt>
