@@ -13,8 +13,9 @@ export default function ChildForm({ child }: { child?: Child }) {
   const navigate = useNavigate()
   const [details, setDetails] = useState<ChildDetails>(() => {
     if (!child) return empty
-    const { id: _, ...current } = child
-    return current
+    // Only the fields this form edits, not e.g. the profile's parents.
+    const { firstName, lastName, gender, languages, foodPreferences, interests } = child
+    return { firstName, lastName, gender, languages, foodPreferences, interests }
   })
   const [problem, setProblem] = useState<Problem>(null)
   const [submitting, setSubmitting] = useState(false)

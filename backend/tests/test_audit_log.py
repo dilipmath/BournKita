@@ -167,6 +167,9 @@ def test_an_audited_router_refuses_routes_it_cannot_attribute_to_one_child(
 
     with pytest.raises(UnauditableRoute, match="GET /today"):
         router.add_api_route("/today", today, methods=["GET"])
+    with pytest.raises(UnauditableRoute, match="POST /notes"):
+        # A create of anything but a Child must say what it is about, not pass for one.
+        router.add_api_route("/notes", today, methods=["POST"])
     with pytest.raises(UnauditableRoute, match="PATCH"):
         router.add_api_route("/{child_id}", patch_child, methods=["PATCH"])
     router.add_api_route("/names", not_about_one_child(names), methods=["GET"])

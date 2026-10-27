@@ -41,7 +41,7 @@ describe('child profiles', () => {
       'GET /api/session': sessionAs('admin'),
       'GET /api/children?search=': { status: 200, body: [] },
       'POST /api/children': { status: 201, body: lena },
-      'GET /api/children/7': { status: 200, body: lena },
+      'GET /api/children/7': { status: 200, body: { ...lena, parents: [] } },
     })
     renderAt('/children', <App />)
 
@@ -66,7 +66,7 @@ describe('child profiles', () => {
     const calls = fakeApi({
       'GET /api/health': health,
       'GET /api/session': sessionAs('admin'),
-      'GET /api/children/7': () => ({ status: 200, body: stored }),
+      'GET /api/children/7': () => ({ status: 200, body: { ...stored, parents: [] } }),
       'PUT /api/children/7': (body) => {
         stored = { id: 7, ...(body as object) }
         return { status: 200, body: stored }
@@ -93,7 +93,7 @@ describe('child profiles', () => {
     const calls = fakeApi({
       'GET /api/health': health,
       'GET /api/session': sessionAs('admin'),
-      'GET /api/children/7': { status: 200, body: lena },
+      'GET /api/children/7': { status: 200, body: { ...lena, parents: [] } },
       'DELETE /api/children/7': { status: 204 },
       'GET /api/children?search=': { status: 200, body: [mia] },
     })
@@ -108,14 +108,14 @@ describe('child profiles', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Delete profile' }))
 
     expect(await screen.findByRole('status')).toHaveTextContent('The profile of Lena Müller was deleted.')
-    expect(screen.getByRole('link', { name: 'Mia Schmidt' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Mia Schmidt' })).toBeInTheDocument()
   })
 
   it('shows Teachers the profile without ways to change it', async () => {
     fakeApi({
       'GET /api/health': health,
       'GET /api/session': sessionAs('teacher'),
-      'GET /api/children/7': { status: 200, body: lena },
+      'GET /api/children/7': { status: 200, body: { ...lena, parents: [] } },
     })
     renderAt('/children/7', <App />)
 
@@ -156,7 +156,7 @@ describe('child profiles', () => {
     fakeApi({
       'GET /api/health': health,
       'GET /api/session': sessionAs('admin'),
-      'GET /api/children/7': { status: 200, body: lena },
+      'GET /api/children/7': { status: 200, body: { ...lena, parents: [] } },
     })
     renderAt('/children/7', <App />)
 

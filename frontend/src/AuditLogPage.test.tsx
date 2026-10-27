@@ -71,7 +71,7 @@ describe('audit log', () => {
       'GET /api/session': sessionAs('admin'),
       'GET /api/children/7': {
         status: 200,
-        body: { id: 7, firstName: 'Lena', lastName: 'Müller', gender: null, languages: '', foodPreferences: '', interests: '' },
+        body: { id: 7, firstName: 'Lena', lastName: 'Müller', gender: null, languages: '', foodPreferences: '', interests: '', parents: [] },
       },
       'GET /api/audit-log?childId=7&limit=50': { status: 200, body: [changed] },
     })

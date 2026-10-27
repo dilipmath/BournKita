@@ -5,7 +5,7 @@ import json
 from collections.abc import Callable, Coroutine, Sequence
 from dataclasses import asdict
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.concurrency import run_in_threadpool
@@ -30,16 +30,42 @@ _ACTIONS: dict[str, AuditAction] = {
 }
 
 
-def not_about_one_child[Endpoint: Callable[..., Any]](endpoint: Endpoint) -> Endpoint:
-    """Marks an endpoint of an audited router that shows no single Child's data (e.g. the list
-    of names), so it is deliberately not logged. Put it below the route decorator."""
-    endpoint.not_about_one_child = True  # type: ignore[attr-defined]
+# How an audited route finds the Children a request is about; set by the markers below.
+_Subject = Literal["path", "created_child", "noted_children", "none"]
+
+
+def _marked[Endpoint: Callable[..., Any]](endpoint: Endpoint, subject: _Subject) -> Endpoint:
+    endpoint.audit_subject = subject  # type: ignore[attr-defined]
     return endpoint
+
+
+def not_about_one_child[Endpoint: Callable[..., Any]](endpoint: Endpoint) -> Endpoint:
+    """Marks an endpoint of an audited router that shows no Child's data beyond names (e.g. a
+    list of names), so it is deliberately not logged. Put it below the route decorator."""
+    return _marked(endpoint, "none")
+
+
+def creates_child[Endpoint: Callable[..., Any]](endpoint: Endpoint) -> Endpoint:
+    """Marks the endpoint that creates a Child profile: the entry is about the `id` in its
+    response."""
+    return _marked(endpoint, "created_child")
+
+
+def about_noted_children[Endpoint: Callable[..., Any]](endpoint: Endpoint) -> Endpoint:
+    """Marks an endpoint whose Children are not in its address (e.g. a Parent's page, which
+    shows all their Children): it must call `note_children`, and gets an entry per Child."""
+    return _marked(endpoint, "noted_children")
+
+
+def note_children(request: Request, child_ids: Sequence[int]) -> None:
+    """Called by an `about_noted_children` endpoint to say which Children it showed or changed."""
+    request.state.audit_children = list(child_ids)
 
 
 def note_changed_fields(request: Request, fields: Sequence[str]) -> None:
     """Called by a change endpoint to say which fields it changed (by their Python names), for
-    the audit entry. A change of no fields gets no entry."""
+    the audit entry. Makes the entry a change whatever the method (e.g. linking a parent with a
+    PUT, unlinking with a DELETE); a change of no fields gets no entry."""
     # Named as the API names them, e.g. foodPreferences.
     request.state.audit_changed_fields = [to_camel(field) for field in fields]
 
@@ -50,35 +76,35 @@ def _noted_changed_fields(request: Request) -> list[str] | None:
 
 
 class UnauditableRoute(Exception):
-    """An audited router has a route the audit log could not attribute to one Child."""
+    """An audited router has a route the audit log could not attribute to Children."""
 
 
 def audited_route(audit: Audit, engine: Engine) -> type[APIRoute]:
     """A route class that records an audit entry after every successful request about one
     Child: a router gets audit logging by using it, without each endpoint writing entries.
     The request's work and its entry are one unit of work, saved together or not at all.
-    The Child is the `child_id` path parameter or, for a create, the `id` in the response.
-    Routes it cannot attribute to one Child stop the app from starting, unless marked with
-    `not_about_one_child`, so a new module cannot slip past the log by accident."""
+    The Child is the `child_id` path parameter, unless a marker (`creates_child`,
+    `about_noted_children`, `not_about_one_child`) says otherwise. Routes it cannot attribute to
+    Children stop the app from starting, so a new module cannot slip past the log by accident."""
 
     class AuditedRoute(APIRoute):
         def __init__(self, path: str, endpoint: Callable[..., Any], **kwargs: Any) -> None:
             # Set first: the base class builds the route handler while initialising.
-            self.not_about_one_child = getattr(endpoint, "not_about_one_child", False)
+            self.audit_subject: _Subject = getattr(endpoint, "audit_subject", "path")
             super().__init__(path, endpoint, **kwargs)
-            if not self.not_about_one_child:
-                _check_auditable(self)
+            _check_auditable(self, self.audit_subject)
 
         def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
             handle = super().get_route_handler()
-            if self.not_about_one_child:
+            subject = self.audit_subject
+            if subject == "none":
                 return handle
 
             async def handle_and_record(request: Request) -> Response:
                 async with unit_of_work(engine) as unit:
                     response = await handle(request)
                     if response.status_code < 300:
-                        await run_in_threadpool(_record, audit, request, response)
+                        await run_in_threadpool(_record, audit, request, response, subject)
                         # Only now: a change whose entry failed is never saved, and a view
                         # whose entry failed is never answered.
                         await unit.commit()
@@ -89,30 +115,36 @@ def audited_route(audit: Audit, engine: Engine) -> type[APIRoute]:
     return AuditedRoute
 
 
-def _check_auditable(route: APIRoute) -> None:
-    about_one_child = "{child_id}" in route.path
-    for method in route.methods or ():
-        if method not in _ACTIONS or (not about_one_child and method != "POST"):
-            raise UnauditableRoute(
-                f"{method} {route.path} names no single Child: give it a {{child_id}} path "
-                "parameter, or mark it not_about_one_child."
-            )
+def _check_auditable(route: APIRoute, subject: _Subject) -> None:
+    methods = route.methods or set()
+    if subject == "none":
+        return
+    if subject == "created_child" and methods != {"POST"}:
+        raise UnauditableRoute(f"{route.path}: only a POST can create a Child.")
+    if subject == "path" and "{child_id}" not in route.path:
+        raise UnauditableRoute(
+            f"{' '.join(sorted(methods))} {route.path} names no Child: give it a {{child_id}} "
+            "path parameter, or mark it creates_child, about_noted_children or "
+            "not_about_one_child."
+        )
+    for method in methods - set(_ACTIONS):
+        raise UnauditableRoute(f"{method} {route.path}: the audit log knows no such action.")
 
 
-def _record(audit: Audit, request: Request, response: Response) -> None:
-    child_id = request.path_params.get("child_id")
-    if child_id is None:
-        # A create, which _check_auditable allows only here: the new Child's ID is in the body.
-        child_id = json.loads(bytes(response.body))["id"]
+def _record(audit: Audit, request: Request, response: Response, subject: _Subject) -> None:
+    if subject == "created_child":
+        child_ids = [json.loads(bytes(response.body))["id"]]
+    elif subject == "noted_children":
+        # Missing means the endpoint forgot to say: fail rather than leave a gap in the log.
+        child_ids = request.state.audit_children
+    else:
+        child_ids = [request.path_params["child_id"]]
     changed_fields = _noted_changed_fields(request)
     if changed_fields == []:
         return  # Saved without changing anything.
-    audit.record(
-        staff_member_of(request).email,
-        _ACTIONS[request.method],
-        int(child_id),
-        changed_fields or (),
-    )
+    action = _ACTIONS[request.method] if changed_fields is None else "changed"
+    for child_id in child_ids:
+        audit.record(staff_member_of(request).email, action, int(child_id), changed_fields or ())
 
 
 class AuditEntryOut(BaseModel):

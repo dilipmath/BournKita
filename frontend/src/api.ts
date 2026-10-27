@@ -141,7 +141,8 @@ export type ChildDetails = {
   interests: string
 }
 export type Child = ChildDetails & { id: number }
-// Each Child profile field's translation key, e.g. for the audit log's changed fields.
+// Each Child profile field's translation key where it differs from the field's name, e.g. for
+// the audit log's changed fields (others, like parentAddress, are translated by their name).
 export const childFieldLabel: Record<keyof ChildDetails, string> = {
   firstName: 'firstName',
   lastName: 'lastName',
@@ -158,12 +159,15 @@ export async function fetchChildren(search: string): Promise<ChildSummary[]> {
   return (await response.json()) as ChildSummary[]
 }
 
+// The whole profile, as its page shows it.
+export type ChildProfile = Child & { parents: Parent[] }
+
 /** A Child profile, or null when none has this ID (e.g. it was deleted). */
-export async function fetchChild(id: number): Promise<Child | null> {
+export async function fetchChild(id: number): Promise<ChildProfile | null> {
   const response = await fetch(`/api/children/${id}`)
   if (response.status === 404) return null
   if (!response.ok) throw new Error(`Loading the Child profile failed: ${response.status}`)
-  return (await response.json()) as Child
+  return (await response.json()) as ChildProfile
 }
 
 /** Creates a Child profile, or changes the one with `id`. Admins only. */
@@ -212,4 +216,49 @@ export async function fetchAuditLog(filter: AuditFilter, before?: number): Promi
   const response = await fetch(`/api/audit-log?${params}`)
   if (!response.ok) return refusalOf(response, 'Loading the audit log')
   return (await response.json()) as AuditEntry[]
+}
+
+// A Parent: a contact person recorded for one or more Children, not a login. Only names are required.
+export type ParentDetails = { firstName: string; lastName: string; address: string; phone: string; email: string }
+export type Parent = ParentDetails & { id: number }
+export type ParentSummary = { id: number; firstName: string; lastName: string }
+export type ParentWithChildren = Parent & { children: ChildSummary[] }
+
+/** Recorded Parents whose name contains `search`, e.g. to link a Sibling's Parent. */
+export async function searchParents(search: string): Promise<ParentSummary[]> {
+  const response = await fetch(`/api/parents?search=${encodeURIComponent(search)}`)
+  if (!response.ok) throw new Error(`Searching Parents failed: ${response.status}`)
+  return (await response.json()) as ParentSummary[]
+}
+
+/** A Parent with their Children, or null when none has this ID. */
+export async function fetchParent(id: number): Promise<ParentWithChildren | null> {
+  const response = await fetch(`/api/parents/${id}`)
+  if (response.status === 404) return null
+  if (!response.ok) throw new Error(`Loading the Parent failed: ${response.status}`)
+  return (await response.json()) as ParentWithChildren
+}
+
+/** Records a Parent, or changes the one with `id`. Admins only. */
+export async function saveParent(details: ParentDetails, id?: number): Promise<Parent | Refusal> {
+  const response =
+    id === undefined ? await sendJson('/api/parents', 'POST', details) : await sendJson(`/api/parents/${id}`, 'PUT', details)
+  if (!response.ok) return refusalOf(response, 'Saving the Parent')
+  return (await response.json()) as Parent
+}
+
+async function changeLink(childId: number, parentId: number, method: 'PUT' | 'DELETE', action: string) {
+  const response = await fetch(`/api/children/${childId}/parents/${parentId}`, { method })
+  if (!response.ok) return refusalOf(response, action)
+  return true as const
+}
+
+/** Links a Parent to a Child. Admins only. Resolves to true once linked. */
+export function linkParent(childId: number, parentId: number): Promise<true | Refusal> {
+  return changeLink(childId, parentId, 'PUT', 'Linking the Parent')
+}
+
+/** Removes a Parent from a Child; the Parent's record stays. Admins only. */
+export function unlinkParent(childId: number, parentId: number): Promise<true | Refusal> {
+  return changeLink(childId, parentId, 'DELETE', 'Removing the Parent')
 }

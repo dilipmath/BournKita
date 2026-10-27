@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { fetchCurrentSession, fetchHealth, logOut, type Session } from './api'
+import AddParentPage from './AddParentPage'
 import AuditLogPage from './AuditLogPage'
+import ParentPage, { ParentEditPage } from './ParentPage'
 import ChildForm from './ChildForm'
 import ChildProfilePage, { ChildEditPage } from './ChildProfilePage'
 import ChildrenPage from './ChildrenPage'
@@ -123,6 +125,9 @@ export default function App() {
           <Route path="/children/new" element={isAdmin ? <ChildForm /> : adminsOnly('adminsOnlyChildren')} />
           <Route path="/children/:id" element={<ChildProfilePage canEdit={isAdmin} />} />
           <Route path="/children/:id/edit" element={isAdmin ? <ChildEditPage /> : adminsOnly('adminsOnlyChildren')} />
+          <Route path="/children/:id/parents/add" element={isAdmin ? <AddParentPage /> : adminsOnly('adminsOnlyChildren')} />
+          <Route path="/parents/:id" element={<ParentPage canEdit={isAdmin} />} />
+          <Route path="/parents/:id/edit" element={isAdmin ? <ParentEditPage /> : adminsOnly('adminsOnlyChildren')} />
           <Route path="/audit-log" element={isAdmin ? <AuditLogPage /> : adminsOnly('adminsOnlyAuditLog')} />
           <Route path="*" element={null} />
         </Routes>

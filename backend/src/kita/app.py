@@ -30,6 +30,8 @@ from kita.identity_api import (
     password_reset_router,
 )
 from kita.mail import Mailer, mailer_from_settings
+from kita.parents import Parents
+from kita.parents_api import parents_router
 from kita.settings import Settings
 from kita.staff_api import staff_router
 
@@ -47,7 +49,7 @@ def create_app(
     crash_sink: CrashReportSink | None = None,
 ) -> FastAPI:
     # First, so a missing or broken key stops the app before it serves anything.
-    FieldCipher.from_settings(settings)
+    cipher = FieldCipher.from_settings(settings)
     clock = clock or SystemClock()
     mailer = mailer or mailer_from_settings(settings)
     crash_sink = crash_sink or default_crash_sink(settings, mailer)
@@ -74,7 +76,9 @@ def create_app(
     children = Children(engine, clock)
     audit = Audit(engine, clock)
     audited_route_class = audited_route(audit, engine)
-    app.include_router(children_router(identity, children, audited_route_class))
+    parents = Parents(engine, clock, cipher)
+    app.include_router(children_router(identity, children, parents, audited_route_class))
+    app.include_router(parents_router(identity, parents, audited_route_class))
     app.include_router(audit_router(identity, audit, children))
 
     @app.exception_handler(Exception)

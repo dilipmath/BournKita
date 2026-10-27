@@ -13,8 +13,12 @@ What the Kita records about one Child: name, gender, languages spoken, food pref
 _Avoid_: Record, file, Akte
 
 **Parent**:
-A contact person recorded for one or more Children; not someone who logs in.
-_Avoid_: Guardian (unless the law requires the distinction), user
+A contact person recorded for one or more Children, with name, address and contact details; not someone who logs in. Siblings share one Parent record.
+_Avoid_: Guardian (unless the law requires the distinction), user, contact (for Parents)
+
+**Sibling**:
+A Child who shares at least one Parent with another Child of the Kita.
+_Avoid_: Brother/sister (as terms in code), family member
 
 **Staff member**:
 Any Kita employee who has a login.

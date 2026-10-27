@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 
 export const e2eAdmin = { email: 'e2e-admin@kita.example', password: 'e2e admin password' }
 
@@ -13,6 +13,8 @@ export async function logIn(page: Page, email: string, password: string): Promis
 export async function logInAsAdmin(page: Page): Promise<void> {
   await page.goto('/')
   await logIn(page, e2eAdmin.email, e2eAdmin.password)
+  // Done only once the session exists; navigating sooner would show the login form again.
+  await expect(page.getByText(`Logged in as ${e2eAdmin.email}`)).toBeVisible()
 }
 
 /** Fills in and sends the form for choosing a password from an emailed link. */

@@ -1,62 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { deleteChild, fetchChild, genderLabel, type Child, type Refusal } from './api'
+import { Link, useNavigate } from 'react-router-dom'
+import { deleteChild, fetchChild, genderLabel, unlinkParent, type Refusal } from './api'
 import ChildForm from './ChildForm'
+import ParentContacts from './ParentContacts'
+import { useRecordAtAddress } from './recordAtAddress'
+import RecordPlaceholder from './RecordPlaceholder'
 
 type Problem = Refusal | 'somethingWentWrong' | null
-
-// The Child profile named by the address: undefined while loading, null when there is none.
-type LoadedChild = { child: Child | null | undefined; failed: boolean }
-
-function useChild(): LoadedChild {
-  const id = Number(useParams().id)
-  const [loaded, setLoaded] = useState<LoadedChild & { id: number }>()
-
-  useEffect(() => {
-    if (!Number.isInteger(id)) return
-    // After moving to another Child, a late answer about the previous one must not show.
-    let latest = true
-    fetchChild(id)
-      .then((child) => latest && setLoaded({ id, child, failed: false }))
-      .catch(() => latest && setLoaded({ id, child: undefined, failed: true }))
-    return () => {
-      latest = false
-    }
-  }, [id])
-
-  if (!Number.isInteger(id)) return { child: null, failed: false }
-  // Still loading this Child, even if another one was loaded before.
-  if (loaded?.id !== id) return { child: undefined, failed: false }
-  return loaded
-}
-
-/** Stands in for a Child profile that is loading, failed to load or does not exist. */
-function ChildPlaceholder({ child, failed }: LoadedChild) {
-  const { t } = useTranslation()
-  if (failed) {
-    return (
-      <p className="status status-problem" role="alert">
-        {t('somethingWentWrong')}
-      </p>
-    )
-  }
-  if (child === null) {
-    return (
-      <section className="page">
-        <p className="status status-problem">{t('notFound')}</p>
-        <Link to="/children">{t('backToChildren')}</Link>
-      </section>
-    )
-  }
-  return <p>{t('loading')}</p>
-}
 
 /** One Child's profile. Admins can edit and delete it from here. */
 export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const loaded = useChild()
+  const [loaded, reload] = useRecordAtAddress(fetchChild)
   const [confirming, setConfirming] = useState(false)
   const [problem, setProblem] = useState<Problem>(null)
   const confirmation = useRef<HTMLDivElement>(null)
@@ -66,9 +23,20 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
     if (confirming) confirmation.current?.focus()
   }, [confirming])
 
-  const { child } = loaded
-  if (!child) return <ChildPlaceholder {...loaded} />
+  const child = loaded.record
+  if (!child) return <RecordPlaceholder {...loaded} backTo={{ to: '/children', label: t('backToChildren') }} />
   const name = `${child.firstName} ${child.lastName}`
+
+  async function unlink(childId: number, parentId: number) {
+    setProblem(null)
+    try {
+      const result = await unlinkParent(childId, parentId)
+      if (result === true) reload()
+      else setProblem(result)
+    } catch {
+      setProblem('somethingWentWrong')
+    }
+  }
 
   async function remove(id: number) {
     setProblem(null)
@@ -82,7 +50,7 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
   }
 
   return (
-    <section className="page child-profile">
+    <section className="page profile">
       <Link to="/children">{t('backToChildren')}</Link>
       <h2>{name}</h2>
       <dl>
@@ -95,6 +63,31 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
         <dt>{t('interests')}</dt>
         <dd>{child.interests || '–'}</dd>
       </dl>
+      <section className="parents" aria-labelledby="parents-heading">
+        <h3 id="parents-heading">{t('parents')}</h3>
+        {child.parents.length === 0 && <p>{t('noParents')}</p>}
+        {child.parents.map((parent) => {
+          const parentName = `${parent.firstName} ${parent.lastName}`
+          return (
+            <article key={parent.id} className="parent">
+              <h4>
+                <Link to={`/parents/${parent.id}`}>{parentName}</Link>
+              </h4>
+              <ParentContacts parent={parent} />
+              {canEdit && (
+                <button type="button" onClick={() => void unlink(child.id, parent.id)}>
+                  {t('removeParentNamed', { name: parentName })}
+                </button>
+              )}
+            </article>
+          )
+        })}
+        {canEdit && (
+          <Link className="button" to={`/children/${child.id}/parents/add`}>
+            {t('addParent')}
+          </Link>
+        )}
+      </section>
       {problem && (
         <p className="status status-problem" role="alert">
           {t(problem)}
@@ -133,7 +126,7 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
 
 /** The form for changing the Child profile named by the address. Admins only. */
 export function ChildEditPage() {
-  const loaded = useChild()
+  const [loaded] = useRecordAtAddress(fetchChild)
   // Keyed by ID, so the form starts afresh for another Child.
-  return loaded.child ? <ChildForm key={loaded.child.id} child={loaded.child} /> : <ChildPlaceholder {...loaded} />
+  return loaded.record ? <ChildForm key={loaded.record.id} child={loaded.record} /> : <RecordPlaceholder {...loaded} />
 }
