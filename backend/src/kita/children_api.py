@@ -3,11 +3,11 @@
 from dataclasses import asdict
 
 from fastapi import APIRouter, Depends, Request, status
+from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
 from kita.api_support import CAMEL_CASE, Refusals, refusals_as_http_errors
-from kita.audit import Audit
-from kita.audit_api import audited_route, not_about_one_child, note_changed_fields
+from kita.audit_api import not_about_one_child, note_changed_fields
 from kita.children import (
     ChildDetails,
     ChildNotFound,
@@ -63,12 +63,15 @@ _REFUSALS: Refusals = {
 }
 
 
-def children_router(identity: Identity, children: Children, audit: Audit) -> APIRouter:
+def children_router(
+    identity: Identity, children: Children, audited_route_class: type[APIRoute]
+) -> APIRouter:
+    """`audited_route_class` comes from audited_route."""
     router = APIRouter(
         prefix="/api/children",
         dependencies=[Depends(staff_member_dependency(identity))],
         # Every view and change of a Child's data goes into the audit log.
-        route_class=audited_route(audit),
+        route_class=audited_route_class,
     )
     admin_only = [Depends(role_dependency(identity, "admin"))]
 

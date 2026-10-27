@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 
 from kita.audit import Audit
-from kita.audit_api import audit_router
+from kita.audit_api import audit_router, audited_route
 from kita.children import Children
 from kita.children_api import children_router
 from kita.clock import Clock, SystemClock
@@ -70,7 +70,8 @@ def create_app(
     app.include_router(staff_router(identity))
     children = Children(engine, clock)
     audit = Audit(engine, clock)
-    app.include_router(children_router(identity, children, audit))
+    audited_route_class = audited_route(audit, engine)
+    app.include_router(children_router(identity, children, audited_route_class))
     app.include_router(audit_router(identity, audit, children))
 
     @app.exception_handler(Exception)

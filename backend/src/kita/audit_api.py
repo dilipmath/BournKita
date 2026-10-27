@@ -12,10 +12,12 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 from pydantic.alias_generators import to_camel
+from sqlalchemy import Engine
 
 from kita.api_support import CAMEL_CASE
 from kita.audit import Audit, AuditAction, AuditEntry, AuditFilter
 from kita.children import Children
+from kita.db import unit_of_work
 from kita.identity import Identity
 from kita.identity_api import role_dependency, staff_member_of
 
@@ -51,9 +53,10 @@ class UnauditableRoute(Exception):
     """An audited router has a route the audit log could not attribute to one Child."""
 
 
-def audited_route(audit: Audit) -> type[APIRoute]:
+def audited_route(audit: Audit, engine: Engine) -> type[APIRoute]:
     """A route class that records an audit entry after every successful request about one
     Child: a router gets audit logging by using it, without each endpoint writing entries.
+    The request's work and its entry are one unit of work, saved together or not at all.
     The Child is the `child_id` path parameter or, for a create, the `id` in the response.
     Routes it cannot attribute to one Child stop the app from starting, unless marked with
     `not_about_one_child`, so a new module cannot slip past the log by accident."""
@@ -72,9 +75,13 @@ def audited_route(audit: Audit) -> type[APIRoute]:
                 return handle
 
             async def handle_and_record(request: Request) -> Response:
-                response = await handle(request)
-                if response.status_code < 300:
-                    await run_in_threadpool(_record, audit, request, response)
+                async with unit_of_work(engine) as unit:
+                    response = await handle(request)
+                    if response.status_code < 300:
+                        await run_in_threadpool(_record, audit, request, response)
+                        # Only now: a change whose entry failed is never saved, and a view
+                        # whose entry failed is never answered.
+                        await unit.commit()
                 return response
 
             return handle_and_record

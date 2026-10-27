@@ -20,7 +20,7 @@ from sqlalchemy import (
 )
 
 from kita.clock import Clock
-from kita.db import metadata
+from kita.db import metadata, transaction
 from kita.identity import normalise_email
 
 AuditAction = Literal["viewed", "created", "changed", "deleted"]
@@ -77,7 +77,7 @@ class Audit:
         child_id: int,
         changed_fields: Sequence[str] = (),
     ) -> None:
-        with self._engine.begin() as connection:
+        with transaction(self._engine) as connection:
             connection.execute(
                 insert(audit_log).values(
                     at=self._clock.now(),
@@ -110,7 +110,7 @@ class Audit:
             # Strictly older in the same order as above: earlier, or as early with a lower ID.
             previous = select(audit_log.c.at).where(audit_log.c.id == before).scalar_subquery()
             query = query.where(tuple_(audit_log.c.at, audit_log.c.id) < tuple_(previous, before))
-        with self._engine.connect() as connection:
+        with transaction(self._engine) as connection:
             rows = connection.execute(query).all()
         return [
             AuditEntry(**{**row._asdict(), "changed_fields": tuple(row.changed_fields)})

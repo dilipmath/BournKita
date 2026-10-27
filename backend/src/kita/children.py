@@ -19,7 +19,7 @@ from sqlalchemy import (
 )
 
 from kita.clock import Clock
-from kita.db import metadata
+from kita.db import metadata, transaction
 
 Gender = Literal["girl", "boy", "diverse"]
 
@@ -125,7 +125,7 @@ class Children:
     def create(self, details: ChildDetails) -> ChildProfile:
         details = _checked(details)
         now = self._clock.now()
-        with self._engine.begin() as connection:
+        with transaction(self._engine) as connection:
             child_id = connection.scalar(
                 insert(children)
                 .values(**asdict(details), created_at=now, updated_at=now)
@@ -149,7 +149,7 @@ class Children:
                 first_last.icontains(search, autoescape=True)
                 | last_first.icontains(search, autoescape=True)
             )
-        with self._engine.connect() as connection:
+        with transaction(self._engine) as connection:
             rows = connection.execute(query).all()
         return [ChildSummary(**row._asdict()) for row in rows]
 
@@ -157,7 +157,7 @@ class Children:
         """The full names of those of these Children whose profiles still exist."""
         if not child_ids:
             return {}
-        with self._engine.connect() as connection:
+        with transaction(self._engine) as connection:
             rows = connection.execute(
                 select(children.c.id, children.c.first_name, children.c.last_name).where(
                     children.c.id.in_(child_ids)
@@ -166,7 +166,7 @@ class Children:
         return {row.id: f"{row.first_name} {row.last_name}" for row in rows}
 
     def profile(self, child_id: int) -> ChildProfile:
-        with self._engine.connect() as connection:
+        with transaction(self._engine) as connection:
             row = connection.execute(
                 select(*_PROFILE_COLUMNS).where(children.c.id == child_id)
             ).one_or_none()
@@ -177,7 +177,7 @@ class Children:
     def update(self, child_id: int, details: ChildDetails) -> tuple[ChildProfile, list[str]]:
         """Changes the profile; returns it with the names of the fields that changed."""
         details = _checked(details)
-        with self._engine.begin() as connection:
+        with transaction(self._engine) as connection:
             row = connection.execute(
                 select(*_PROFILE_COLUMNS).where(children.c.id == child_id).with_for_update()
             ).one_or_none()
@@ -193,7 +193,7 @@ class Children:
         return ChildProfile(id=child_id, **asdict(details)), changed
 
     def delete(self, child_id: int) -> None:
-        with self._engine.begin() as connection:
+        with transaction(self._engine) as connection:
             deleted = connection.execute(delete(children).where(children.c.id == child_id))
         if deleted.rowcount != 1:
             raise ChildNotFound

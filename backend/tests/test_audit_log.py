@@ -1,3 +1,4 @@
+from collections.abc import Callable, Iterator
 from datetime import timedelta
 
 import pytest
@@ -157,8 +158,8 @@ def test_an_audited_router_refuses_routes_it_cannot_attribute_to_one_child(
     settings: Settings, clock: FixedClock
 ) -> None:
     # A later module that shows many Children at once must decide about logging, not forget it.
-    audit = Audit(create_engine(settings.database_url), clock)
-    router = APIRouter(route_class=audited_route(audit))
+    engine = create_engine(settings.database_url)
+    router = APIRouter(route_class=audited_route(Audit(engine, clock), engine))
 
     def today() -> None: ...
     def patch_child(child_id: int) -> None: ...
@@ -169,3 +170,50 @@ def test_an_audited_router_refuses_routes_it_cannot_attribute_to_one_child(
     with pytest.raises(UnauditableRoute, match="PATCH"):
         router.add_api_route("/{child_id}", patch_child, methods=["PATCH"])
     router.add_api_route("/names", not_about_one_child(names), methods=["GET"])
+
+
+@pytest.fixture
+def audit_log_down(settings: Settings) -> Iterator[Callable[[bool], None]]:
+    """Switches writing audit entries off (True) and on again (False) in the database, as a full
+    disk or a lost connection would."""
+    engine = create_engine(settings.database_url)
+
+    def set_down(down: bool) -> None:
+        with engine.begin() as connection:
+            if down:
+                connection.exec_driver_sql(
+                    "CREATE FUNCTION refuse_audit_entry() RETURNS trigger AS "
+                    "$$ BEGIN RAISE EXCEPTION 'audit log unavailable'; END $$ LANGUAGE plpgsql"
+                )
+                connection.exec_driver_sql(
+                    "CREATE TRIGGER refuse_audit_entry BEFORE INSERT ON audit_log "
+                    "FOR EACH ROW EXECUTE FUNCTION refuse_audit_entry()"
+                )
+            else:
+                connection.exec_driver_sql("DROP TRIGGER IF EXISTS refuse_audit_entry ON audit_log")
+                connection.exec_driver_sql("DROP FUNCTION IF EXISTS refuse_audit_entry()")
+
+    yield set_down
+    set_down(False)
+    engine.dispose()
+
+
+def test_a_change_whose_audit_entry_cannot_be_written_is_not_saved(
+    admin: TestClient, audit_log_down: Callable[[bool], None]
+) -> None:
+    child_id = create_child(admin)
+    audit_log_down(True)
+
+    changed = admin.put(f"/api/children/{child_id}", json={**LENA, "interests": "Fußball"})
+    deleted = admin.delete(f"/api/children/{child_id}")
+    created = admin.post("/api/children", json={**LENA, "firstName": "Mia"})
+    viewed = admin.get(f"/api/children/{child_id}")
+
+    assert [r.status_code for r in (changed, deleted, created, viewed)] == [500, 500, 500, 500]
+    audit_log_down(False)
+    assert admin.get(f"/api/children/{child_id}").json()["interests"] == LENA["interests"]
+    assert [child["firstName"] for child in admin.get("/api/children").json()] == ["Lena"]
+    assert [entry["action"] for entry in admin.get("/api/audit-log").json()] == [
+        "viewed",
+        "created",
+    ]
