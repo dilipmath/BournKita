@@ -19,3 +19,9 @@ def create_child(admin: TestClient, **changes: Any) -> int:
     assert response.status_code == 201, response.text
     child_id: int = response.json()["id"]
     return child_id
+
+
+def own_fields(profile: dict[str, Any]) -> dict[str, Any]:
+    """The Child's own fields of a profile, without the lists other modules add (Parents,
+    contacts)."""
+    return {key: profile[key] for key in ("id", *LENA)}

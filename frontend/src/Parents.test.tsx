@@ -24,7 +24,7 @@ const lena = {
 }
 
 function profile(parents: unknown[]) {
-  return { status: 200, body: { ...lena, parents } }
+  return { status: 200, body: { ...lena, parents, emergencyContacts: [], pickUpPersons: [] } }
 }
 
 describe('Parents', () => {

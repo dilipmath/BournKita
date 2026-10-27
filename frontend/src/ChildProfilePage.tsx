@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
-import { deleteChild, fetchChild, genderLabel, unlinkParent, type Refusal } from './api'
+import { deleteChild, fetchChild, genderLabel } from './api'
 import ChildForm from './ChildForm'
-import ParentContacts from './ParentContacts'
+import ContactsSection from './ContactsSection'
+import ParentsSection from './ParentsSection'
+import ProblemAlert from './ProblemAlert'
+import type { Problem } from './profileChange'
 import { useRecordAtAddress } from './recordAtAddress'
 import RecordPlaceholder from './RecordPlaceholder'
-
-type Problem = Refusal | 'somethingWentWrong' | null
 
 /** One Child's profile. Admins can edit and delete it from here. */
 export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
@@ -26,17 +27,6 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
   const child = loaded.record
   if (!child) return <RecordPlaceholder {...loaded} backTo={{ to: '/children', label: t('backToChildren') }} />
   const name = `${child.firstName} ${child.lastName}`
-
-  async function unlink(childId: number, parentId: number) {
-    setProblem(null)
-    try {
-      const result = await unlinkParent(childId, parentId)
-      if (result === true) reload()
-      else setProblem(result)
-    } catch {
-      setProblem('somethingWentWrong')
-    }
-  }
 
   async function remove(id: number) {
     setProblem(null)
@@ -63,36 +53,17 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
         <dt>{t('interests')}</dt>
         <dd>{child.interests || '–'}</dd>
       </dl>
-      <section className="parents" aria-labelledby="parents-heading">
-        <h3 id="parents-heading">{t('parents')}</h3>
-        {child.parents.length === 0 && <p>{t('noParents')}</p>}
-        {child.parents.map((parent) => {
-          const parentName = `${parent.firstName} ${parent.lastName}`
-          return (
-            <article key={parent.id} className="parent">
-              <h4>
-                <Link to={`/parents/${parent.id}`}>{parentName}</Link>
-              </h4>
-              <ParentContacts parent={parent} />
-              {canEdit && (
-                <button type="button" onClick={() => void unlink(child.id, parent.id)}>
-                  {t('removeParentNamed', { name: parentName })}
-                </button>
-              )}
-            </article>
-          )
-        })}
-        {canEdit && (
-          <Link className="button" to={`/children/${child.id}/parents/add`}>
-            {t('addParent')}
-          </Link>
-        )}
-      </section>
-      {problem && (
-        <p className="status status-problem" role="alert">
-          {t(problem)}
-        </p>
-      )}
+      <ContactsSection
+        kind="pickUp"
+        childId={child.id}
+        contacts={child.pickUpPersons}
+        parents={child.parents}
+        canEdit={canEdit}
+        reload={reload}
+      />
+      <ContactsSection kind="emergency" childId={child.id} contacts={child.emergencyContacts} canEdit={canEdit} reload={reload} />
+      <ParentsSection child={child} canEdit={canEdit} reload={reload} />
+      <ProblemAlert problem={problem} />
       {canEdit &&
         (confirming ? (
           // A second, deliberate step: deleting cannot be undone.

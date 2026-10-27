@@ -160,7 +160,11 @@ export async function fetchChildren(search: string): Promise<ChildSummary[]> {
 }
 
 // The whole profile, as its page shows it.
-export type ChildProfile = Child & { parents: Parent[] }
+export type ChildProfile = Child & {
+  parents: LinkedParent[]
+  emergencyContacts: Contact[]
+  pickUpPersons: Contact[]
+}
 
 /** A Child profile, or null when none has this ID (e.g. it was deleted). */
 export async function fetchChild(id: number): Promise<ChildProfile | null> {
@@ -247,8 +251,9 @@ export async function saveParent(details: ParentDetails, id?: number): Promise<P
   return (await response.json()) as Parent
 }
 
-async function changeLink(childId: number, parentId: number, method: 'PUT' | 'DELETE', action: string) {
-  const response = await fetch(`/api/children/${childId}/parents/${parentId}`, { method })
+async function changeLink(childId: number, parentId: number, method: 'PUT' | 'DELETE', action: string, body?: object) {
+  const url = `/api/children/${childId}/parents/${parentId}`
+  const response = body ? await sendJson(url, 'PUT', body) : await fetch(url, { method })
   if (!response.ok) return refusalOf(response, action)
   return true as const
 }
@@ -262,3 +267,39 @@ export function linkParent(childId: number, parentId: number): Promise<true | Re
 export function unlinkParent(childId: number, parentId: number): Promise<true | Refusal> {
   return changeLink(childId, parentId, 'DELETE', 'Removing the Parent')
 }
+
+// A Parent as linked to one Child: whether they may pick that Child up.
+export type LinkedParent = Parent & { mayPickUp: boolean }
+
+/** Says whether a linked Parent may pick the Child up. Admins only. */
+export function setMayPickUp(childId: number, parentId: number, mayPickUp: boolean): Promise<true | Refusal> {
+  return changeLink(childId, parentId, 'PUT', 'Changing who may pick up', { mayPickUp })
+}
+
+// A Child's contacts. emergency: whom to call when something happens (Emergency contacts).
+// pickUp: who else may take the Child home (Pick-up persons).
+export type ContactKind = 'emergency' | 'pickUp'
+export type ContactDetails = { kind: ContactKind; name: string; relationship: string; phone: string; note: string }
+export type Contact = Omit<ContactDetails, 'kind'> & { id: number }
+
+/** Adds an emergency contact or pick-up person to a Child. Admins only. */
+export async function addContact(childId: number, details: ContactDetails): Promise<Contact | Refusal> {
+  const response = await sendJson(`/api/children/${childId}/contacts`, 'POST', details)
+  if (!response.ok) return refusalOf(response, 'Adding the contact')
+  return (await response.json()) as Contact
+}
+
+/** Changes one of a Child's contacts. Admins only. */
+export async function updateContact(childId: number, contactId: number, details: ContactDetails): Promise<Contact | Refusal> {
+  const response = await sendJson(`/api/children/${childId}/contacts/${contactId}`, 'PUT', details)
+  if (!response.ok) return refusalOf(response, 'Changing the contact')
+  return (await response.json()) as Contact
+}
+
+/** Removes one of a Child's contacts. Admins only. Resolves to true once removed. */
+export async function removeContact(childId: number, contactId: number): Promise<true | Refusal> {
+  const response = await fetch(`/api/children/${childId}/contacts/${contactId}`, { method: 'DELETE' })
+  if (!response.ok) return refusalOf(response, 'Removing the contact')
+  return true
+}
+

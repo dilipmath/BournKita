@@ -463,3 +463,71 @@ button.danger {
   border-bottom: 2px solid var(--border);
 }
 
+/* Emergency contacts and pick-up persons on a Child profile. */
+.contacts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  align-self: stretch;
+}
+
+.contacts h3 {
+  margin: 0;
+}
+
+.contacts ul {
+  align-self: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contact {
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.contact a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  color: var(--accent);
+}
+
+.contact .note {
+  margin: 4px 0 8px;
+  white-space: pre-line;
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-self: stretch;
+}
+
+.contact-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  margin-bottom: 8px;
+}
+
+.checkbox input {
+  width: 28px;
+  height: 28px;
+  min-height: 0;
+}
+

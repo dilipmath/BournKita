@@ -5,25 +5,7 @@ from sqlalchemy import create_engine, text
 
 from kita.settings import Settings
 from tests.children import create_child
-
-ANNA = {
-    "firstName": "Anna",
-    "lastName": "Müller",
-    "address": "Lindenstraße 12, 10115 Berlin",
-    "phone": "+49 30 1234567",
-    "email": "anna.mueller@example.org",
-}
-
-
-def create_parent(admin: TestClient, **changes: Any) -> int:
-    response = admin.post("/api/parents", json={**ANNA, **changes})
-    assert response.status_code == 201, response.text
-    parent_id: int = response.json()["id"]
-    return parent_id
-
-
-def link(client: TestClient, child_id: int, parent_id: int) -> int:
-    return client.put(f"/api/children/{child_id}/parents/{parent_id}").status_code
+from tests.parents import ANNA, create_parent, link
 
 
 def parents_on_profile(client: TestClient, child_id: int) -> list[dict[str, Any]]:
@@ -41,7 +23,7 @@ def test_siblings_share_one_parent_record_that_teachers_can_read(
     assert [link(admin, lena, anna), link(admin, max_, anna)] == [204, 204]
 
     for child_id in (lena, max_):
-        assert parents_on_profile(teacher, child_id) == [{"id": anna, **ANNA}]
+        assert parents_on_profile(teacher, child_id) == [{"id": anna, **ANNA, "mayPickUp": True}]
     parent = teacher.get(f"/api/parents/{anna}").json()
     assert parent["children"] == [
         {"id": lena, "firstName": "Lena", "lastName": "Müller"},
@@ -119,9 +101,10 @@ def test_linking_and_unlinking_are_logged_as_changes_of_the_child(admin: TestCli
     assert unlinked.status_code == 204
     assert parents_on_profile(admin, lena) == []
     assert admin.get(f"/api/parents/{anna}").json()["children"] == []
+    # Both times, the Parent also became, then stopped being, a Pick-up person.
     assert [entry for entry in audit_entries(admin) if entry[0] == "changed"] == [
-        ("changed", lena, ["parents"]),
-        ("changed", lena, ["parents"]),
+        ("changed", lena, ["parents", "pickUpPersons"]),
+        ("changed", lena, ["parents", "pickUpPersons"]),
     ]
 
 

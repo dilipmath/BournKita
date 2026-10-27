@@ -16,6 +16,14 @@ _Avoid_: Record, file, Akte
 A contact person recorded for one or more Children, with name, address and contact details; not someone who logs in. Siblings share one Parent record.
 _Avoid_: Guardian (unless the law requires the distinction), user, contact (for Parents)
 
+**Emergency contact**:
+Someone to call when something happens to a Child, recorded for that Child only.
+_Avoid_: Contact person (too broad), Notfallnummer (in code and docs)
+
+**Pick-up person**:
+Someone who may take a Child home. A Child's Parents are Pick-up persons unless an Admin says otherwise; others are recorded for that Child only.
+_Avoid_: Collector, Abholer (in code and docs), authorised person
+
 **Sibling**:
 A Child who shares at least one Parent with another Child of the Kita.
 _Avoid_: Brother/sister (as terms in code), family member

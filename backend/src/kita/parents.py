@@ -2,9 +2,10 @@
 logins. Addresses and contact details are stored encrypted."""
 
 from dataclasses import asdict, dataclass, fields
-from typing import Any
+from typing import Any, Literal
 
 from sqlalchemy import (
+    Boolean,
     Column,
     Connection,
     DateTime,
@@ -18,6 +19,7 @@ from sqlalchemy import (
     delete,
     insert,
     select,
+    true,
     update,
 )
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -47,6 +49,8 @@ child_parents = Table(
     metadata,
     Column("child_id", Integer, ForeignKey("children.id", ondelete="CASCADE"), primary_key=True),
     Column("parent_id", Integer, ForeignKey("parents.id", ondelete="CASCADE"), primary_key=True),
+    # Parents may pick up their Child unless an Admin says otherwise.
+    Column("may_pick_up", Boolean, nullable=False, server_default=true()),
 )
 
 # The longest value each field takes, before encryption.
@@ -75,6 +79,18 @@ class ParentWithChildren:
     parent: Parent
     # By first name.
     children: list[ChildSummary]
+
+
+@dataclass(frozen=True)
+class LinkedParent:
+    """A Parent as linked to one Child."""
+
+    parent: Parent
+    may_pick_up: bool
+
+
+# What linking changed: a new link, or only whether the Parent may pick up.
+LinkChange = Literal["linked", "pick_up_changed"]
 
 
 @dataclass(frozen=True)
@@ -171,15 +187,15 @@ class Parents:
                 self._parent(connection, parent_id), self._children(connection, parent_id)
             )
 
-    def of_child(self, child_id: int) -> list[Parent]:
+    def of_child(self, child_id: int) -> list[LinkedParent]:
         with transaction(self._engine) as connection:
             rows = connection.execute(
-                select(parents)
+                select(parents, child_parents.c.may_pick_up)
                 .join(child_parents, child_parents.c.parent_id == parents.c.id)
                 .where(child_parents.c.child_id == child_id)
                 .order_by(parents.c.last_name, parents.c.first_name, parents.c.id)
             ).all()
-        return [self._to_parent(row) for row in rows]
+        return [LinkedParent(self._to_parent(row), row.may_pick_up) for row in rows]
 
     def summaries(self, search: str = "") -> list[ParentSummary]:
         """All Parents by last name; `search` keeps those whose name contains it."""
@@ -198,28 +214,48 @@ class Parents:
             rows = connection.execute(query).all()
         return [ParentSummary(**row._asdict()) for row in rows]
 
-    def link(self, child_id: int, parent_id: int) -> bool:
-        """Links the Parent to the Child; False if they already were."""
+    def link(
+        self, child_id: int, parent_id: int, may_pick_up: bool | None = None
+    ) -> LinkChange | None:
+        """Links the Parent to the Child, or changes whether they may pick up; None if it was
+        already so. Without `may_pick_up`, a new link may pick up and an existing one keeps
+        what it had."""
+        link_of = (child_parents.c.child_id == child_id, child_parents.c.parent_id == parent_id)
         with transaction(self._engine) as connection:
             self._ensure_exists(connection, child_id, parent_id)
             linked = connection.scalar(
                 pg_insert(child_parents)
-                .values(child_id=child_id, parent_id=parent_id)
+                .values(
+                    child_id=child_id,
+                    parent_id=parent_id,
+                    may_pick_up=True if may_pick_up is None else may_pick_up,
+                )
                 .on_conflict_do_nothing()
                 .returning(child_parents.c.child_id)
             )
-        return linked is not None
+            if linked is not None:
+                return "linked"
+            if may_pick_up is None:
+                return None
+            changed = connection.scalar(
+                update(child_parents)
+                .where(*link_of, child_parents.c.may_pick_up != may_pick_up)
+                .values(may_pick_up=may_pick_up)
+                .returning(child_parents.c.child_id)
+            )
+        return "pick_up_changed" if changed is not None else None
 
-    def unlink(self, child_id: int, parent_id: int) -> bool:
-        """Removes the link; the Parent's record stays. False if there was no link."""
+    def unlink(self, child_id: int, parent_id: int) -> bool | None:
+        """Removes the link; the Parent's record stays. Returns whether the Parent could pick
+        the Child up, or None if there was no link."""
         with transaction(self._engine) as connection:
             self._ensure_exists(connection, child_id, parent_id)
-            unlinked = connection.execute(
-                delete(child_parents).where(
-                    child_parents.c.child_id == child_id, child_parents.c.parent_id == parent_id
-                )
+            may_pick_up: bool | None = connection.scalar(
+                delete(child_parents)
+                .where(child_parents.c.child_id == child_id, child_parents.c.parent_id == parent_id)
+                .returning(child_parents.c.may_pick_up)
             )
-        return unlinked.rowcount == 1
+        return may_pick_up
 
     def _stored(self, details: ParentDetails, parent_id: int) -> dict[str, str]:
         values = asdict(details)

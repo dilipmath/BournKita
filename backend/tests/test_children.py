@@ -3,7 +3,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from tests.children import LENA, create_child
+from tests.children import LENA, create_child, own_fields
 
 
 def test_an_admin_creates_a_child_profile_and_reads_it_back(admin: TestClient) -> None:
@@ -12,8 +12,7 @@ def test_an_admin_creates_a_child_profile_and_reads_it_back(admin: TestClient) -
     assert response.status_code == 201
     child_id = response.json()["id"]
     assert response.json() == {"id": child_id, **LENA}
-    # The profile page also lists the parents (see test_parents).
-    assert admin.get(f"/api/children/{child_id}").json() == {"id": child_id, **LENA, "parents": []}
+    assert own_fields(admin.get(f"/api/children/{child_id}").json()) == {"id": child_id, **LENA}
 
 
 def test_a_teacher_views_a_child_profile_but_cannot_create_one(
@@ -24,7 +23,7 @@ def test_a_teacher_views_a_child_profile_but_cannot_create_one(
     viewed = teacher.get(f"/api/children/{child_id}")
     created = teacher.post("/api/children", json=LENA)
 
-    assert viewed.json() == {"id": child_id, **LENA, "parents": []}
+    assert own_fields(viewed.json()) == {"id": child_id, **LENA}
     assert created.status_code == 403
     assert created.json() == {"detail": "admins_only"}
 
@@ -44,11 +43,7 @@ def test_an_admin_edits_a_child_profile(admin: TestClient) -> None:
     response = admin.put(f"/api/children/{child_id}", json=changed)
 
     assert response.status_code == 200
-    assert admin.get(f"/api/children/{child_id}").json() == {
-        "id": child_id,
-        **changed,
-        "parents": [],
-    }
+    assert own_fields(admin.get(f"/api/children/{child_id}").json()) == {"id": child_id, **changed}
 
 
 def test_a_teacher_cannot_edit_a_child_profile(admin: TestClient, teacher: TestClient) -> None:
