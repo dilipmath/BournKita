@@ -37,6 +37,10 @@ const refusals = {
   not_found: 'notFound',
   name_required: 'nameRequired',
   too_long: 'tooLong',
+  already_given: 'alreadyGiven',
+  not_given: 'notGiven',
+  in_future: 'inFuture',
+  out_of_order: 'outOfOrder',
 } as const
 
 export type Refusal = (typeof refusals)[keyof typeof refusals]
@@ -164,6 +168,7 @@ export type ChildProfile = Child & {
   parents: LinkedParent[]
   emergencyContacts: Contact[]
   pickUpPersons: Contact[]
+  consents: Consents
 }
 
 /** A Child profile, or null when none has this ID (e.g. it was deleted). */
@@ -303,3 +308,24 @@ export async function removeContact(childId: number, contactId: number): Promise
   return true
 }
 
+// What a Child's Parents allowed. Each period was given on a date (YYYY-MM-DD) and maybe
+// withdrawn on a later one.
+export type ConsentType = 'photo' | 'excursion' | 'dataProtection'
+export type ConsentPeriod = { givenOn: string; withdrawnOn: string | null }
+// Every period of each Consent, oldest first; the last one is the current status.
+export type Consents = Record<ConsentType, ConsentPeriod[]>
+export type ConsentChange = 'given' | 'withdrawn'
+
+/** Records that a Consent was given or withdrawn on a date. Admins only. Resolves to true once
+ * recorded. */
+export async function recordConsent(
+  childId: number,
+  consent: ConsentType,
+  change: ConsentChange,
+  on: string,
+): Promise<true | Refusal> {
+  const body = change === 'given' ? { givenOn: on } : { withdrawnOn: on }
+  const response = await sendJson(`/api/children/${childId}/consents/${consent}/${change}`, 'POST', body)
+  if (!response.ok) return refusalOf(response, 'Recording the Consent')
+  return true
+}

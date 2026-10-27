@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import App from './App'
-import { fakeApi, health, renderAt, sessionAs } from './testing'
+import { fakeApi, health, noProfileLists, renderAt, sessionAs } from './testing'
 
 const lena = { id: 7, firstName: 'Lena', lastName: 'Müller', gender: null, languages: '', foodPreferences: '', interests: '' }
 const anna = { id: 3, firstName: 'Anna', lastName: 'Müller', address: '', phone: '+49 30 1234567', email: '', mayPickUp: true }
@@ -13,7 +13,7 @@ const tom = { id: 12, name: 'Tom Weber', relationship: 'Neighbour', phone: '0171
 type Profile = { parents: unknown[]; emergencyContacts: unknown[]; pickUpPersons: unknown[] }
 
 function profile(parts: Partial<Profile> = {}) {
-  return { status: 200, body: { ...lena, parents: [], emergencyContacts: [], pickUpPersons: [], ...parts } }
+  return { status: 200, body: { ...lena, ...noProfileLists, ...parts } }
 }
 
 describe('Emergency contacts and Pick-up persons', () => {

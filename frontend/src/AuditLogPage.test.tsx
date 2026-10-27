@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import App from './App'
-import { fakeApi, health, renderAt, sessionAs } from './testing'
+import { fakeApi, health, noProfileLists, renderAt, sessionAs } from './testing'
 
 const changed = {
   id: 3,
@@ -12,7 +12,7 @@ const changed = {
   action: 'changed',
   childId: 7,
   childName: 'Lena Müller',
-  changedFields: ['foodPreferences', 'languages', 'pickUpPersons'],
+  changedFields: ['foodPreferences', 'languages', 'pickUpPersons', 'photoConsent'],
 }
 const deleted = {
   id: 2,
@@ -38,7 +38,7 @@ describe('audit log', () => {
     const changeRow = await screen.findByRole('row', { name: /Changed/ })
     expect(changeRow).toHaveTextContent('leitung@kita.example')
     expect(within(changeRow).getByRole('link', { name: 'Lena Müller' })).toHaveAttribute('href', '/children/7')
-    expect(changeRow).toHaveTextContent('Food preferences, Languages spoken, Pick-up persons')
+    expect(changeRow).toHaveTextContent('Food preferences, Languages spoken, Pick-up persons, Photo consent')
     expect(screen.getByRole('row', { name: /Deleted/ })).toHaveTextContent('Deleted Child (no. 5)')
   })
 
@@ -71,7 +71,7 @@ describe('audit log', () => {
       'GET /api/session': sessionAs('admin'),
       'GET /api/children/7': {
         status: 200,
-        body: { id: 7, firstName: 'Lena', lastName: 'Müller', gender: null, languages: '', foodPreferences: '', interests: '', parents: [], emergencyContacts: [], pickUpPersons: [] },
+        body: { id: 7, firstName: 'Lena', lastName: 'Müller', gender: null, languages: '', foodPreferences: '', interests: '', ...noProfileLists },
       },
       'GET /api/audit-log?childId=7&limit=50': { status: 200, body: [changed] },
     })

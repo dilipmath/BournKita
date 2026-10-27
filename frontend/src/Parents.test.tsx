@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import App from './App'
-import { fakeApi, health, renderAt, sessionAs } from './testing'
+import { fakeApi, health, noProfileLists, renderAt, sessionAs } from './testing'
 
 const anna = {
   id: 3,
@@ -24,7 +24,7 @@ const lena = {
 }
 
 function profile(parents: unknown[]) {
-  return { status: 200, body: { ...lena, parents, emergencyContacts: [], pickUpPersons: [] } }
+  return { status: 200, body: { ...lena, ...noProfileLists, parents } }
 }
 
 describe('Parents', () => {

@@ -517,6 +517,55 @@ button.danger {
   font-weight: 600;
 }
 
+/* Consents on a Child profile. */
+.consents {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  align-self: stretch;
+}
+
+.consents h3 {
+  margin: 0;
+}
+
+.consents ul {
+  align-self: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.consent {
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.consent p {
+  margin: 0 0 8px;
+}
+
+.consent .history {
+  font-size: 0.9em;
+}
+
+.consent-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.consent-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
 .checkbox {
   display: flex;
   align-items: center;

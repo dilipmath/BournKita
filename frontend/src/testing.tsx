@@ -38,3 +38,11 @@ export const health = { status: 200, body: { status: 'ok', database: 'ok', time:
 export function sessionAs(role: 'admin' | 'teacher') {
   return { status: 200, body: { email: `${role}@kita.example`, role, inactivityTimeoutMinutes: 30 } }
 }
+
+// The lists a Child profile carries besides the Child's own fields, all empty.
+export const noProfileLists = {
+  parents: [],
+  emergencyContacts: [],
+  pickUpPersons: [],
+  consents: { photo: [], excursion: [], dataProtection: [] },
+}

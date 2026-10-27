@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { deleteChild, fetchChild, genderLabel } from './api'
 import ChildForm from './ChildForm'
+import ConsentsSection from './ConsentsSection'
 import ContactsSection from './ContactsSection'
 import ParentsSection from './ParentsSection'
 import ProblemAlert from './ProblemAlert'
@@ -63,6 +64,7 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
       />
       <ContactsSection kind="emergency" childId={child.id} contacts={child.emergencyContacts} canEdit={canEdit} reload={reload} />
       <ParentsSection child={child} canEdit={canEdit} reload={reload} />
+      <ConsentsSection childId={child.id} consents={child.consents} canEdit={canEdit} reload={reload} />
       <ProblemAlert problem={problem} />
       {canEdit &&
         (confirming ? (

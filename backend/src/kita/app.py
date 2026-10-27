@@ -14,6 +14,7 @@ from kita.audit_api import audit_router, audited_route
 from kita.children import Children
 from kita.children_api import children_router
 from kita.clock import Clock, SystemClock
+from kita.consents import Consents
 from kita.contacts import Contacts
 from kita.crash import (
     CrashReportingMailer,
@@ -79,7 +80,10 @@ def create_app(
     audited_route_class = audited_route(audit, engine)
     parents = Parents(engine, clock, cipher)
     contacts = Contacts(engine, cipher)
-    app.include_router(children_router(identity, children, parents, contacts, audited_route_class))
+    consents = Consents(engine, clock)
+    app.include_router(
+        children_router(identity, children, parents, contacts, consents, audited_route_class)
+    )
     app.include_router(parents_router(identity, parents, audited_route_class))
     app.include_router(audit_router(identity, audit, children))
 

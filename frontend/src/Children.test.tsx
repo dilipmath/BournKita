@@ -3,7 +3,7 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import App from './App'
-import { fakeApi, health, renderAt, sessionAs } from './testing'
+import { fakeApi, health, noProfileLists, renderAt, sessionAs } from './testing'
 
 const lena = {
   id: 7,
@@ -41,7 +41,7 @@ describe('child profiles', () => {
       'GET /api/session': sessionAs('admin'),
       'GET /api/children?search=': { status: 200, body: [] },
       'POST /api/children': { status: 201, body: lena },
-      'GET /api/children/7': { status: 200, body: { ...lena, parents: [], emergencyContacts: [], pickUpPersons: [] } },
+      'GET /api/children/7': { status: 200, body: { ...lena, ...noProfileLists } },
     })
     renderAt('/children', <App />)
 
@@ -66,7 +66,7 @@ describe('child profiles', () => {
     const calls = fakeApi({
       'GET /api/health': health,
       'GET /api/session': sessionAs('admin'),
-      'GET /api/children/7': () => ({ status: 200, body: { ...stored, parents: [], emergencyContacts: [], pickUpPersons: [] } }),
+      'GET /api/children/7': () => ({ status: 200, body: { ...stored, ...noProfileLists } }),
       'PUT /api/children/7': (body) => {
         stored = { id: 7, ...(body as object) }
         return { status: 200, body: stored }
@@ -93,7 +93,7 @@ describe('child profiles', () => {
     const calls = fakeApi({
       'GET /api/health': health,
       'GET /api/session': sessionAs('admin'),
-      'GET /api/children/7': { status: 200, body: { ...lena, parents: [], emergencyContacts: [], pickUpPersons: [] } },
+      'GET /api/children/7': { status: 200, body: { ...lena, ...noProfileLists } },
       'DELETE /api/children/7': { status: 204 },
       'GET /api/children?search=': { status: 200, body: [mia] },
     })
@@ -115,7 +115,7 @@ describe('child profiles', () => {
     fakeApi({
       'GET /api/health': health,
       'GET /api/session': sessionAs('teacher'),
-      'GET /api/children/7': { status: 200, body: { ...lena, parents: [], emergencyContacts: [], pickUpPersons: [] } },
+      'GET /api/children/7': { status: 200, body: { ...lena, ...noProfileLists } },
     })
     renderAt('/children/7', <App />)
 
@@ -156,7 +156,7 @@ describe('child profiles', () => {
     fakeApi({
       'GET /api/health': health,
       'GET /api/session': sessionAs('admin'),
-      'GET /api/children/7': { status: 200, body: { ...lena, parents: [], emergencyContacts: [], pickUpPersons: [] } },
+      'GET /api/children/7': { status: 200, body: { ...lena, ...noProfileLists } },
     })
     renderAt('/children/7', <App />)
 

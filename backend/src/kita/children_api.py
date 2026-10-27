@@ -1,6 +1,7 @@
 """HTTP API for Child profiles: every Staff member may read them, only Admins may change them."""
 
 from dataclasses import asdict
+from datetime import date
 
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.routing import APIRoute
@@ -17,6 +18,15 @@ from kita.children import (
     Gender,
     NameRequired,
     TooLong,
+)
+from kita.consents import (
+    AlreadyGiven,
+    ConsentPeriod,
+    Consents,
+    ConsentType,
+    InFuture,
+    NotGiven,
+    OutOfOrder,
 )
 from kita.contacts import Contact, ContactDetails, ContactKind, ContactNotFound, Contacts
 from kita.identity import Identity
@@ -101,12 +111,65 @@ class ContactOut(BaseModel):
         return cls.model_validate(contact)
 
 
+class ConsentPeriodOut(BaseModel):
+    model_config = CAMEL_CASE
+
+    given_on: date
+    withdrawn_on: date | None
+
+    @classmethod
+    def of(cls, period: ConsentPeriod) -> "ConsentPeriodOut":
+        return cls.model_validate(period)
+
+
+class ConsentsOut(BaseModel):
+    """Every period of each Consent, oldest first; the last one is the current status."""
+
+    model_config = CAMEL_CASE
+
+    photo: list[ConsentPeriodOut]
+    excursion: list[ConsentPeriodOut]
+    data_protection: list[ConsentPeriodOut]
+
+    @classmethod
+    def of(cls, periods: dict[ConsentType, list[ConsentPeriod]]) -> "ConsentsOut":
+        def of_consent(consent: ConsentType) -> list[ConsentPeriodOut]:
+            return [ConsentPeriodOut.of(period) for period in periods[consent]]
+
+        return cls(
+            photo=of_consent("photo"),
+            excursion=of_consent("excursion"),
+            data_protection=of_consent("dataProtection"),
+        )
+
+
+class ConsentGivenIn(BaseModel):
+    model_config = CAMEL_CASE
+
+    given_on: date
+
+
+class ConsentWithdrawnIn(BaseModel):
+    model_config = CAMEL_CASE
+
+    withdrawn_on: date
+
+
 class ChildProfileOut(ChildOut):
     """The whole profile, as its page shows it."""
 
     parents: list[LinkedParentOut]
     emergency_contacts: list[ContactOut]
     pick_up_persons: list[ContactOut]
+    consents: ConsentsOut
+
+
+# The profile field naming each Consent in the audit log.
+_CONSENT_FIELDS: dict[ConsentType, str] = {
+    "photo": "photo_consent",
+    "excursion": "excursion_consent",
+    "dataProtection": "data_protection_consent",
+}
 
 
 # The profile field each kind of contact is listed in, naming it in the audit log.
@@ -122,6 +185,10 @@ _REFUSALS: Refusals = {
     TooLong: (status.HTTP_422_UNPROCESSABLE_CONTENT, "too_long"),
     ParentNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
     ContactNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
+    AlreadyGiven: (status.HTTP_409_CONFLICT, "already_given"),
+    NotGiven: (status.HTTP_409_CONFLICT, "not_given"),
+    InFuture: (status.HTTP_422_UNPROCESSABLE_CONTENT, "in_future"),
+    OutOfOrder: (status.HTTP_422_UNPROCESSABLE_CONTENT, "out_of_order"),
 }
 
 
@@ -130,6 +197,7 @@ def children_router(
     children: Children,
     parents: Parents,
     contacts: Contacts,
+    consents: Consents,
     audited_route_class: type[APIRoute],
 ) -> APIRouter:
     """`audited_route_class` comes from audited_route."""
@@ -166,6 +234,7 @@ def children_router(
             parents=[LinkedParentOut.of_link(linked) for linked in parents.of_child(child_id)],
             emergency_contacts=of_kind("emergency"),
             pick_up_persons=of_kind("pickUp"),
+            consents=ConsentsOut.of(consents.of_child(child_id)),
         )
 
     @router.put("/{child_id}", dependencies=admin_only)
@@ -223,6 +292,30 @@ def children_router(
         with refusals_as_http_errors(_REFUSALS):
             kind = contacts.remove(child_id, contact_id)
         note_changed_fields(request, [_CONTACT_FIELDS[kind]])
+
+    @router.post(
+        "/{child_id}/consents/{consent}/given",
+        status_code=status.HTTP_204_NO_CONTENT,
+        dependencies=admin_only,
+    )
+    def give_consent(
+        child_id: int, consent: ConsentType, given: ConsentGivenIn, request: Request
+    ) -> None:
+        with refusals_as_http_errors(_REFUSALS):
+            consents.give(child_id, consent, given.given_on)
+        note_changed_fields(request, [_CONSENT_FIELDS[consent]])
+
+    @router.post(
+        "/{child_id}/consents/{consent}/withdrawn",
+        status_code=status.HTTP_204_NO_CONTENT,
+        dependencies=admin_only,
+    )
+    def withdraw_consent(
+        child_id: int, consent: ConsentType, withdrawn: ConsentWithdrawnIn, request: Request
+    ) -> None:
+        with refusals_as_http_errors(_REFUSALS):
+            consents.withdraw(child_id, consent, withdrawn.withdrawn_on)
+        note_changed_fields(request, [_CONSENT_FIELDS[consent]])
 
     @router.delete(
         "/{child_id}/parents/{parent_id}",

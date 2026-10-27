@@ -10,6 +10,7 @@ import {
   type AuditFilter,
   type Refusal,
 } from './api'
+import { localDate } from './dates'
 
 const actionLabel = {
   viewed: 'actionViewed',
@@ -20,8 +21,7 @@ const actionLabel = {
 
 /** Midnight at the start of a day picked in a date field, in the tablet's time zone. */
 function startOfDay(date: string, plusDays = 0): string {
-  const [year, month, day] = date.split('-').map(Number)
-  return new Date(year, month - 1, day + plusDays).toISOString()
+  return localDate(date, plusDays).toISOString()
 }
 
 /** The Admin-only audit log: who viewed or changed which Child's data, newest first. */

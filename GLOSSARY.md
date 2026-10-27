@@ -24,6 +24,10 @@ _Avoid_: Contact person (too broad), Notfallnummer (in code and docs)
 Someone who may take a Child home. A Child's Parents are Pick-up persons unless an Admin says otherwise; others are recorded for that Child only.
 _Avoid_: Collector, Abholer (in code and docs), authorised person
 
+**Consent**:
+A Parent's permission for one thing concerning a Child: photos, excursions or data protection. Given on a date and possibly withdrawn on a later one; it can be given again, and every period stays on record. A Child has a Consent only while it is given and not withdrawn.
+_Avoid_: Permission, approval, Einwilligung (in code and docs)
+
 **Sibling**:
 A Child who shares at least one Parent with another Child of the Kita.
 _Avoid_: Brother/sister (as terms in code), family member
