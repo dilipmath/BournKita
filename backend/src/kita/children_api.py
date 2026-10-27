@@ -1,14 +1,20 @@
 """HTTP API for Child profiles: every Staff member may read them, only Admins may change them."""
 
 from dataclasses import asdict
-from datetime import date
+from datetime import date, datetime
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, UploadFile, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
 from kita.api_support import CAMEL_CASE, Refusals, refusals_as_http_errors
-from kita.audit_api import creates_child, not_about_one_child, note_changed_fields
+from kita.audit_api import (
+    creates_child,
+    not_about_one_child,
+    note_changed_fields,
+    part_of_logged_view,
+)
 from kita.children import (
     ChildDetails,
     ChildNotFound,
@@ -33,6 +39,8 @@ from kita.identity import Identity
 from kita.identity_api import role_dependency, staff_member_dependency
 from kita.parents import LinkedParent, ParentNotFound, Parents
 from kita.parents_api import ParentOut
+from kita.photos import ContactPhoto, NoPhotoConsent, Photo, Photos, PhotoSize
+from kita.photos_api import PHOTO_REFUSALS, photo_response, read_upload
 
 
 class ChildSummaryOut(BaseModel):
@@ -71,10 +79,13 @@ class ChildOut(ChildIn):
 
 class LinkedParentOut(ParentOut):
     may_pick_up: bool
+    # Their photo, if any, is at /api/parents/{id}/photo/thumbnail and …/full; the ID changes
+    # when the photo does.
+    photo_id: int | None
 
     @classmethod
-    def of_link(cls, linked: LinkedParent) -> "LinkedParentOut":
-        return cls(**asdict(linked.parent), may_pick_up=linked.may_pick_up)
+    def of_link(cls, linked: LinkedParent, photo_id: int | None) -> "LinkedParentOut":
+        return cls(**asdict(linked.parent), may_pick_up=linked.may_pick_up, photo_id=photo_id)
 
 
 class ParentLinkIn(BaseModel):
@@ -105,10 +116,13 @@ class ContactOut(BaseModel):
     relationship: str
     phone: str
     note: str
+    # Their photo, if any, is at …/contacts/{id}/photo/thumbnail and …/full; the ID changes
+    # when the photo does.
+    photo_id: int | None
 
     @classmethod
-    def of(cls, contact: Contact) -> "ContactOut":
-        return cls.model_validate(contact)
+    def of(cls, contact: Contact, photo_id: int | None) -> "ContactOut":
+        return cls(**asdict(contact) | {"photo_id": photo_id})
 
 
 class ConsentPeriodOut(BaseModel):
@@ -155,6 +169,19 @@ class ConsentWithdrawnIn(BaseModel):
     withdrawn_on: date
 
 
+class PhotoOut(BaseModel):
+    """A photo; its files are at …/photos/{id}/thumbnail and …/full."""
+
+    model_config = CAMEL_CASE
+
+    id: int
+    uploaded_at: datetime
+
+    @classmethod
+    def of(cls, photo: Photo) -> "PhotoOut":
+        return cls.model_validate(photo)
+
+
 class ChildProfileOut(ChildOut):
     """The whole profile, as its page shows it."""
 
@@ -162,6 +189,7 @@ class ChildProfileOut(ChildOut):
     emergency_contacts: list[ContactOut]
     pick_up_persons: list[ContactOut]
     consents: ConsentsOut
+    photos: list[PhotoOut]
 
 
 # The profile field naming each Consent in the audit log.
@@ -185,6 +213,8 @@ _REFUSALS: Refusals = {
     TooLong: (status.HTTP_422_UNPROCESSABLE_CONTENT, "too_long"),
     ParentNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
     ContactNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
+    NoPhotoConsent: (status.HTTP_409_CONFLICT, "no_photo_consent"),
+    **PHOTO_REFUSALS,
     AlreadyGiven: (status.HTTP_409_CONFLICT, "already_given"),
     NotGiven: (status.HTTP_409_CONFLICT, "not_given"),
     InFuture: (status.HTTP_422_UNPROCESSABLE_CONTENT, "in_future"),
@@ -198,6 +228,7 @@ def children_router(
     parents: Parents,
     contacts: Contacts,
     consents: Consents,
+    photos: Photos,
     audited_route_class: type[APIRoute],
 ) -> APIRouter:
     """`audited_route_class` comes from audited_route."""
@@ -225,16 +256,27 @@ def children_router(
         with refusals_as_http_errors(_REFUSALS):
             profile = ChildOut.of(children.profile(child_id))
         its_contacts = contacts.of_child(child_id)
+        its_parents = parents.of_child(child_id)
+        contact_photos = photos.photos_of_contacts([contact.id for contact in its_contacts])
+        parent_photos = photos.photos_of_parents([linked.parent.id for linked in its_parents])
 
         def of_kind(kind: ContactKind) -> list[ContactOut]:
-            return [ContactOut.of(contact) for contact in its_contacts if contact.kind == kind]
+            return [
+                ContactOut.of(contact, contact_photos.get(contact.id))
+                for contact in its_contacts
+                if contact.kind == kind
+            ]
 
         return ChildProfileOut(
             **profile.model_dump(by_alias=False),
-            parents=[LinkedParentOut.of_link(linked) for linked in parents.of_child(child_id)],
+            parents=[
+                LinkedParentOut.of_link(linked, parent_photos.get(linked.parent.id))
+                for linked in its_parents
+            ],
             emergency_contacts=of_kind("emergency"),
             pick_up_persons=of_kind("pickUp"),
             consents=ConsentsOut.of(consents.of_child(child_id)),
+            photos=[PhotoOut.of(photo) for photo in photos.of_child(child_id)],
         )
 
     @router.put("/{child_id}", dependencies=admin_only)
@@ -270,7 +312,7 @@ def children_router(
         with refusals_as_http_errors(_REFUSALS):
             added = contacts.add(child_id, contact.details())
         note_changed_fields(request, [_CONTACT_FIELDS[added.kind]])
-        return ContactOut.of(added)
+        return ContactOut.of(added, None)
 
     @router.put("/{child_id}/contacts/{contact_id}", dependencies=admin_only)
     def update_contact(
@@ -281,17 +323,66 @@ def children_router(
         # Moved to the other list, it changed both.
         kinds = {updated.previous_kind, updated.contact.kind} if updated.changed else set()
         note_changed_fields(request, sorted(_CONTACT_FIELDS[kind] for kind in kinds))
-        return ContactOut.of(updated.contact)
+        photo_ids = photos.photos_of_contacts([contact_id])
+        return ContactOut.of(updated.contact, photo_ids.get(contact_id))
 
     @router.delete(
         "/{child_id}/contacts/{contact_id}",
         status_code=status.HTTP_204_NO_CONTENT,
         dependencies=admin_only,
     )
-    def remove_contact(child_id: int, contact_id: int, request: Request) -> None:
+    def remove_contact(
+        child_id: int, contact_id: int, request: Request, background: BackgroundTasks
+    ) -> None:
+        leftovers = photos.leftovers_of_contact(child_id, contact_id)
         with refusals_as_http_errors(_REFUSALS):
             kind = contacts.remove(child_id, contact_id)
         note_changed_fields(request, [_CONTACT_FIELDS[kind]])
+        background.add_task(photos.delete_files, leftovers)
+
+    @router.put(
+        "/{child_id}/contacts/{contact_id}/photo",
+        status_code=status.HTTP_204_NO_CONTENT,
+        dependencies=admin_only,
+    )
+    async def set_contact_photo(
+        child_id: int,
+        contact_id: int,
+        photo: UploadFile,
+        request: Request,
+        background: BackgroundTasks,
+    ) -> None:
+        data = await read_upload(photo)
+        with refusals_as_http_errors(_REFUSALS):
+            replaced = await run_in_threadpool(
+                photos.set_pick_up_photo, ContactPhoto(child_id, contact_id), data
+            )
+            kind = await run_in_threadpool(contacts.kind_of, child_id, contact_id)
+        note_changed_fields(request, [_CONTACT_FIELDS[kind]])
+        background.add_task(photos.delete_files, replaced)
+
+    @router.get("/{child_id}/contacts/{contact_id}/photo/{size}")
+    @part_of_logged_view
+    def contact_photo_file(
+        child_id: int, contact_id: int, size: PhotoSize, request: Request
+    ) -> Response:
+        with refusals_as_http_errors(_REFUSALS):
+            data = photos.pick_up_photo_file(ContactPhoto(child_id, contact_id), size)
+        return photo_response(data, request)
+
+    @router.delete(
+        "/{child_id}/contacts/{contact_id}/photo",
+        status_code=status.HTTP_204_NO_CONTENT,
+        dependencies=admin_only,
+    )
+    def remove_contact_photo(
+        child_id: int, contact_id: int, request: Request, background: BackgroundTasks
+    ) -> None:
+        with refusals_as_http_errors(_REFUSALS):
+            removed = photos.remove_pick_up_photo(ContactPhoto(child_id, contact_id))
+            kind = contacts.kind_of(child_id, contact_id)
+        note_changed_fields(request, [_CONTACT_FIELDS[kind]])
+        background.add_task(photos.delete_files, removed)
 
     @router.post(
         "/{child_id}/consents/{consent}/given",
@@ -317,6 +408,34 @@ def children_router(
             consents.withdraw(child_id, consent, withdrawn.withdrawn_on)
         note_changed_fields(request, [_CONSENT_FIELDS[consent]])
 
+    @router.post("/{child_id}/photos", status_code=status.HTTP_201_CREATED, dependencies=admin_only)
+    async def add_photo(child_id: int, photo: UploadFile, request: Request) -> PhotoOut:
+        data = await read_upload(photo)
+        with refusals_as_http_errors(_REFUSALS):
+            added = await run_in_threadpool(photos.add, child_id, data)
+        note_changed_fields(request, ["photos"])
+        return PhotoOut.of(added)
+
+    @router.get("/{child_id}/photos/{photo_id}/{size}")
+    @part_of_logged_view
+    def photo_file(child_id: int, photo_id: int, size: PhotoSize, request: Request) -> Response:
+        with refusals_as_http_errors(_REFUSALS):
+            data = photos.file(child_id, photo_id, size)
+        return photo_response(data, request)
+
+    @router.delete(
+        "/{child_id}/photos/{photo_id}",
+        status_code=status.HTTP_204_NO_CONTENT,
+        dependencies=admin_only,
+    )
+    def remove_photo(
+        child_id: int, photo_id: int, request: Request, background: BackgroundTasks
+    ) -> None:
+        with refusals_as_http_errors(_REFUSALS):
+            leftovers = photos.remove(child_id, photo_id)
+        note_changed_fields(request, ["photos"])
+        background.add_task(photos.delete_files, leftovers)
+
     @router.delete(
         "/{child_id}/parents/{parent_id}",
         status_code=status.HTTP_204_NO_CONTENT,
@@ -333,8 +452,10 @@ def children_router(
             )
 
     @router.delete("/{child_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=admin_only)
-    def delete_child(child_id: int) -> None:
+    def delete_child(child_id: int, background: BackgroundTasks) -> None:
+        leftovers = photos.leftovers_of_child(child_id)
         with refusals_as_http_errors(_REFUSALS):
             children.delete(child_id)
+        background.add_task(photos.delete_files, leftovers)
 
     return router

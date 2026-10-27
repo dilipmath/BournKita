@@ -3,7 +3,8 @@ a Parent to a Child is on the Child's address (see children_api)."""
 
 from dataclasses import asdict
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, UploadFile, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
@@ -13,11 +14,14 @@ from kita.audit_api import (
     not_about_one_child,
     note_changed_fields,
     note_children,
+    part_of_logged_view,
 )
 from kita.children import ChildSummary, NameRequired, TooLong
 from kita.identity import Identity
 from kita.identity_api import role_dependency, staff_member_dependency
 from kita.parents import Parent, ParentDetails, ParentNotFound, Parents, ParentSummary
+from kita.photos import ParentPhoto, Photos, PhotoSize
+from kita.photos_api import PHOTO_REFUSALS, photo_response, read_upload
 
 
 class ParentIn(BaseModel):
@@ -75,11 +79,12 @@ _REFUSALS: Refusals = {
     ParentNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
     NameRequired: (status.HTTP_422_UNPROCESSABLE_CONTENT, "name_required"),
     TooLong: (status.HTTP_422_UNPROCESSABLE_CONTENT, "too_long"),
+    **PHOTO_REFUSALS,
 }
 
 
 def parents_router(
-    identity: Identity, parents: Parents, audited_route_class: type[APIRoute]
+    identity: Identity, parents: Parents, photos: Photos, audited_route_class: type[APIRoute]
 ) -> APIRouter:
     """`audited_route_class` comes from audited_route: a Parent's data is their Children's."""
     router = APIRouter(
@@ -120,5 +125,41 @@ def parents_router(
         # Named after the parent, e.g. parentAddress, to tell them from the Child's own fields.
         note_changed_fields(request, [f"parent_{field}" for field in updated.changed_fields])
         return ParentOut.of(updated.parent)
+
+    @router.put(
+        "/{parent_id}/photo", status_code=status.HTTP_204_NO_CONTENT, dependencies=admin_only
+    )
+    @about_noted_children
+    async def set_parent_photo(
+        parent_id: int, photo: UploadFile, request: Request, background: BackgroundTasks
+    ) -> None:
+        data = await read_upload(photo)
+        with refusals_as_http_errors(_REFUSALS):
+            replaced = await run_in_threadpool(
+                photos.set_pick_up_photo, ParentPhoto(parent_id), data
+            )
+            found = await run_in_threadpool(parents.parent, parent_id)
+        note_children(request, [child.id for child in found.children])
+        note_changed_fields(request, ["parent_photo"])
+        background.add_task(photos.delete_files, replaced)
+
+    @router.get("/{parent_id}/photo/{size}")
+    @part_of_logged_view
+    def parent_photo_file(parent_id: int, size: PhotoSize, request: Request) -> Response:
+        with refusals_as_http_errors(_REFUSALS):
+            data = photos.pick_up_photo_file(ParentPhoto(parent_id), size)
+        return photo_response(data, request)
+
+    @router.delete(
+        "/{parent_id}/photo", status_code=status.HTTP_204_NO_CONTENT, dependencies=admin_only
+    )
+    @about_noted_children
+    def remove_parent_photo(parent_id: int, request: Request, background: BackgroundTasks) -> None:
+        with refusals_as_http_errors(_REFUSALS):
+            removed = photos.remove_pick_up_photo(ParentPhoto(parent_id))
+            found = parents.parent(parent_id)
+        note_children(request, [child.id for child in found.children])
+        note_changed_fields(request, ["parent_photo"])
+        background.add_task(photos.delete_files, removed)
 
     return router

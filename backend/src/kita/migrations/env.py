@@ -1,7 +1,16 @@
 from alembic import context
 from sqlalchemy import create_engine
 
-from kita import audit, children, consents, contacts, identity, parents  # noqa: F401  (register their tables on the metadata)
+# The modules register their tables on the metadata.
+from kita import (  # noqa: F401
+    audit,
+    children,
+    consents,
+    contacts,
+    identity,
+    parents,
+    photos,
+)
 from kita.db import metadata
 from kita.settings import Settings
 

@@ -6,7 +6,8 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-install-project
 COPY src ./src
 RUN uv sync --frozen
-RUN useradd --system --no-create-home kita
+RUN useradd --system --no-create-home kita \
+    && mkdir -p /data/photos && chown kita /data/photos
 USER kita
 ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000

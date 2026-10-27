@@ -87,6 +87,17 @@ class Consents:
             periods[row.consent].append(ConsentPeriod(row.given_on, row.withdrawn_on))
         return periods
 
+    def is_given(self, child_id: int, consent: ConsentType) -> bool:
+        """Whether the Child has the Consent now: given, and not withdrawn since."""
+        with transaction(self._engine) as connection:
+            withdrawn_on = connection.execute(
+                select(child_consents.c.withdrawn_on)
+                .where(child_consents.c.child_id == child_id, child_consents.c.consent == consent)
+                .order_by(child_consents.c.given_on.desc(), child_consents.c.id.desc())
+                .limit(1)
+            ).one_or_none()
+        return withdrawn_on is not None and withdrawn_on[0] is None
+
     def give(self, child_id: int, consent: ConsentType, on: date) -> None:
         self._check_not_in_future(on)
         with transaction(self._engine) as connection:

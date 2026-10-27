@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { addContact, removeContact, updateContact, type Contact, type ContactKind, type LinkedParent } from './api'
 import ContactForm from './ContactForm'
+import PickUpPhoto from './PickUpPhoto'
 import Phone from './Phone'
 import ProblemAlert from './ProblemAlert'
 import { useProfileChange } from './profileChange'
@@ -47,6 +48,13 @@ export default function ContactsSection({ kind, childId, contacts, parents = [],
         <ul>
           {parentsListed.map((parent) => (
             <li key={`parent-${parent.id}`} className="contact">
+              <PickUpPhoto
+                of={{ parentId: parent.id }}
+                photoId={parent.photoId}
+                name={`${parent.firstName} ${parent.lastName}`}
+                canEdit={canEdit}
+                change={change}
+              />
               <strong>
                 {parent.firstName} {parent.lastName}
               </strong>
@@ -68,6 +76,16 @@ export default function ContactsSection({ kind, childId, contacts, parents = [],
               </li>
             ) : (
               <li key={contact.id} className="contact">
+                {/* Checked at pick-up; whom to call needs none. */}
+                {kind === 'pickUp' && (
+                  <PickUpPhoto
+                    of={{ childId, contactId: contact.id }}
+                    photoId={contact.photoId}
+                    name={contact.name}
+                    canEdit={canEdit}
+                    change={change}
+                  />
+                )}
                 <strong>{contact.name}</strong>
                 {contact.relationship && <span> ({contact.relationship})</span>}
                 <div>

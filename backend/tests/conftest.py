@@ -11,7 +11,7 @@ from kita.db import metadata, migrate
 from kita.encryption import new_key
 from kita.settings import Settings
 from tests.accounts import create_admin, log_in, onboard
-from tests.fakes import FixedClock, OutageMailer, RecordingCrashSink
+from tests.fakes import FixedClock, MemoryFileStore, OutageMailer, RecordingCrashSink
 
 
 @pytest.fixture(scope="session")
@@ -61,13 +61,21 @@ def crash_sink() -> RecordingCrashSink:
 
 
 @pytest.fixture
+def file_store() -> MemoryFileStore:
+    return MemoryFileStore()
+
+
+@pytest.fixture
 def app(
     settings: Settings,
     clock: FixedClock,
     mailer: OutageMailer,
     crash_sink: RecordingCrashSink,
+    file_store: MemoryFileStore,
 ) -> FastAPI:
-    return create_app(settings, clock=clock, mailer=mailer, crash_sink=crash_sink)
+    return create_app(
+        settings, clock=clock, mailer=mailer, crash_sink=crash_sink, file_store=file_store
+    )
 
 
 @pytest.fixture

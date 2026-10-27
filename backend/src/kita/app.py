@@ -34,6 +34,7 @@ from kita.identity_api import (
 from kita.mail import Mailer, mailer_from_settings
 from kita.parents import Parents
 from kita.parents_api import parents_router
+from kita.photos import DiskFileStore, FileStore, Photos
 from kita.settings import Settings
 from kita.staff_api import staff_router
 
@@ -49,6 +50,7 @@ def create_app(
     clock: Clock | None = None,
     mailer: Mailer | None = None,
     crash_sink: CrashReportSink | None = None,
+    file_store: FileStore | None = None,
 ) -> FastAPI:
     # First, so a missing or broken key stops the app before it serves anything.
     cipher = FieldCipher.from_settings(settings)
@@ -81,10 +83,15 @@ def create_app(
     parents = Parents(engine, clock, cipher)
     contacts = Contacts(engine, cipher)
     consents = Consents(engine, clock)
-    app.include_router(
-        children_router(identity, children, parents, contacts, consents, audited_route_class)
+    photos = Photos(
+        engine, clock, cipher, file_store or DiskFileStore(settings.photo_folder), consents
     )
-    app.include_router(parents_router(identity, parents, audited_route_class))
+    app.include_router(
+        children_router(
+            identity, children, parents, contacts, consents, photos, audited_route_class
+        )
+    )
+    app.include_router(parents_router(identity, parents, photos, audited_route_class))
     app.include_router(audit_router(identity, audit, children))
 
     @app.exception_handler(Exception)

@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Literal
 
 from pydantic import SecretStr
@@ -30,3 +31,5 @@ class Settings(BaseSettings):
     mail_from: str = "Kita Kids Database <kita@localhost>"
     # Encrypts sensitive fields; required to start. `kita-admin generate-key` makes one.
     encryption_key: SecretStr | None = None
+    # Where photo files are kept (encrypted), e.g. on the Kita's network drive.
+    photo_folder: Path = Path("photos")

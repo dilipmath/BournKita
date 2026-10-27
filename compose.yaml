@@ -34,6 +34,14 @@ services:
       # Encrypts addresses, contact and health data. This default is for development only and
       # is public; the production stack (#31) needs its own (`kita-admin generate-key`).
       KITA_ENCRYPTION_KEY: ${KITA_ENCRYPTION_KEY:-fdrh6GyPYGiTyjJtXojo6BBpfYqHzLJ9jiZhxclYbjA=}
+      # Photo files, encrypted with the key above. Production (#31) puts them on the network drive.
+      KITA_PHOTO_FOLDER: /data/photos
+    volumes:
+      - photos:/data/photos
+    # Large uploads wait here while they are read; in memory, an unencrypted photo never reaches
+    # the disk.
+    tmpfs:
+      - /tmp
     depends_on:
       db:
         condition: service_healthy
@@ -60,3 +68,4 @@ services:
 
 volumes:
   db-data:
+  photos:

@@ -61,6 +61,25 @@ class FieldCipher:
         sealed = self._aead.encrypt(nonce, value.encode(), field.encode())
         return f"{_FORMAT}:{self._key_id}:{base64.b64encode(nonce + sealed).decode()}"
 
+    def encrypt_bytes(self, data: bytes, field: str) -> bytes:
+        """As `encrypt`, for a file (e.g. a photo, bound to its file name): the same header,
+        then the nonce and ciphertext as raw bytes."""
+        nonce = os.urandom(_NONCE_BYTES)
+        return self._header() + nonce + self._aead.encrypt(nonce, data, field.encode())
+
+    def decrypt_bytes(self, stored: bytes, field: str) -> bytes:
+        header = self._header()
+        if not stored.startswith(header):
+            raise NotDecryptable
+        raw = stored[len(header) :]
+        try:
+            return self._aead.decrypt(raw[:_NONCE_BYTES], raw[_NONCE_BYTES:], field.encode())
+        except InvalidTag:
+            raise NotDecryptable from None
+
+    def _header(self) -> bytes:
+        return f"{_FORMAT}:{self._key_id}:".encode()
+
     def decrypt(self, stored: str, field: str) -> str:
         try:
             version, key_id, payload = stored.split(":")

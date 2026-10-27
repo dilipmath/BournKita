@@ -1,33 +1,11 @@
-from typing import Any
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 
 from kita.settings import Settings
 from tests.children import create_child
+from tests.contacts import NACHBAR, OMA, add_contact, profile
 from tests.parents import ANNA, create_parent, link
-
-OMA = {"name": "Erika Müller", "relationship": "Grandmother", "phone": "+49 30 7654321"}
-NACHBAR = {
-    "name": "Tom Weber",
-    "relationship": "Neighbour",
-    "phone": "0171 2223334",
-    "note": "Shows his ID card",
-}
-
-
-def add_contact(admin: TestClient, child_id: int, kind: str, contact: dict[str, Any]) -> int:
-    response = admin.post(f"/api/children/{child_id}/contacts", json={"kind": kind, **contact})
-    assert response.status_code == 201, response.text
-    contact_id: int = response.json()["id"]
-    return contact_id
-
-
-def profile(client: TestClient, child_id: int) -> dict[str, Any]:
-    response = client.get(f"/api/children/{child_id}")
-    assert response.status_code == 200, response.text
-    body: dict[str, Any] = response.json()
-    return body
 
 
 def changes(admin: TestClient) -> list[list[str]]:
@@ -44,8 +22,8 @@ def test_teachers_see_a_childs_emergency_contacts_and_pick_up_persons(
 
     seen = profile(teacher, lena)
 
-    assert seen["emergencyContacts"] == [{"id": oma, **OMA, "note": ""}]
-    assert seen["pickUpPersons"] == [{"id": tom, **NACHBAR}]
+    assert seen["emergencyContacts"] == [{"id": oma, **OMA, "note": "", "photoId": None}]
+    assert seen["pickUpPersons"] == [{"id": tom, **NACHBAR, "photoId": None}]
     assert changes(admin) == [["pickUpPersons"], ["emergencyContacts"]]
 
 
@@ -54,7 +32,9 @@ def test_parents_may_pick_up_unless_an_admin_says_otherwise(admin: TestClient) -
     anna = create_parent(admin)
     link(admin, lena, anna)
 
-    assert profile(admin, lena)["parents"] == [{"id": anna, **ANNA, "mayPickUp": True}]
+    assert profile(admin, lena)["parents"] == [
+        {"id": anna, **ANNA, "mayPickUp": True, "photoId": None}
+    ]
     response = admin.put(f"/api/children/{lena}/parents/{anna}", json={"mayPickUp": False})
 
     assert response.status_code == 204

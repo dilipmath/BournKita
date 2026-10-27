@@ -14,7 +14,13 @@ export function fakeApi(routes: Record<string, Reply | Handler>) {
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
       const route = `${init?.method ?? 'GET'} ${url}`
-      const body = init?.body ? JSON.parse(init.body as string) : undefined
+      // An upload is recorded by its fields' names and files' names.
+      const body =
+        init?.body instanceof FormData
+          ? Object.fromEntries([...init.body].map(([name, value]) => [name, value instanceof File ? value.name : value]))
+          : init?.body
+            ? JSON.parse(init.body as string)
+            : undefined
       calls.push({ route, body })
       const reply = routes[route]
       if (!reply) throw new Error(`No fake for ${route}`)
@@ -45,4 +51,5 @@ export const noProfileLists = {
   emergencyContacts: [],
   pickUpPersons: [],
   consents: { photo: [], excursion: [], dataProtection: [] },
+  photos: [],
 }

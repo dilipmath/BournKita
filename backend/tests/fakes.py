@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 
 from kita.crash import CrashReport
 from kita.mail import Email, MailNotSent
+from kita.photos import FileNotStored
 
 
 @dataclass
@@ -45,3 +46,21 @@ class OutageMailer(CapturingMailer):
         if self.down:
             raise MailNotSent("mail server unreachable") from ConnectionRefusedError()
         super().send(email)
+
+
+@dataclass
+class MemoryFileStore:
+    """A FileStore that keeps files in memory instead of on disk."""
+
+    files: dict[str, bytes] = field(default_factory=dict)
+
+    def put(self, name: str, data: bytes) -> None:
+        self.files[name] = data
+
+    def get(self, name: str) -> bytes:
+        if name not in self.files:
+            raise FileNotStored(name)
+        return self.files[name]
+
+    def delete(self, name: str) -> None:
+        self.files.pop(name, None)

@@ -154,6 +154,18 @@ class Contacts:
         after = Contact(id=contact_id, **asdict(details))
         return ContactUpdate(after, after != before, before.kind)
 
+    def kind_of(self, child_id: int, contact_id: int) -> ContactKind:
+        with transaction(self._engine) as connection:
+            kind = connection.scalar(
+                select(child_contacts.c.kind).where(
+                    child_contacts.c.id == contact_id, child_contacts.c.child_id == child_id
+                )
+            )
+        if kind is None:
+            raise ContactNotFound
+        result: ContactKind = kind
+        return result
+
     def remove(self, child_id: int, contact_id: int) -> ContactKind:
         """Removes the contact; returns which kind it was."""
         with transaction(self._engine) as connection:

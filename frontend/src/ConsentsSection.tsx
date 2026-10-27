@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { recordConsent, type ConsentChange, type ConsentPeriod, type Consents, type ConsentType } from './api'
+import { isGiven, recordConsent, type ConsentChange, type ConsentPeriod, type Consents, type ConsentType } from './api'
 import { kitaToday, localDate } from './dates'
 import ProblemAlert from './ProblemAlert'
 import { useProfileChange } from './profileChange'
@@ -41,7 +41,7 @@ export default function ConsentsSection({ childId, consents, canEdit, reload }: 
         {(Object.keys(consentLabel) as ConsentType[]).map((consent) => {
           const periods = consents[consent]
           const current = periods.at(-1)
-          const isGiven = current !== undefined && current.withdrawnOn === null
+          const given = isGiven(periods)
           // Every period that has ended, so a withdrawal keeps the date it was given on.
           const ended = periods.filter((period): period is EndedPeriod => period.withdrawnOn !== null)
           const name = t(consentLabel[consent])
@@ -50,8 +50,8 @@ export default function ConsentsSection({ childId, consents, canEdit, reload }: 
             : current.withdrawnOn === null
               ? t('consentGivenSince', { date: formatted(current.givenOn) })
               : t('consentWithdrawnOn', { date: formatted(current.withdrawnOn) })
-          const nextChange: ConsentChange = isGiven ? 'withdrawn' : 'given'
-          const action = t(isGiven ? 'recordWithdrawal' : 'recordGiving', { consent: name })
+          const nextChange: ConsentChange = given ? 'withdrawn' : 'given'
+          const action = t(given ? 'recordWithdrawal' : 'recordGiving', { consent: name })
           return (
             <li key={consent} className="consent">
               <p>

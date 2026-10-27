@@ -41,6 +41,9 @@ const refusals = {
   not_given: 'notGiven',
   in_future: 'inFuture',
   out_of_order: 'outOfOrder',
+  not_an_image: 'notAnImage',
+  too_large: 'photoTooLarge',
+  no_photo_consent: 'noPhotoConsent',
 } as const
 
 export type Refusal = (typeof refusals)[keyof typeof refusals]
@@ -169,6 +172,8 @@ export type ChildProfile = Child & {
   emergencyContacts: Contact[]
   pickUpPersons: Contact[]
   consents: Consents
+  // None while the photo Consent is not given.
+  photos: Photo[]
 }
 
 /** A Child profile, or null when none has this ID (e.g. it was deleted). */
@@ -274,7 +279,8 @@ export function unlinkParent(childId: number, parentId: number): Promise<true | 
 }
 
 // A Parent as linked to one Child: whether they may pick that Child up.
-export type LinkedParent = Parent & { mayPickUp: boolean }
+// photoId: their photo's, which changes when the photo does; null without one.
+export type LinkedParent = Parent & { mayPickUp: boolean; photoId: number | null }
 
 /** Says whether a linked Parent may pick the Child up. Admins only. */
 export function setMayPickUp(childId: number, parentId: number, mayPickUp: boolean): Promise<true | Refusal> {
@@ -285,7 +291,8 @@ export function setMayPickUp(childId: number, parentId: number, mayPickUp: boole
 // pickUp: who else may take the Child home (Pick-up persons).
 export type ContactKind = 'emergency' | 'pickUp'
 export type ContactDetails = { kind: ContactKind; name: string; relationship: string; phone: string; note: string }
-export type Contact = Omit<ContactDetails, 'kind'> & { id: number }
+// photoId: their photo's, which changes when the photo does; null without one.
+export type Contact = Omit<ContactDetails, 'kind'> & { id: number; photoId: number | null }
 
 /** Adds an emergency contact or pick-up person to a Child. Admins only. */
 export async function addContact(childId: number, details: ContactDetails): Promise<Contact | Refusal> {
@@ -316,6 +323,12 @@ export type ConsentPeriod = { givenOn: string; withdrawnOn: string | null }
 export type Consents = Record<ConsentType, ConsentPeriod[]>
 export type ConsentChange = 'given' | 'withdrawn'
 
+/** Whether a Consent is given now: its latest period is not withdrawn. */
+export function isGiven(periods: ConsentPeriod[]): boolean {
+  const current = periods.at(-1)
+  return current !== undefined && current.withdrawnOn === null
+}
+
 /** Records that a Consent was given or withdrawn on a date. Admins only. Resolves to true once
  * recorded. */
 export async function recordConsent(
@@ -327,5 +340,59 @@ export async function recordConsent(
   const body = change === 'given' ? { givenOn: on } : { withdrawnOn: on }
   const response = await sendJson(`/api/children/${childId}/consents/${consent}/${change}`, 'POST', body)
   if (!response.ok) return refusalOf(response, 'Recording the Consent')
+  return true
+}
+
+// A photo of a Child, for their gallery.
+export type Photo = { id: number; uploadedAt: string }
+// thumbnail: small, for galleries and lists. full: for looking at one photo.
+export type PhotoSize = 'thumbnail' | 'full'
+// Whose Pick-up person photo: one of a Child's contacts, or a Parent.
+export type PickUpPhoto = { childId: number; contactId: number } | { parentId: number }
+
+export function childPhotoUrl(childId: number, photoId: number, size: PhotoSize): string {
+  return `/api/children/${childId}/photos/${photoId}/${size}`
+}
+
+function pickUpPhotoBase(of: PickUpPhoto): string {
+  return 'parentId' in of ? `/api/parents/${of.parentId}/photo` : `/api/children/${of.childId}/contacts/${of.contactId}/photo`
+}
+
+/** Where a Pick-up person's photo is; a new photo gets a new address, so a tablet never shows the one it replaced. */
+export function pickUpPhotoUrl(of: PickUpPhoto, photoId: number, size: PhotoSize): string {
+  return `${pickUpPhotoBase(of)}/${size}?v=${photoId}`
+}
+
+function sendPhoto(url: string, method: 'POST' | 'PUT', file: File): Promise<Response> {
+  const body = new FormData()
+  body.append('photo', file)
+  return fetch(url, { method, body })
+}
+
+/** Adds a photo to a Child's gallery. Admins only, and only with photo Consent. */
+export async function addChildPhoto(childId: number, file: File): Promise<Photo | Refusal> {
+  const response = await sendPhoto(`/api/children/${childId}/photos`, 'POST', file)
+  if (!response.ok) return refusalOf(response, 'Adding the photo')
+  return (await response.json()) as Photo
+}
+
+/** Deletes a photo of a Child for good. Admins only. Resolves to true once deleted. */
+export async function deleteChildPhoto(childId: number, photoId: number): Promise<true | Refusal> {
+  const response = await fetch(`/api/children/${childId}/photos/${photoId}`, { method: 'DELETE' })
+  if (!response.ok) return refusalOf(response, 'Deleting the photo')
+  return true
+}
+
+/** Sets a Pick-up person's photo, replacing any earlier one. Admins only. Resolves to true once set. */
+export async function setPickUpPhoto(of: PickUpPhoto, file: File): Promise<true | Refusal> {
+  const response = await sendPhoto(pickUpPhotoBase(of), 'PUT', file)
+  if (!response.ok) return refusalOf(response, 'Setting the photo')
+  return true
+}
+
+/** Removes a Pick-up person's photo. Admins only. Resolves to true once removed. */
+export async function removePickUpPhoto(of: PickUpPhoto): Promise<true | Refusal> {
+  const response = await fetch(pickUpPhotoBase(of), { method: 'DELETE' })
+  if (!response.ok) return refusalOf(response, 'Removing the photo')
   return true
 }

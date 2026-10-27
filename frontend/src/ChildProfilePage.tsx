@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
-import { deleteChild, fetchChild, genderLabel } from './api'
+import { childPhotoUrl, deleteChild, fetchChild, genderLabel } from './api'
 import ChildForm from './ChildForm'
 import ConsentsSection from './ConsentsSection'
 import ContactsSection from './ContactsSection'
+import GallerySection from './GallerySection'
 import ParentsSection from './ParentsSection'
 import ProblemAlert from './ProblemAlert'
 import type { Problem } from './profileChange'
@@ -43,7 +44,11 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
   return (
     <section className="page profile">
       <Link to="/children">{t('backToChildren')}</Link>
-      <h2>{name}</h2>
+      <div className="profile-heading">
+        {/* The newest photo; none without photo Consent. */}
+        {child.photos[0] && <img src={childPhotoUrl(child.id, child.photos[0].id, 'thumbnail')} alt={t('photoOf', { name })} />}
+        <h2>{name}</h2>
+      </div>
       <dl>
         <dt>{t('gender')}</dt>
         <dd>{t(child.gender ? genderLabel[child.gender] : 'genderNotStated')}</dd>
@@ -65,6 +70,7 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
       <ContactsSection kind="emergency" childId={child.id} contacts={child.emergencyContacts} canEdit={canEdit} reload={reload} />
       <ParentsSection child={child} canEdit={canEdit} reload={reload} />
       <ConsentsSection childId={child.id} consents={child.consents} canEdit={canEdit} reload={reload} />
+      <GallerySection child={child} canEdit={canEdit} reload={reload} />
       <ProblemAlert problem={problem} />
       {canEdit &&
         (confirming ? (

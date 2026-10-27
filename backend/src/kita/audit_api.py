@@ -31,7 +31,11 @@ _ACTIONS: dict[str, AuditAction] = {
 
 
 # How an audited route finds the Children a request is about; set by the markers below.
-_Subject = Literal["path", "created_child", "noted_children", "none"]
+_Subject = Literal["path", "created_child", "noted_children", "none", "part_of_logged_view"]
+
+
+# Subjects of routes that record no entry.
+_UNRECORDED: tuple[_Subject, ...] = ("none", "part_of_logged_view")
 
 
 def _marked[Endpoint: Callable[..., Any]](endpoint: Endpoint, subject: _Subject) -> Endpoint:
@@ -43,6 +47,13 @@ def not_about_one_child[Endpoint: Callable[..., Any]](endpoint: Endpoint) -> End
     """Marks an endpoint of an audited router that shows no Child's data beyond names (e.g. a
     list of names), so it is deliberately not logged. Put it below the route decorator."""
     return _marked(endpoint, "none")
+
+
+def part_of_logged_view[Endpoint: Callable[..., Any]](endpoint: Endpoint) -> Endpoint:
+    """Marks an endpoint that serves a part of a logged view (e.g. a photo of the gallery on a
+    Child profile), so one look at the profile is one entry, not one per photo. Put it below the
+    route decorator."""
+    return _marked(endpoint, "part_of_logged_view")
 
 
 def creates_child[Endpoint: Callable[..., Any]](endpoint: Endpoint) -> Endpoint:
@@ -97,7 +108,7 @@ def audited_route(audit: Audit, engine: Engine) -> type[APIRoute]:
         def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
             handle = super().get_route_handler()
             subject = self.audit_subject
-            if subject == "none":
+            if subject in _UNRECORDED:
                 return handle
 
             async def handle_and_record(request: Request) -> Response:
@@ -117,7 +128,9 @@ def audited_route(audit: Audit, engine: Engine) -> type[APIRoute]:
 
 def _check_auditable(route: APIRoute, subject: _Subject) -> None:
     methods = route.methods or set()
-    if subject == "none":
+    if subject == "part_of_logged_view" and methods != {"GET"}:
+        raise UnauditableRoute(f"{route.path}: only a GET can be part of a logged view.")
+    if subject in _UNRECORDED:
         return
     if subject == "created_child" and methods != {"POST"}:
         raise UnauditableRoute(f"{route.path}: only a POST can create a Child.")

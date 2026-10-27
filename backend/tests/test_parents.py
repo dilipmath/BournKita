@@ -23,7 +23,9 @@ def test_siblings_share_one_parent_record_that_teachers_can_read(
     assert [link(admin, lena, anna), link(admin, max_, anna)] == [204, 204]
 
     for child_id in (lena, max_):
-        assert parents_on_profile(teacher, child_id) == [{"id": anna, **ANNA, "mayPickUp": True}]
+        assert parents_on_profile(teacher, child_id) == [
+            {"id": anna, **ANNA, "mayPickUp": True, "photoId": None}
+        ]
     parent = teacher.get(f"/api/parents/{anna}").json()
     assert parent["children"] == [
         {"id": lena, "firstName": "Lena", "lastName": "Müller"},
