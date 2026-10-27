@@ -22,6 +22,7 @@ from kita.crash import (
     default_crash_sink,
     send_safely,
 )
+from kita.encryption import FieldCipher
 from kita.identity import Identity
 from kita.identity_api import (
     email_verification_router,
@@ -45,6 +46,8 @@ def create_app(
     mailer: Mailer | None = None,
     crash_sink: CrashReportSink | None = None,
 ) -> FastAPI:
+    # First, so a missing or broken key stops the app before it serves anything.
+    FieldCipher.from_settings(settings)
     clock = clock or SystemClock()
     mailer = mailer or mailer_from_settings(settings)
     crash_sink = crash_sink or default_crash_sink(settings, mailer)

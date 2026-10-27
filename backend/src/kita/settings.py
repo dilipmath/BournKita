@@ -1,5 +1,6 @@
 from typing import Literal
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # How the connection to the mail server is secured: STARTTLS (usually port 587), TLS from the
@@ -27,3 +28,5 @@ class Settings(BaseSettings):
     smtp_username: str | None = None
     smtp_password: str | None = None
     mail_from: str = "Kita Kids Database <kita@localhost>"
+    # Encrypts sensitive fields; required to start. `kita-admin generate-key` makes one.
+    encryption_key: SecretStr | None = None

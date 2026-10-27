@@ -9,6 +9,7 @@ from sqlalchemy import create_engine
 
 from kita.clock import SystemClock
 from kita.db import migrate
+from kita.encryption import new_key
 from kita.identity import MIN_PASSWORD_LENGTH, AccountsAlreadyExist, Identity, is_valid_email
 from kita.mail import LogMailer
 from kita.settings import Settings
@@ -32,8 +33,13 @@ def main(
     commands.add_parser("migrate", help="bring the database schema up to date")
     create_admin = commands.add_parser("create-admin", help="create the first Admin account")
     create_admin.add_argument("--email", required=True)
+    commands.add_parser("generate-key", help="print a new KITA_ENCRYPTION_KEY")
     args = parser.parse_args(argv)
     settings = settings or Settings()
+
+    if args.command == "generate-key":
+        print(new_key())
+        return 0
 
     if args.command == "migrate":
         migrate(settings.database_url)

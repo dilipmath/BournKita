@@ -3,10 +3,12 @@ from collections.abc import Callable, Iterator
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from pydantic import SecretStr
 from sqlalchemy import create_engine, make_url, text
 
 from kita.app import create_app
 from kita.db import metadata, migrate
+from kita.encryption import new_key
 from kita.settings import Settings
 from tests.accounts import create_admin, log_in, onboard
 from tests.fakes import FixedClock, OutageMailer, RecordingCrashSink
@@ -25,7 +27,10 @@ def settings() -> Settings:
         if not exists:
             connection.execute(text(f'CREATE DATABASE "{test_url.database}"'))
     admin.dispose()
-    settings = Settings(database_url=test_url.render_as_string(hide_password=False))
+    settings = Settings(
+        database_url=test_url.render_as_string(hide_password=False),
+        encryption_key=SecretStr(new_key()),
+    )
     migrate(settings.database_url)
     return settings
 

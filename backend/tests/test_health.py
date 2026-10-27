@@ -26,10 +26,12 @@ def test_health_reports_server_time_from_the_clock(
 
 
 def test_health_reports_database_unavailable_when_it_cannot_connect(
-    clock: FixedClock, mailer: CapturingMailer
+    settings: Settings, clock: FixedClock, mailer: CapturingMailer
 ) -> None:
-    settings = Settings(database_url="postgresql+psycopg://kita:kita@localhost:1/kita")
-    with TestClient(create_app(settings, clock=clock, mailer=mailer)) as client:
+    unreachable = settings.model_copy(
+        update={"database_url": "postgresql+psycopg://kita:kita@localhost:1/kita"}
+    )
+    with TestClient(create_app(unreachable, clock=clock, mailer=mailer)) as client:
         response = client.get("/api/health")
 
     assert response.status_code == 503

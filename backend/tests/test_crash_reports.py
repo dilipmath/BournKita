@@ -117,9 +117,9 @@ def test_frontend_reports_never_forward_free_text(
 
 
 def test_reports_are_emailed_to_the_developer_when_an_address_is_configured(
-    clock: FixedClock, mailer: CapturingMailer
+    settings: Settings, clock: FixedClock, mailer: CapturingMailer
 ) -> None:
-    app_settings = Settings(crash_report_email="developer@example.org")
+    app_settings = settings.model_copy(update={"crash_report_email": "developer@example.org"})
     with TestClient(create_app(app_settings, clock=clock, mailer=mailer)) as client:
         client.post("/api/crash-reports", json=web_report())
 
@@ -136,9 +136,9 @@ class FailingCrashSink:
 
 
 def test_a_failing_sink_does_not_turn_a_report_into_another_crash(
-    clock: FixedClock, mailer: CapturingMailer
+    settings: Settings, clock: FixedClock, mailer: CapturingMailer
 ) -> None:
-    app = create_app(Settings(), clock=clock, mailer=mailer, crash_sink=FailingCrashSink())
+    app = create_app(settings, clock=clock, mailer=mailer, crash_sink=FailingCrashSink())
     with TestClient(app, raise_server_exceptions=False) as client:
         response = client.post("/api/crash-reports", json=web_report())
 
@@ -155,9 +155,12 @@ def test_frontend_reports_with_more_than_a_page_section_are_rejected(
 
 
 def test_reports_are_still_logged_in_full_when_emailed(
-    clock: FixedClock, mailer: CapturingMailer, caplog: pytest.LogCaptureFixture
+    settings: Settings,
+    clock: FixedClock,
+    mailer: CapturingMailer,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    app_settings = Settings(crash_report_email="developer@example.org")
+    app_settings = settings.model_copy(update={"crash_report_email": "developer@example.org"})
     with TestClient(create_app(app_settings, clock=clock, mailer=mailer)) as client:
         client.post("/api/crash-reports", json=web_report())
 
