@@ -70,7 +70,7 @@ describe('Groups', () => {
       'GET /api/health': health,
       'GET /api/session': sessionAs('teacher'),
       'GET /api/groups': { status: 200, body: [{ ...bees, mine: false }, { ...monkeys, mine: true }, { ...owls, mine: false }] },
-      'GET /api/groups/5': { status: 200, body: { ...monkeys, children: [{ id: 7, firstName: 'Lena', lastName: 'Müller' }] } },
+      'GET /api/groups/5': { status: 200, body: { ...monkeys, children: [{ id: 7, firstName: 'Lena', lastName: 'Müller', alerts: [] }] } },
     })
     const { unmount } = renderAt('/', <App />)
 

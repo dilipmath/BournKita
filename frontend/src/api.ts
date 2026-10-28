@@ -176,6 +176,7 @@ export async function fetchChildren(search: string): Promise<ChildSummary[]> {
 
 // The whole profile, as its page shows it.
 export type ChildProfile = Child & {
+  alerts: Alert[]
   parents: LinkedParent[]
   emergencyContacts: Contact[]
   pickUpPersons: Contact[]
@@ -324,6 +325,34 @@ export async function removeContact(childId: number, contactId: number): Promise
   return true
 }
 
+// A Child's allergy or medical condition, which every Staff member must know about: what it is
+// (e.g. "Peanuts") and, maybe, what to do.
+export type AlertKind = 'allergy' | 'medical'
+export type AlertDetails = { kind: AlertKind; name: string; note: string }
+export type Alert = AlertDetails & { id: number }
+export const alertKindLabel = { allergy: 'alertKindAllergy', medical: 'alertKindMedical' } as const
+
+/** Records an allergy or medical condition for a Child. Admins only. */
+export async function addAlert(childId: number, details: AlertDetails): Promise<Alert | Refusal> {
+  const response = await sendJson(`/api/children/${childId}/alerts`, 'POST', details)
+  if (!response.ok) return refusalOf(response, 'Adding the alert')
+  return (await response.json()) as Alert
+}
+
+/** Changes one of a Child's alerts. Admins only. */
+export async function updateAlert(childId: number, alertId: number, details: AlertDetails): Promise<Alert | Refusal> {
+  const response = await sendJson(`/api/children/${childId}/alerts/${alertId}`, 'PUT', details)
+  if (!response.ok) return refusalOf(response, 'Changing the alert')
+  return (await response.json()) as Alert
+}
+
+/** Removes one of a Child's alerts. Admins only. Resolves to true once removed. */
+export async function removeAlert(childId: number, alertId: number): Promise<true | Refusal> {
+  const response = await fetch(`/api/children/${childId}/alerts/${alertId}`, { method: 'DELETE' })
+  if (!response.ok) return refusalOf(response, 'Removing the alert')
+  return true
+}
+
 // What a Child's Parents allowed. Each period was given on a date (YYYY-MM-DD) and maybe
 // withdrawn on a later one.
 export type ConsentType = 'photo' | 'excursion' | 'dataProtection'
@@ -452,8 +481,8 @@ export async function removeGroup(id: number): Promise<true | Refusal> {
   return true
 }
 
-// A Group with its Children, by first name: what its dashboard shows.
-export type GroupDashboard = Group & { children: ChildSummary[] }
+// A Group with its Children, by first name, and their alerts: what its dashboard shows.
+export type GroupDashboard = Group & { children: (ChildSummary & { alerts: Alert[] })[] }
 
 /** A Group's dashboard, or null when there is no such Group. */
 export async function fetchGroupDashboard(id: number): Promise<GroupDashboard | null> {

@@ -9,7 +9,7 @@ A child cared for by the Kita, with a profile kept by Admins.
 _Avoid_: Kid, pupil, student
 
 **Child profile**:
-What the Kita records about one Child: name, gender, languages spoken, food preferences and interests (more safety data follows). Admins keep it; every Staff member can read it.
+What the Kita records about one Child: name, gender, languages spoken, food preferences, interests, Alerts and the other safety data below. Admins keep it; every Staff member can read it.
 _Avoid_: Record, file, Akte
 
 **Parent**:
@@ -24,6 +24,10 @@ _Avoid_: Contact person (too broad), Notfallnummer (in code and docs)
 Someone who may take a Child home. A Child's Parents are Pick-up persons unless an Admin says otherwise; others are recorded for that Child only.
 _Avoid_: Collector, Abholer (in code and docs), authorised person
 
+**Alert**:
+An allergy or a medical condition of a Child that every Staff member must know about: what it is (e.g. peanuts, asthma) and, optionally, what to do. Health data, so stored encrypted.
+_Avoid_: Warning, health note, Allergie (in code and docs)
+
 **Consent**:
 A Parent's permission for one thing concerning a Child: photos, excursions or data protection. Given on a date and possibly withdrawn on a later one; it can be given again, and every period stays on record. A Child has a Consent only while it is given and not withdrawn.
 _Avoid_: Permission, approval, Einwilligung (in code and docs)
@@ -37,7 +41,7 @@ A set of Children cared for together, with a name and an icon (e.g. Monkeys). A 
 _Avoid_: Class, room, Gruppe (in code and docs)
 
 **Group dashboard**:
-The page a Staff member lands on after picking a Group: that Group's Children, and later its day.
+The page a Staff member lands on after picking a Group: that Group's Children with their Alerts, and later its day.
 _Avoid_: Group page, overview
 
 **Staff member**:

@@ -47,6 +47,7 @@ export function sessionAs(role: 'admin' | 'teacher') {
 
 // The lists a Child profile carries besides the Child's own fields, all empty.
 export const noProfileLists = {
+  alerts: [],
   parents: [],
   emergencyContacts: [],
   pickUpPersons: [],

@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, Request, status
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
+from kita.alerts import Alert, Alerts
+from kita.alerts_api import AlertOut
 from kita.api_support import CAMEL_CASE, Refusals, refusals_as_http_errors
 from kita.audit_api import (
     about_noted_children,
@@ -53,22 +55,27 @@ class GroupForStaffMemberOut(GroupOut):
 
 
 class GroupChildOut(BaseModel):
-    """One of a Group's Children, by name. (Like children_api's ChildSummaryOut, which cannot be
-    imported here: that module shows each Child's Group.)"""
+    """One of a Group's Children: their name and Alerts."""
 
     model_config = CAMEL_CASE
 
     id: int
     first_name: str
     last_name: str
+    alerts: list[AlertOut]
 
     @classmethod
-    def of(cls, child: ChildSummary) -> "GroupChildOut":
-        return cls.model_validate(child)
+    def of(cls, child: ChildSummary, alerts: list[Alert]) -> "GroupChildOut":
+        return cls(
+            id=child.id,
+            first_name=child.first_name,
+            last_name=child.last_name,
+            alerts=[AlertOut.of(alert) for alert in alerts],
+        )
 
 
 class GroupDashboardOut(GroupOut):
-    """The Group dashboard: the Group and its Children, by first name."""
+    """The Group dashboard: the Group and its Children, by first name, with their Alerts."""
 
     children: list[GroupChildOut]
 
@@ -82,9 +89,10 @@ _REFUSALS: Refusals = {
 
 
 def groups_router(
-    identity: Identity, groups: Groups, audited_route_class: type[APIRoute]
+    identity: Identity, groups: Groups, alerts: Alerts, audited_route_class: type[APIRoute]
 ) -> APIRouter:
-    """`audited_route_class` comes from audited_route: removing a Group changes its Children's."""
+    """`audited_route_class` comes from audited_route: the dashboard shows Children's Alerts, and
+    removing a Group changes its Children's."""
     router = APIRouter(
         prefix="/api/groups",
         dependencies=[Depends(staff_member_dependency(identity))],
@@ -105,15 +113,17 @@ def groups_router(
             return GroupOut.of(groups.create(group.details()))
 
     @router.get("/{group_id}")
-    @not_about_one_child
-    def group_dashboard(group_id: int) -> GroupDashboardOut:
-        """Children's names only, like the list of Children, so not audited."""
+    @about_noted_children
+    def group_dashboard(group_id: int, request: Request) -> GroupDashboardOut:
         with refusals_as_http_errors(_REFUSALS):
             group = groups.group(group_id)
             children = groups.children_of(group_id)
+        its_alerts = alerts.of_children([child.id for child in children])
+        # Names alone are not logged (like the list of Children); Alerts are health data.
+        note_children(request, list(its_alerts))
         return GroupDashboardOut(
             **GroupOut.of(group).model_dump(by_alias=False),
-            children=[GroupChildOut.of(child) for child in children],
+            children=[GroupChildOut.of(child, its_alerts.get(child.id, [])) for child in children],
         )
 
     @router.put("/{group_id}", dependencies=admin_only)

@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from tests.accounts import TEACHER_EMAIL, onboard
 from tests.children import create_child
 from tests.fakes import OutageMailer
-from tests.groups import create_group, groups
+from tests.groups import create_group, groups, put_in_group
 
 
 def test_every_staff_member_sees_the_groups_an_admin_created(
@@ -69,10 +69,6 @@ def test_teachers_cannot_change_groups(admin: TestClient, teacher: TestClient) -
     ]
 
     assert [response.status_code for response in refused] == [403, 403, 403]
-
-
-def put_in_group(admin: TestClient, child_id: int, group_id: int | None) -> int:
-    return admin.put(f"/api/children/{child_id}/group", json={"groupId": group_id}).status_code
 
 
 def dashboard_children(client: TestClient, group_id: int) -> list[str]:

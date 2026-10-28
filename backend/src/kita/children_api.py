@@ -8,6 +8,8 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
+from kita.alerts import AlertNotFound, Alerts
+from kita.alerts_api import AlertIn, AlertOut
 from kita.api_support import CAMEL_CASE, Refusals, refusals_as_http_errors
 from kita.audit_api import (
     creates_child,
@@ -194,6 +196,7 @@ class PhotoOut(BaseModel):
 class ChildProfileOut(ChildOut):
     """The whole profile, as its page shows it."""
 
+    alerts: list[AlertOut]
     parents: list[LinkedParentOut]
     emergency_contacts: list[ContactOut]
     pick_up_persons: list[ContactOut]
@@ -223,6 +226,7 @@ _REFUSALS: Refusals = {
     TooLong: (status.HTTP_422_UNPROCESSABLE_CONTENT, "too_long"),
     ParentNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
     ContactNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
+    AlertNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
     NoPhotoConsent: (status.HTTP_409_CONFLICT, "no_photo_consent"),
     GroupNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
     **PHOTO_REFUSALS,
@@ -238,6 +242,7 @@ def children_router(
     children: Children,
     parents: Parents,
     contacts: Contacts,
+    alerts: Alerts,
     consents: Consents,
     photos: Photos,
     groups: Groups,
@@ -281,6 +286,7 @@ def children_router(
 
         return ChildProfileOut(
             **profile.model_dump(by_alias=False),
+            alerts=[AlertOut.of(alert) for alert in alerts.of_child(child_id)],
             parents=[
                 LinkedParentOut.of_link(linked, parent_photos.get(linked.parent.id))
                 for linked in its_parents
@@ -396,6 +402,30 @@ def children_router(
             kind = contacts.kind_of(child_id, contact_id)
         note_changed_fields(request, [_CONTACT_FIELDS[kind]])
         background.add_task(photos.delete_files, removed)
+
+    @router.post("/{child_id}/alerts", status_code=status.HTTP_201_CREATED, dependencies=admin_only)
+    def add_alert(child_id: int, alert: AlertIn, request: Request) -> AlertOut:
+        with refusals_as_http_errors(_REFUSALS):
+            added = alerts.add(child_id, alert.details())
+        note_changed_fields(request, ["alerts"])
+        return AlertOut.of(added)
+
+    @router.put("/{child_id}/alerts/{alert_id}", dependencies=admin_only)
+    def update_alert(child_id: int, alert_id: int, alert: AlertIn, request: Request) -> AlertOut:
+        with refusals_as_http_errors(_REFUSALS):
+            updated = alerts.update(child_id, alert_id, alert.details())
+        note_changed_fields(request, ["alerts"] if updated.changed else [])
+        return AlertOut.of(updated.alert)
+
+    @router.delete(
+        "/{child_id}/alerts/{alert_id}",
+        status_code=status.HTTP_204_NO_CONTENT,
+        dependencies=admin_only,
+    )
+    def remove_alert(child_id: int, alert_id: int, request: Request) -> None:
+        with refusals_as_http_errors(_REFUSALS):
+            alerts.remove(child_id, alert_id)
+        note_changed_fields(request, ["alerts"])
 
     @router.put(
         "/{child_id}/group", status_code=status.HTTP_204_NO_CONTENT, dependencies=admin_only

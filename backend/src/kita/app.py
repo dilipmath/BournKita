@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 
+from kita.alerts import Alerts
 from kita.audit import Audit
 from kita.audit_api import audit_router, audited_route
 from kita.children import Children
@@ -83,6 +84,7 @@ def create_app(
     audited_route_class = audited_route(audit, engine)
     parents = Parents(engine, clock, cipher)
     contacts = Contacts(engine, cipher)
+    alerts = Alerts(engine, cipher)
     consents = Consents(engine, clock)
     photos = Photos(
         engine, clock, cipher, file_store or DiskFileStore(settings.photo_folder), consents
@@ -91,12 +93,20 @@ def create_app(
     app.include_router(staff_router(identity, groups))
     app.include_router(
         children_router(
-            identity, children, parents, contacts, consents, photos, groups, audited_route_class
+            identity,
+            children,
+            parents,
+            contacts,
+            alerts,
+            consents,
+            photos,
+            groups,
+            audited_route_class,
         )
     )
     app.include_router(parents_router(identity, parents, photos, audited_route_class))
     app.include_router(audit_router(identity, audit, children))
-    app.include_router(groups_router(identity, groups, audited_route_class))
+    app.include_router(groups_router(identity, groups, alerts, audited_route_class))
 
     @app.exception_handler(Exception)
     async def report_crash(request: Request, error: Exception) -> JSONResponse:

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
+import AlertMarker from './AlertMarker'
+import AlertsBanner from './AlertsBanner'
 import { childPhotoUrl, deleteChild, fetchChild, genderLabel } from './api'
 import ChildForm from './ChildForm'
 import ChildGroup from './ChildGroup'
@@ -50,6 +52,7 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
         {child.photos[0] && <img src={childPhotoUrl(child.id, child.photos[0].id, 'thumbnail')} alt={t('photoOf', { name })} />}
         <h2>{name}</h2>
       </div>
+      <AlertsBanner childId={child.id} alerts={child.alerts} canEdit={canEdit} reload={reload} />
       <dl>
         <ChildGroup child={child} canEdit={canEdit} reload={reload} />
         <dt>{t('gender')}</dt>
@@ -57,7 +60,11 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
         <dt>{t('languagesSpoken')}</dt>
         <dd>{child.languages || '–'}</dd>
         <dt>{t('foodPreferences')}</dt>
-        <dd>{child.foodPreferences || '–'}</dd>
+        <dd>
+          {child.foodPreferences || '–'}{' '}
+          {/* So nobody serves the Child something dangerous. */}
+          <AlertMarker label={t('allergies')} alerts={child.alerts.filter((alert) => alert.kind === 'allergy')} />
+        </dd>
         <dt>{t('interests')}</dt>
         <dd>{child.interests || '–'}</dd>
       </dl>

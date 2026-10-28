@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import AlertMarker from './AlertMarker'
 import { fetchGroupDashboard } from './api'
 import GroupLabel from './GroupLabel'
 import { useRecordAtAddress } from './recordAtAddress'
@@ -25,7 +26,8 @@ export default function GroupDashboard() {
             <li key={child.id}>
               <Link to={`/children/${child.id}`}>
                 {child.firstName} {child.lastName}
-              </Link>
+              </Link>{' '}
+              <AlertMarker label={t('alertsMarker')} alerts={child.alerts} />
             </li>
           ))}
         </ul>

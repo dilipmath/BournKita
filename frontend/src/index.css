@@ -759,3 +759,61 @@ button.danger {
   padding: 0;
   margin: 0;
 }
+
+/* A Child's allergies and medical conditions: impossible to miss on the profile. */
+.alert-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  align-self: stretch;
+  padding: 16px;
+  border: 3px solid var(--bad);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+/* No Alerts: a plain note, so a Child with Alerts stands out. */
+.alert-banner.none {
+  border: 2px solid var(--border);
+}
+
+.alert-banner h3 {
+  margin: 0;
+  color: var(--bad);
+}
+
+.alert-banner.none h3 {
+  color: var(--text);
+}
+
+.alert-banner ul {
+  align-self: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.alert-banner li {
+  padding: 8px 0;
+  font-size: 1.1rem;
+}
+
+.alert-banner li + li {
+  border-top: 1px solid var(--border);
+}
+
+.alert-banner .note {
+  margin: 4px 0 8px;
+  white-space: pre-line;
+}
+
+/* Next to a name or the food preferences. */
+.alert-marker {
+  display: inline-block;
+  padding: 0 8px;
+  border: 2px solid var(--bad);
+  border-radius: 8px;
+  color: var(--bad);
+  font-weight: 600;
+}
