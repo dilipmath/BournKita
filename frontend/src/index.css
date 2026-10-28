@@ -924,3 +924,13 @@ button.danger {
 .task.dragging .drag-handle {
   cursor: grabbing;
 }
+
+/* Confirming a Task's deletion, in place of its buttons. */
+.task .confirm {
+  margin-left: 48px;
+  padding: 12px;
+}
+
+.task .confirm .actions {
+  margin-left: 0;
+}

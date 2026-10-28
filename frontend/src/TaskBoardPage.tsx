@@ -23,6 +23,8 @@ export default function TaskBoardPage() {
   const { problem, change } = useProfileChange(reload)
   // The Task being changed, or 'new' while one is added.
   const [editing, setEditing] = useState<number | 'new' | null>(null)
+  // The Task whose deletion is waiting to be confirmed.
+  const [confirming, setConfirming] = useState<number | null>(null)
   // A move shown until the board reloads, so a dropped Task stays where it was dropped; it
   // applies only to the board loaded when it was made.
   const [shownMove, setShownMove] = useState<{ on: Task[]; taskId: number; status: TaskStatus } | null>(null)
@@ -72,26 +74,42 @@ export default function TaskBoardPage() {
           <strong>{task.title}</strong>
         </div>
         {task.note && <p className="note">{task.note}</p>}
-        <div className="actions">
-          {statuses
-            .filter((other) => other !== status)
-            .map((other) => (
-              <button
-                key={other}
-                type="button"
-                aria-label={t('moveNamedTo', { name: task.title, column: t(taskStatusLabel[other]) })}
-                onClick={() => void move(task.id, other)}
-              >
-                → {t(taskStatusLabel[other])}
+        {confirming === task.id ? (
+          // A second, deliberate step, so one stray tap does not lose a Task.
+          <div className="confirm" role="group" aria-label={t('deleteNamed', { name: task.title })}>
+            <p>{t('confirmDeleteTask', { title: task.title })}</p>
+            <div className="actions">
+              <button type="button" className="danger" onClick={() => void change(() => removeTask(groupId, task.id))}>
+                {t('delete')}
               </button>
-            ))}
-          <button type="button" aria-label={t('changeNamed', { name: task.title })} onClick={() => setEditing(task.id)}>
-            {t('edit')}
-          </button>
-          <button type="button" aria-label={t('deleteNamed', { name: task.title })} onClick={() => void change(() => removeTask(groupId, task.id))}>
-            {t('delete')}
-          </button>
-        </div>
+              {/* Focused, so the safe choice is the one already picked. */}
+              <button type="button" autoFocus onClick={() => setConfirming(null)}>
+                {t('cancel')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="actions">
+            {statuses
+              .filter((other) => other !== status)
+              .map((other) => (
+                <button
+                  key={other}
+                  type="button"
+                  aria-label={t('moveNamedTo', { name: task.title, column: t(taskStatusLabel[other]) })}
+                  onClick={() => void move(task.id, other)}
+                >
+                  → {t(taskStatusLabel[other])}
+                </button>
+              ))}
+            <button type="button" aria-label={t('changeNamed', { name: task.title })} onClick={() => setEditing(task.id)}>
+              {t('edit')}
+            </button>
+            <button type="button" aria-label={t('deleteNamed', { name: task.title })} onClick={() => setConfirming(task.id)}>
+              {t('delete')}
+            </button>
+          </div>
+        )}
       </li>
     )
   }

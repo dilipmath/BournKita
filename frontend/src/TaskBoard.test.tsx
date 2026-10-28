@@ -106,6 +106,14 @@ describe('Task board', () => {
     expect(calls).toContainEqual({ route: 'PUT /api/groups/2/tasks/31', body: { title: 'Wash the smocks', note: 'Before Friday' } })
 
     await userEvent.click(screen.getByRole('button', { name: 'Delete Wash the smocks' }))
+    // A second, deliberate tap: one stray tap must not lose a Task.
+    const confirm = screen.getByRole('group', { name: 'Delete Wash the smocks' })
+    expect(confirm).toHaveTextContent('Really delete “Wash the smocks”?')
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Cancel' }))
+    expect(calls.map((call) => call.route)).not.toContain('DELETE /api/groups/2/tasks/31')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Delete Wash the smocks' }))
+    await userEvent.click(within(screen.getByRole('group', { name: 'Delete Wash the smocks' })).getByRole('button', { name: 'Delete' }))
     expect(await within(column('To do')).findByText('No tasks.')).toBeInTheDocument()
   })
 })
