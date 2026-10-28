@@ -40,6 +40,8 @@ from kita.parents_api import parents_router
 from kita.photos import DiskFileStore, FileStore, Photos
 from kita.settings import Settings
 from kita.staff_api import staff_router
+from kita.tasks import Tasks
+from kita.tasks_api import tasks_router
 
 
 class Health(BaseModel):
@@ -107,6 +109,7 @@ def create_app(
     app.include_router(parents_router(identity, parents, photos, audited_route_class))
     app.include_router(audit_router(identity, audit, children))
     app.include_router(groups_router(identity, groups, alerts, audited_route_class))
+    app.include_router(tasks_router(identity, Tasks(engine, clock)))
 
     @app.exception_handler(Exception)
     async def report_crash(request: Request, error: Exception) -> JSONResponse:

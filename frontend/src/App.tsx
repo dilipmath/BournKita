@@ -12,6 +12,7 @@ import ForgotPasswordPage from './ForgotPasswordPage'
 import GroupDashboard from './GroupDashboard'
 import GroupPicker from './GroupPicker'
 import GroupsPage from './GroupsPage'
+import TaskBoardPage from './TaskBoardPage'
 import LoginForm from './LoginForm'
 import ResetPasswordPage from './ResetPasswordPage'
 import StaffPage from './StaffPage'
@@ -139,6 +140,7 @@ export default function App() {
           <Route path="/audit-log" element={isAdmin ? <AuditLogPage /> : adminsOnly('adminsOnlyAuditLog')} />
           <Route path="/groups" element={isAdmin ? <GroupsPage /> : adminsOnly('adminsOnlyGroups')} />
           <Route path="/groups/:id" element={<GroupDashboard />} />
+          <Route path="/groups/:id/board" element={<TaskBoardPage />} />
           <Route path="/" element={<GroupPicker />} />
           <Route path="*" element={null} />
         </Routes>

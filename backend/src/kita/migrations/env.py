@@ -12,6 +12,7 @@ from kita import (  # noqa: F401
     identity,
     parents,
     photos,
+    tasks,
 )
 from kita.db import metadata
 from kita.settings import Settings

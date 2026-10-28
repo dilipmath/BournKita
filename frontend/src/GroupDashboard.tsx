@@ -18,6 +18,9 @@ export default function GroupDashboard() {
       <h2>
         <GroupLabel group={dashboard} />
       </h2>
+      <Link className="button" to={`/groups/${dashboard.id}/board`}>
+        {t('taskBoard')}
+      </Link>
       {dashboard.children.length === 0 ? (
         <p>{t('noChildrenInGroup')}</p>
       ) : (

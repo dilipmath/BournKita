@@ -817,3 +817,110 @@ button.danger {
   color: var(--bad);
   font-weight: 600;
 }
+
+/* A Group's Task board: three columns side by side on a tablet, one under another on a phone. */
+.page.task-board {
+  max-width: none;
+  align-items: stretch;
+}
+
+.board-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 700px) {
+  .board-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.board-column {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  min-height: 160px;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+}
+
+.board-column h3 {
+  margin: 0;
+}
+
+.board-column ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Where a dragged Task would land. */
+.board-column.drop-target {
+  border-color: var(--accent);
+  border-style: dashed;
+}
+
+.task {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px 12px 4px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+
+.task.dragging {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+}
+
+.task-title {
+  display: flex;
+  align-items: center;
+}
+
+.task .note {
+  margin: 0 0 0 48px;
+  white-space: pre-line;
+}
+
+.task .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: 48px;
+}
+
+.task .actions button {
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+/* A large grip to drag a Task by; touching it drags instead of scrolling the page. */
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 48px;
+  min-height: 48px;
+  font-size: 1.6rem;
+  color: var(--accent);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.task.dragging .drag-handle {
+  cursor: grabbing;
+}

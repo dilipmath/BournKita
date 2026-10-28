@@ -505,3 +505,45 @@ export async function setStaffGroups(accountId: number, groupIds: number[]): Pro
   if (!response.ok) return refusalOf(response, 'Changing the Groups')
   return (await response.json()) as StaffAccount
 }
+
+// A Group's Task board: its Tasks, each in one column.
+export type TaskStatus = 'toDo' | 'doing' | 'done'
+export const taskStatusLabel = { toDo: 'taskStatusToDo', doing: 'taskStatusDoing', done: 'taskStatusDone' } as const
+export type TaskDetails = { title: string; note: string }
+export type Task = TaskDetails & { id: number; status: TaskStatus }
+
+/** A Group's Tasks, oldest first, or null when there is no such Group. */
+export async function fetchTasks(groupId: number): Promise<Task[] | null> {
+  const response = await fetch(`/api/groups/${groupId}/tasks`)
+  if (response.status === 404) return null
+  if (!response.ok) throw new Error(`Loading the Task board failed: ${response.status}`)
+  return (await response.json()) as Task[]
+}
+
+/** Adds a Task to a Group's board, in To do. */
+export async function addTask(groupId: number, details: TaskDetails): Promise<Task | Refusal> {
+  const response = await sendJson(`/api/groups/${groupId}/tasks`, 'POST', details)
+  if (!response.ok) return refusalOf(response, 'Adding the Task')
+  return (await response.json()) as Task
+}
+
+/** Changes a Task's title and note. */
+export async function updateTask(groupId: number, taskId: number, details: TaskDetails): Promise<Task | Refusal> {
+  const response = await sendJson(`/api/groups/${groupId}/tasks/${taskId}`, 'PUT', details)
+  if (!response.ok) return refusalOf(response, 'Changing the Task')
+  return (await response.json()) as Task
+}
+
+/** Moves a Task to a column. Resolves to true once moved. */
+export async function moveTask(groupId: number, taskId: number, status: TaskStatus): Promise<true | Refusal> {
+  const response = await sendJson(`/api/groups/${groupId}/tasks/${taskId}/status`, 'PUT', { status })
+  if (!response.ok) return refusalOf(response, 'Moving the Task')
+  return true
+}
+
+/** Deletes a Task. Resolves to true once deleted. */
+export async function removeTask(groupId: number, taskId: number): Promise<true | Refusal> {
+  const response = await fetch(`/api/groups/${groupId}/tasks/${taskId}`, { method: 'DELETE' })
+  if (!response.ok) return refusalOf(response, 'Deleting the Task')
+  return true
+}

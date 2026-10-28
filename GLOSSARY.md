@@ -44,6 +44,14 @@ _Avoid_: Class, room, Gruppe (in code and docs)
 The page a Staff member lands on after picking a Group: that Group's Children with their Alerts, and later its day.
 _Avoid_: Group page, overview
 
+**Task board**:
+A Group's board of Tasks in three columns: To do, Doing and Done. Admins and Teachers can work on every Group's board; it shows that Group's Tasks only.
+_Avoid_: Kanban, task list, Aufgabenliste (in code and docs)
+
+**Task**:
+A piece of work for a Group's team, with a title and an optional note, in one column of the Task board. New Tasks start in To do.
+_Avoid_: Ticket, to-do item, card (the card is only how a Task is drawn)
+
 **Staff member**:
 Any Kita employee who has a login.
 _Avoid_: User, employee, teacher (as a kind of person)
