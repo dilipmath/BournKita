@@ -10,7 +10,8 @@
     "lint": "oxlint",
     "test": "vitest run",
     "preview": "vite preview",
-    "test:e2e": "playwright test"
+    "test:e2e": "node e2e/run.ts",
+    "test:e2e:dev": "playwright test"
   },
   "dependencies": {
     "i18next": "^26.5.4",

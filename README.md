@@ -61,6 +61,10 @@ npm run dev        # http://localhost:5173, proxies /api to the backend on port 
 npm run build
 npm run lint
 npm test           # Vitest unit tests
-npm run test:e2e   # Playwright on a tablet viewport, against http://localhost:8080 (full stack);
-                   # creates the e2e Admin with kita-admin, so run it against an empty database
+npm run test:e2e   # Playwright on a tablet viewport, against a throwaway copy of the stack
+                   # (compose.e2e.yaml, http://localhost:8081) with an empty database, removed
+                   # afterwards; so tests never fill the development database. Arguments go to
+                   # Playwright (npm run test:e2e -- e2e/backlog.spec.ts); --keep leaves it running.
+npm run test:e2e:dev  # Playwright against the running development stack (http://localhost:8080);
+                      # its test data stays there
 ```

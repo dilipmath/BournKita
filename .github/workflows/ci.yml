@@ -52,7 +52,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose up -d --build --wait
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -62,7 +61,6 @@ jobs:
         working-directory: frontend
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
-      - run: npx playwright test
+      # Starts the throwaway e2e stack, runs the tests, prints the stack's logs if they fail.
+      - run: npm run test:e2e
         working-directory: frontend
-      - if: failure()
-        run: docker compose logs

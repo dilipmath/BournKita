@@ -1,0 +1,22 @@
+# The stack the end-to-end tests run against: a throwaway copy of the development stack, with
+# its own empty database, photo folder and Mailpit, on ports beside the development ones, so
+# both can run at once and test data never reaches development data.
+# Started and removed by `npm run test:e2e` (frontend/e2e/run.ts), as the Compose project
+# kita-e2e.
+services:
+  db:
+    # Only the API needs the database; no port on the host.
+    ports: !reset []
+
+  api:
+    environment:
+      # Links in emails (verification, password reset) lead to this stack's web server.
+      KITA_PUBLIC_URL: http://localhost:8081
+
+  mailpit:
+    ports: !override
+      - "8026:8025"
+
+  web:
+    ports: !override
+      - "8081:80"
