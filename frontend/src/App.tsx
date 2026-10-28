@@ -12,6 +12,7 @@ import ForgotPasswordPage from './ForgotPasswordPage'
 import GroupDashboard from './GroupDashboard'
 import GroupPicker from './GroupPicker'
 import GroupsPage from './GroupsPage'
+import BacklogPage from './BacklogPage'
 import TaskBoardPage from './TaskBoardPage'
 import LoginForm from './LoginForm'
 import ResetPasswordPage from './ResetPasswordPage'
@@ -141,6 +142,7 @@ export default function App() {
           <Route path="/groups" element={isAdmin ? <GroupsPage /> : adminsOnly('adminsOnlyGroups')} />
           <Route path="/groups/:id" element={<GroupDashboard />} />
           <Route path="/groups/:id/board" element={<TaskBoardPage />} />
+          <Route path="/groups/:id/backlog" element={<BacklogPage />} />
           <Route path="/" element={<GroupPicker />} />
           <Route path="*" element={null} />
         </Routes>

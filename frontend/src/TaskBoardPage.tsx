@@ -8,8 +8,10 @@ import { useProfileChange } from './profileChange'
 import { useRecordAtAddress } from './recordAtAddress'
 import RecordPlaceholder from './RecordPlaceholder'
 import TaskForm from './TaskForm'
+import TaskPlan from './TaskPlan'
+import { useAssignees } from './useAssignees'
 import { useGroups } from './useGroups'
-import { useTaskDrag } from './useTaskDrag'
+import { dataAt, usePointerDrag } from './usePointerDrag'
 
 const statuses = Object.keys(taskStatusLabel) as TaskStatus[]
 
@@ -20,6 +22,7 @@ export default function TaskBoardPage() {
   const groupId = Number(useParams().id)
   const [loaded, reload] = useRecordAtAddress(fetchTasks)
   const group = useGroups()?.find((listed) => listed.id === groupId)
+  const assignees = useAssignees(groupId)
   const { problem, change } = useProfileChange(reload)
   // The Task being changed, or 'new' while one is added.
   const [editing, setEditing] = useState<number | 'new' | null>(null)
@@ -28,7 +31,14 @@ export default function TaskBoardPage() {
   // A move shown until the board reloads, so a dropped Task stays where it was dropped; it
   // applies only to the board loaded when it was made.
   const [shownMove, setShownMove] = useState<{ on: Task[]; taskId: number; status: TaskStatus } | null>(null)
-  const { handleProps, dragging, over } = useTaskDrag((taskId, status) => void move(taskId, status))
+  const { handleProps, dragging } = usePointerDrag(
+    (x, y) => dataAt(x, y, 'status') as TaskStatus | null,
+    (taskId, status) => {
+      // Let go over its own column, it stays where it is.
+      const task = tasks?.find((each) => each.id === taskId)
+      if (task && statusOf(task) !== status) void move(taskId, status)
+    },
+  )
 
   const tasks = loaded.record
   if (!tasks) return <RecordPlaceholder {...loaded} backTo={{ to: '/', label: t('backToStart') }} />
@@ -53,13 +63,14 @@ export default function TaskBoardPage() {
           <TaskForm
             label={t('changeNamed', { name: task.title })}
             task={task}
+            assignees={assignees}
             onSave={(details) => save(() => updateTask(groupId, task.id, details))}
             onCancel={() => setEditing(null)}
           />
         </li>
       )
     }
-    const isDragged = dragging?.taskId === task.id
+    const isDragged = dragging?.id === task.id
     return (
       <li
         key={task.id}
@@ -68,12 +79,13 @@ export default function TaskBoardPage() {
       >
         <div className="task-title">
           {/* For pointers only: keyboards and screen readers use the Move buttons. */}
-          <span className="drag-handle" aria-hidden="true" {...handleProps(task.id, status)}>
+          <span className="drag-handle" aria-hidden="true" {...handleProps(task.id)}>
             ⠿
           </span>
           <strong>{task.title}</strong>
         </div>
         {task.note && <p className="note">{task.note}</p>}
+        <TaskPlan task={task} />
         {confirming === task.id ? (
           // A second, deliberate step, so one stray tap does not lose a Task.
           <div className="confirm" role="group" aria-label={t('deleteNamed', { name: task.title })}>
@@ -116,7 +128,12 @@ export default function TaskBoardPage() {
 
   return (
     <section className="page task-board">
-      <Link to={`/groups/${groupId}`}>{t('backToGroup')}</Link>
+      <nav className="actions" aria-label={t('taskViews')}>
+        <Link to={`/groups/${groupId}`}>{t('backToGroup')}</Link>
+        <Link className="button" to={`/groups/${groupId}/backlog`}>
+          {t('backlog')}
+        </Link>
+      </nav>
       <h2>
         {t('taskBoard')}
         {group && (
@@ -135,14 +152,14 @@ export default function TaskBoardPage() {
             <section
               key={status}
               data-status={status}
-              className={over === status && dragging ? 'board-column drop-target' : 'board-column'}
+              className={dragging?.over === status ? 'board-column drop-target' : 'board-column'}
               aria-labelledby={headingId}
             >
               <h3 id={headingId}>{t(taskStatusLabel[status])}</h3>
               {inColumn.length === 0 ? <p>{t('noTasks')}</p> : <ul>{inColumn.map((task) => card(task, status))}</ul>}
               {status === 'toDo' &&
                 (editing === 'new' ? (
-                  <TaskForm label={t('addTask')} onSave={(details) => save(() => addTask(groupId, details))} onCancel={() => setEditing(null)} />
+                  <TaskForm label={t('addTask')} assignees={assignees} onSave={(details) => save(() => addTask(groupId, details))} onCancel={() => setEditing(null)} />
                 ) : (
                   <button type="button" onClick={() => setEditing('new')}>
                     {t('addTask')}

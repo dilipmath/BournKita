@@ -49,8 +49,16 @@ A Group's board of Tasks in three columns: To do, Doing and Done. Admins and Tea
 _Avoid_: Kanban, task list, Aufgabenliste (in code and docs)
 
 **Task**:
-A piece of work for a Group's team, with a title and an optional note, in one column of the Task board. New Tasks start in To do.
+A piece of work for a Group's team, with a title and an optional note, in one column of the Task board. It may also say who does it (an Assignee), when it is due and a few labels. New Tasks start in To do, at the end of the Backlog.
 _Avoid_: Ticket, to-do item, card (the card is only how a Task is drawn)
+
+**Assignee**:
+The Staff member who does a Task: an active one who works in the Task's Group.
+_Avoid_: Owner, responsible, Zuständige (in code and docs)
+
+**Backlog**:
+A Group's To do Tasks in the order its Staff choose, most important first. A Task's priority is its place in the Backlog; there is no separate priority level.
+_Avoid_: Priority list, queue, Warteschlange (in code and docs)
 
 **Staff member**:
 Any Kita employee who has a login.

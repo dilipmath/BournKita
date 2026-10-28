@@ -6,9 +6,10 @@ import App from './App'
 import { fakeApi, health, renderAt, sessionAs } from './testing'
 
 const monkeys = { id: 2, name: 'Monkeys', icon: 'monkey', mine: true }
-const smocks = { id: 31, title: 'Wash the painting smocks', note: 'Before Friday', status: 'toDo' }
-const plants = { id: 32, title: 'Water the plants', note: '', status: 'doing' }
-const lantern = { id: 33, title: 'Lantern festival', note: '', status: 'done' }
+const unplanned = { assignee: null, dueOn: null, labels: [] }
+const smocks = { id: 31, title: 'Wash the painting smocks', note: 'Before Friday', status: 'toDo', ...unplanned }
+const plants = { id: 32, title: 'Water the plants', note: '', status: 'doing', ...unplanned }
+const lantern = { id: 33, title: 'Lantern festival', note: '', status: 'done', ...unplanned }
 
 type Task = { id: number; title: string; note: string; status: string }
 
@@ -19,6 +20,7 @@ function boardApi(tasks: Task[]) {
     'GET /api/health': health,
     'GET /api/session': sessionAs('teacher'),
     'GET /api/groups': { status: 200, body: [monkeys] },
+    'GET /api/groups/2/assignees': { status: 200, body: [] },
     'GET /api/groups/2/tasks': () => ({ status: 200, body: state.tasks }),
     'POST /api/groups/2/tasks': (body) => {
       const added = { ...(body as Task), id: 40, status: 'toDo' }
@@ -79,7 +81,7 @@ describe('Task board', () => {
     await userEvent.click(within(form).getByRole('button', { name: 'Save' }))
 
     expect(await within(column('To do')).findByText('Wash the painting smocks')).toBeInTheDocument()
-    expect(calls).toContainEqual({ route: 'POST /api/groups/2/tasks', body: { title: 'Wash the painting smocks', note: 'Before Friday' } })
+    expect(calls).toContainEqual({ route: 'POST /api/groups/2/tasks', body: { title: 'Wash the painting smocks', note: 'Before Friday', assigneeId: null, dueOn: null, labels: [] } })
   })
 
   it('lets a Teacher move a Task to another column without dragging', async () => {
@@ -103,7 +105,7 @@ describe('Task board', () => {
     await userEvent.type(within(form).getByLabelText('Title'), 'Wash the smocks')
     await userEvent.click(within(form).getByRole('button', { name: 'Save' }))
     expect(await within(column('To do')).findByText('Wash the smocks')).toBeInTheDocument()
-    expect(calls).toContainEqual({ route: 'PUT /api/groups/2/tasks/31', body: { title: 'Wash the smocks', note: 'Before Friday' } })
+    expect(calls).toContainEqual({ route: 'PUT /api/groups/2/tasks/31', body: { title: 'Wash the smocks', note: 'Before Friday', assigneeId: null, dueOn: null, labels: [] } })
 
     await userEvent.click(screen.getByRole('button', { name: 'Delete Wash the smocks' }))
     // A second, deliberate tap: one stray tap must not lose a Task.

@@ -45,6 +45,8 @@ const refusals = {
   too_large: 'photoTooLarge',
   no_photo_consent: 'noPhotoConsent',
   group_name_taken: 'groupNameTaken',
+  not_in_group: 'notInGroup',
+  backlog_changed: 'backlogChanged',
 } as const
 
 export type Refusal = (typeof refusals)[keyof typeof refusals]
@@ -506,13 +508,33 @@ export async function setStaffGroups(accountId: number, groupIds: number[]): Pro
   return (await response.json()) as StaffAccount
 }
 
-// A Group's Task board: its Tasks, each in one column.
+// A Group's Task board: its Tasks, each in one column. The To do ones are the backlog, in the
+// order the API gives them: the first is the most important.
 export type TaskStatus = 'toDo' | 'doing' | 'done'
 export const taskStatusLabel = { toDo: 'taskStatusToDo', doing: 'taskStatusDoing', done: 'taskStatusDone' } as const
-export type TaskDetails = { title: string; note: string }
-export type Task = TaskDetails & { id: number; status: TaskStatus }
+// A Staff member a Task can be given to: one who works in its Group.
+export type Assignee = { id: number; email: string }
+// dueOn: YYYY-MM-DD, or null.
+export type TaskDetails = { title: string; note: string; assigneeId: number | null; dueOn: string | null; labels: string[] }
+export type Task = Omit<TaskDetails, 'assigneeId'> & { id: number; status: TaskStatus; assignee: Assignee | null }
 
-/** A Group's Tasks, oldest first, or null when there is no such Group. */
+/** Whom a Group's Tasks can be given to, by email address. */
+export async function fetchAssignees(groupId: number): Promise<Assignee[]> {
+  const response = await fetch(`/api/groups/${groupId}/assignees`)
+  if (!response.ok) throw new Error(`Loading the Group's Staff members failed: ${response.status}`)
+  return (await response.json()) as Assignee[]
+}
+
+/** Puts a Group's backlog in this order, most important first. Resolves to 'backlogChanged'
+ * when it no longer has exactly these Tasks (someone else changed it meanwhile). */
+export async function reorderBacklog(groupId: number, taskIds: number[]): Promise<true | Refusal> {
+  const response = await sendJson(`/api/groups/${groupId}/backlog`, 'PUT', { taskIds })
+  if (!response.ok) return refusalOf(response, 'Reordering the backlog')
+  return true
+}
+
+/** A Group's Tasks, each column in its order (so To do in Backlog order), or null when there
+ * is no such Group. */
 export async function fetchTasks(groupId: number): Promise<Task[] | null> {
   const response = await fetch(`/api/groups/${groupId}/tasks`)
   if (response.status === 404) return null

@@ -934,3 +934,55 @@ button.danger {
 .task .confirm .actions {
   margin-left: 0;
 }
+
+/* Who does a Task, when it is due, and its labels. */
+.task-plan {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-left: 48px;
+  font-size: 0.9rem;
+}
+
+.task-plan .overdue {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+.task-plan .labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.task-plan .label {
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+/* A Group's backlog: one Task under another, most important first. */
+.page.backlog {
+  align-items: stretch;
+}
+
+.backlog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.backlog-list .task.drop-target {
+  border-color: var(--accent);
+  border-style: dashed;
+}
+
+.rank {
+  min-width: 2.5em;
+  color: var(--accent);
+  font-weight: 700;
+}
