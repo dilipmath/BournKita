@@ -11,6 +11,8 @@ test('a Staff member who forgot their password chooses a new one from the emaile
   await page.getByRole('button', { name: 'Create account' }).tap()
   await expect(page.getByRole('status')).toHaveText(`A verification email has been sent to ${email}.`)
   await page.getByRole('button', { name: 'Log out' }).tap()
+  // Only once logged out: navigating sooner can cancel the logout and keep the Admin's session.
+  await expect(page.getByRole('button', { name: 'Log in' })).toBeVisible()
   await page.goto(await linkFromEmail(email, '/verify-email'))
   await choosePassword(page, 'first long password')
   await expect(page.getByRole('status')).toHaveText('Your password is saved. You can now log in.')

@@ -11,6 +11,8 @@ test('a new Staff member follows the emailed link, chooses a password and logs i
   await page.getByRole('button', { name: 'Create account' }).tap()
   await expect(page.getByRole('status')).toHaveText(`A verification email has been sent to ${email}.`)
   await page.getByRole('button', { name: 'Log out' }).tap()
+  // Only once logged out: navigating sooner can cancel the logout and keep the Admin's session.
+  await expect(page.getByRole('button', { name: 'Log in' })).toBeVisible()
 
   await page.goto(await linkFromEmail(email, '/verify-email'))
   await choosePassword(page, password)

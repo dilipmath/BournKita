@@ -37,6 +37,8 @@ test('an Admin records an allergy, and it shows on the profile and the Group das
   await expect(page.getByText('Allergies: Peanuts')).toBeVisible()
 
   await page.getByRole('link', { name: 'Start' }).tap()
+  // The profile has a Group drop-down too: pick from the start page's only once it is there.
+  await expect(page).toHaveURL('/')
   await page.getByLabel('Group', { exact: true }).selectOption({ label: `🐝 ${groupName}` })
   const lena = page.getByRole('listitem').filter({ has: page.getByRole('link', { name: `Lena ${lastName}` }) })
   await expect(lena).toContainText('Alerts: Peanuts')
