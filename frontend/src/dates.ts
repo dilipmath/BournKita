@@ -13,3 +13,12 @@ export function kitaToday(): string {
   // Canadian English writes dates as YYYY-MM-DD.
   return new Intl.DateTimeFormat('en-CA', { timeZone: KITA_TIME_ZONE }).format(new Date())
 }
+
+/** The time at the Kita of a moment the API gives (UTC), e.g. "08:12". */
+export function kitaTime(moment: string, language: string): string {
+  return new Intl.DateTimeFormat(language.startsWith('de') ? 'de-DE' : 'en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: KITA_TIME_ZONE,
+  }).format(new Date(moment))
+}

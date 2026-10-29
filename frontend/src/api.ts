@@ -55,6 +55,12 @@ const refusals = {
   repeating_holidays: 'repeatingHolidays',
   no_holidays: 'noHolidays',
   file_too_large: 'fileTooLarge',
+  not_checked_in: 'notCheckedIn',
+  already_checked_in: 'alreadyCheckedIn',
+  already_checked_out: 'alreadyCheckedOut',
+  absent_today: 'absentToday',
+  present_then: 'presentThen',
+  overlapping_absence: 'overlappingAbsence',
 } as const
 
 export type Refusal = (typeof refusals)[keyof typeof refusals]
@@ -190,6 +196,8 @@ export async function fetchChildren(search: string): Promise<ChildSummary[]> {
 // The whole profile, as its page shows it.
 export type ChildProfile = Child & {
   alerts: Alert[]
+  // Those that have not ended yet: today's and later ones.
+  absences: Absence[]
   parents: LinkedParent[]
   emergencyContacts: Contact[]
   pickUpPersons: Contact[]
@@ -494,8 +502,39 @@ export async function removeGroup(id: number): Promise<true | Refusal> {
   return true
 }
 
-// A Group with its Children, by first name, and their alerts: what its dashboard shows.
-export type GroupDashboard = Group & { children: (ChildSummary & { alerts: Alert[] })[] }
+// A Child's day at the Kita: checked in at, and out at (null while still there); UTC times.
+export type AttendanceDay = { checkedInAt: string; checkedOutAt: string | null }
+export type AbsenceReason = 'sick' | 'holiday' | 'other'
+export const absenceReasonLabel = { sick: 'absenceSick', holiday: 'absenceHoliday', other: 'absenceOther' } as const
+// Days a Child will not come (YYYY-MM-DD, both included), and why.
+export type Absence = { id: number; startsOn: string; endsOn: string; reason: AbsenceReason }
+// One of a Group's Children today.
+export type GroupChild = ChildSummary & { alerts: Alert[]; attendance: AttendanceDay | null; absence: Absence | null; birthdayToday: boolean }
+// The Group dashboard, the Today view: the Group, the day at the Kita, its Children by first name.
+export type GroupDashboard = Group & { day: string; children: GroupChild[] }
+
+export type AttendanceStep = 'check-in' | 'check-out' | 'undo'
+
+/** Checks a Child in or out today, or undoes today's last of these. Resolves to true once done. */
+export async function attendanceStep(childId: number, step: AttendanceStep): Promise<true | Refusal> {
+  const response = await fetch(`/api/children/${childId}/attendance/${step}`, { method: 'POST' })
+  if (!response.ok) return refusalOf(response, 'Recording the attendance')
+  return true
+}
+
+/** Records that a Child will not come from `startsOn` to `endsOn`. */
+export async function addAbsence(childId: number, absence: Omit<Absence, 'id'>): Promise<Absence | Refusal> {
+  const response = await sendJson(`/api/children/${childId}/absences`, 'POST', absence)
+  if (!response.ok) return refusalOf(response, 'Recording the Absence')
+  return (await response.json()) as Absence
+}
+
+/** Removes an Absence (e.g. recorded by mistake). Resolves to true once removed. */
+export async function removeAbsence(childId: number, absenceId: number): Promise<true | Refusal> {
+  const response = await fetch(`/api/children/${childId}/absences/${absenceId}`, { method: 'DELETE' })
+  if (!response.ok) return refusalOf(response, 'Removing the Absence')
+  return true
+}
 
 /** A Group's dashboard, or null when there is no such Group. */
 export async function fetchGroupDashboard(id: number): Promise<GroupDashboard | null> {

@@ -119,6 +119,7 @@ describe('Allergy and medical alerts', () => {
           id: 2,
           name: 'Monkeys',
           icon: 'monkey',
+          day: '2027-01-04',
           children: [
             { id: 7, firstName: 'Lena', lastName: 'Müller', alerts: [peanuts, asthma] },
             { id: 8, firstName: 'Mia', lastName: 'Müller', alerts: [] },

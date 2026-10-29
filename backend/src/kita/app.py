@@ -11,6 +11,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 
 from kita.alerts import Alerts
+from kita.attendance import Attendance
 from kita.audit import Audit
 from kita.audit_api import audit_router, audited_route
 from kita.birthdays import Birthdays
@@ -110,6 +111,7 @@ def create_app(
     parents = Parents(engine, clock, cipher)
     contacts = Contacts(engine, cipher)
     alerts = Alerts(engine, cipher)
+    attendance = Attendance(engine, clock, cipher)
     consents = Consents(engine, clock)
     photos = Photos(
         engine, clock, cipher, file_store or DiskFileStore(settings.photo_folder), consents
@@ -123,6 +125,7 @@ def create_app(
             parents,
             contacts,
             alerts,
+            attendance,
             consents,
             photos,
             groups,
@@ -131,13 +134,16 @@ def create_app(
     )
     app.include_router(parents_router(identity, parents, photos, audited_route_class))
     app.include_router(audit_router(identity, audit, children))
-    app.include_router(groups_router(identity, groups, alerts, audited_route_class))
+    birthdays = Birthdays(engine)
+    app.include_router(
+        groups_router(identity, groups, alerts, attendance, birthdays, audited_route_class)
+    )
     app.include_router(tasks_router(identity, Tasks(engine, clock)))
     events = Events(engine, clock)
     app.include_router(events_router(identity, events))
     holidays = Holidays(engine)
     app.include_router(holidays_router(identity, holidays))
-    app.include_router(calendar_router(identity, events, Birthdays(engine), holidays))
+    app.include_router(calendar_router(identity, events, birthdays, holidays))
     # Kept on the app for the Reminder job, and for tests, which run it themselves.
     app.state.reminders = Reminders(engine, clock, reporting_mailer, events, settings.public_url)
 

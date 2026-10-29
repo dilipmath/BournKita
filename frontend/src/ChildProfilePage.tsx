@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import AlertMarker from './AlertMarker'
+import AbsencesSection from './AbsencesSection'
 import AlertsBanner from './AlertsBanner'
 import { fullDate } from './calendarDates'
 import { childPhotoUrl, deleteChild, fetchChild, genderLabel } from './api'
@@ -81,6 +82,7 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
       />
       <ContactsSection kind="emergency" childId={child.id} contacts={child.emergencyContacts} canEdit={canEdit} reload={reload} />
       <ParentsSection child={child} canEdit={canEdit} reload={reload} />
+      <AbsencesSection childId={child.id} absences={child.absences} reload={reload} />
       <ConsentsSection childId={child.id} consents={child.consents} canEdit={canEdit} reload={reload} />
       <GallerySection child={child} canEdit={canEdit} reload={reload} />
       <ProblemAlert problem={problem} />

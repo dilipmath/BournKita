@@ -1,5 +1,7 @@
 """HTTP API for Groups: every Staff member may see them, only Admins may change them."""
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
@@ -7,12 +9,15 @@ from pydantic import BaseModel
 from kita.alerts import Alert, Alerts
 from kita.alerts_api import AlertOut
 from kita.api_support import CAMEL_CASE, Refusals, refusals_as_http_errors
+from kita.attendance import Absence, Attendance, AttendanceDay
+from kita.attendance_api import AbsenceOut, AttendanceDayOut
 from kita.audit_api import (
     about_noted_children,
     not_about_one_child,
     note_changed_fields,
     note_children,
 )
+from kita.birthdays import Birthdays
 from kita.children import ChildSummary, NameRequired, TooLong
 from kita.groups import (
     Group,
@@ -55,7 +60,8 @@ class GroupForStaffMemberOut(GroupOut):
 
 
 class GroupChildOut(BaseModel):
-    """One of a Group's Children: their name and Alerts."""
+    """One of a Group's Children today: their name and Alerts, whether they are checked in or
+    absent, and whether it is their Birthday."""
 
     model_config = CAMEL_CASE
 
@@ -63,20 +69,37 @@ class GroupChildOut(BaseModel):
     first_name: str
     last_name: str
     alerts: list[AlertOut]
+    # None: not checked in today.
+    attendance: AttendanceDayOut | None
+    # None: not absent today.
+    absence: AbsenceOut | None
+    birthday_today: bool
 
     @classmethod
-    def of(cls, child: ChildSummary, alerts: list[Alert]) -> "GroupChildOut":
+    def of(
+        cls,
+        child: ChildSummary,
+        alerts: list[Alert],
+        day: AttendanceDay | None,
+        absence: Absence | None,
+        birthday_today: bool,
+    ) -> "GroupChildOut":
         return cls(
             id=child.id,
             first_name=child.first_name,
             last_name=child.last_name,
             alerts=[AlertOut.of(alert) for alert in alerts],
+            attendance=None if day is None else AttendanceDayOut.of(day),
+            absence=None if absence is None else AbsenceOut.of(absence),
+            birthday_today=birthday_today,
         )
 
 
 class GroupDashboardOut(GroupOut):
-    """The Group dashboard: the Group and its Children, by first name, with their Alerts."""
+    """The Group dashboard, the Today view: the Group, the day at the Kita, and its Children by
+    first name, each with their Alerts and how they are today."""
 
+    day: date
     children: list[GroupChildOut]
 
 
@@ -89,7 +112,12 @@ _REFUSALS: Refusals = {
 
 
 def groups_router(
-    identity: Identity, groups: Groups, alerts: Alerts, audited_route_class: type[APIRoute]
+    identity: Identity,
+    groups: Groups,
+    alerts: Alerts,
+    attendance: Attendance,
+    birthdays: Birthdays,
+    audited_route_class: type[APIRoute],
 ) -> APIRouter:
     """`audited_route_class` comes from audited_route: the dashboard shows Children's Alerts, and
     removing a Group changes its Children's."""
@@ -118,12 +146,28 @@ def groups_router(
         with refusals_as_http_errors(_REFUSALS):
             group = groups.group(group_id)
             children = groups.children_of(group_id)
-        its_alerts = alerts.of_children([child.id for child in children])
-        # Names alone are not logged (like the list of Children); Alerts are health data.
+        child_ids = [child.id for child in children]
+        day = attendance.today()
+        its_alerts = alerts.of_children(child_ids)
+        attendance_days = attendance.days_on(day, child_ids)
+        absences_today = attendance.absences_on(day, child_ids)
+        birthday_children = {b.child_id for b in birthdays.between(day, day, group_id)}
+        # Names, Attendance and Birthdays are not logged (like the list of Children); Alerts are
+        # health data, so their views are.
         note_children(request, list(its_alerts))
         return GroupDashboardOut(
             **GroupOut.of(group).model_dump(by_alias=False),
-            children=[GroupChildOut.of(child, its_alerts.get(child.id, [])) for child in children],
+            day=day,
+            children=[
+                GroupChildOut.of(
+                    child,
+                    its_alerts.get(child.id, []),
+                    attendance_days.get(child.id),
+                    absences_today.get(child.id),
+                    child.id in birthday_children,
+                )
+                for child in children
+            ],
         )
 
     @router.put("/{group_id}", dependencies=admin_only)

@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 # The modules register their tables on the metadata.
 from kita import (  # noqa: F401
     alerts,
+    attendance,
     audit,
     children,
     consents,

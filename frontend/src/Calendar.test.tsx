@@ -125,7 +125,7 @@ describe('Calendar', () => {
       'GET /api/health': health,
       'GET /api/session': sessionAs('teacher'),
       'GET /api/groups': { status: 200, body: [{ ...monkeys, mine: true }] },
-      'GET /api/groups/2': { status: 200, body: { ...monkeys, children: [] } },
+      'GET /api/groups/2': { status: 200, body: { ...monkeys, day: '2027-01-04', children: [] } },
       'GET /api/calendar?from=2026-12-28&to=2027-01-31&groupId=2': { status: 200, body: span(january) },
     })
     renderAt('/groups/2', <App />)

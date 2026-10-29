@@ -63,7 +63,7 @@ describe('Task board', () => {
     fakeApi({
       'GET /api/health': health,
       'GET /api/session': sessionAs('teacher'),
-      'GET /api/groups/2': { status: 200, body: { ...monkeys, children: [] } },
+      'GET /api/groups/2': { status: 200, body: { ...monkeys, day: '2027-01-04', children: [] } },
     })
     renderAt('/groups/2', <App />)
 

@@ -41,8 +41,16 @@ A set of Children cared for together, with a name and an icon (e.g. Monkeys). A 
 _Avoid_: Class, room, Gruppe (in code and docs)
 
 **Group dashboard**:
-The page a Staff member lands on after picking a Group: that Group's Children with their Alerts, and later its day.
+The page a Staff member lands on after picking a Group, also called the Today view: that Group's day at the Kita. Each Child's Attendance or Absence, their Alerts, and today's Birthdays; Staff check Children in and out and record Absences here.
 _Avoid_: Group page, overview
+
+**Attendance**:
+Whether a Child is at the Kita today: checked in when they arrive and checked out when they leave, each once a day, at the Kita's local time. A mistaken step can be undone. Each day starts afresh.
+_Avoid_: Presence list, Anwesenheit (in code and docs), register
+
+**Absence**:
+Days a Child will not come, from one day to another, with a reason: sick, holiday (the family's own time off, not a Holiday of the region) or other. A Child who is absent cannot be checked in, and an Absence cannot cover a day the Child was checked in. The coming ones are on the Child profile. The reason is health data, so stored encrypted.
+_Avoid_: Leave, sick note, Fehlzeit (in code and docs)
 
 **Task board**:
 A Group's board of Tasks in three columns: To do, Doing and Done. Admins and Teachers can work on every Group's board; it shows that Group's Tasks only.

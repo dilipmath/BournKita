@@ -11,6 +11,8 @@ from pydantic import BaseModel
 from kita.alerts import AlertNotFound, Alerts
 from kita.alerts_api import AlertIn, AlertOut
 from kita.api_support import CAMEL_CASE, Refusals, refusals_as_http_errors
+from kita.attendance import Attendance
+from kita.attendance_api import ATTENDANCE_REFUSALS, AbsenceIn, AbsenceOut, AttendanceStep
 from kita.audit_api import (
     creates_child,
     not_about_one_child,
@@ -202,6 +204,8 @@ class ChildProfileOut(ChildOut):
     parents: list[LinkedParentOut]
     emergency_contacts: list[ContactOut]
     pick_up_persons: list[ContactOut]
+    # Those that have not ended yet: today's and later ones.
+    absences: list[AbsenceOut]
     consents: ConsentsOut
     photos: list[PhotoOut]
     group: GroupOut | None
@@ -237,6 +241,7 @@ _REFUSALS: Refusals = {
     InFuture: (status.HTTP_422_UNPROCESSABLE_CONTENT, "in_future"),
     BornInFuture: (status.HTTP_422_UNPROCESSABLE_CONTENT, "in_future"),
     OutOfOrder: (status.HTTP_422_UNPROCESSABLE_CONTENT, "out_of_order"),
+    **ATTENDANCE_REFUSALS,
 }
 
 
@@ -246,6 +251,7 @@ def children_router(
     parents: Parents,
     contacts: Contacts,
     alerts: Alerts,
+    attendance: Attendance,
     consents: Consents,
     photos: Photos,
     groups: Groups,
@@ -296,6 +302,7 @@ def children_router(
             ],
             emergency_contacts=of_kind("emergency"),
             pick_up_persons=of_kind("pickUp"),
+            absences=[AbsenceOut.of(a) for a in attendance.coming_absences(child_id)],
             consents=ConsentsOut.of(consents.of_child(child_id)),
             photos=[PhotoOut.of(photo) for photo in photos.of_child(child_id)],
             group=None if (group := groups.of_child(child_id)) is None else GroupOut.of(group),
@@ -429,6 +436,34 @@ def children_router(
         with refusals_as_http_errors(_REFUSALS):
             alerts.remove(child_id, alert_id)
         note_changed_fields(request, ["alerts"])
+
+    @router.post("/{child_id}/attendance/{step}", status_code=status.HTTP_204_NO_CONTENT)
+    def attendance_step(child_id: int, step: AttendanceStep, request: Request) -> None:
+        """Checks the Child in or out today, or undoes today's last step. Every Staff member."""
+        with refusals_as_http_errors(_REFUSALS):
+            if step == "check-in":
+                attendance.check_in(child_id)
+            elif step == "check-out":
+                attendance.check_out(child_id)
+            else:
+                attendance.undo(child_id)
+        note_changed_fields(request, ["attendance"])
+
+    @router.post("/{child_id}/absences", status_code=status.HTTP_201_CREATED)
+    def add_absence(child_id: int, absence: AbsenceIn, request: Request) -> AbsenceOut:
+        """Records that the Child will not come on these days. Every Staff member."""
+        with refusals_as_http_errors(_REFUSALS):
+            added = attendance.add_absence(
+                child_id, absence.starts_on, absence.ends_on or absence.starts_on, absence.reason
+            )
+        note_changed_fields(request, ["absences"])
+        return AbsenceOut.of(added)
+
+    @router.delete("/{child_id}/absences/{absence_id}", status_code=status.HTTP_204_NO_CONTENT)
+    def remove_absence(child_id: int, absence_id: int, request: Request) -> None:
+        with refusals_as_http_errors(_REFUSALS):
+            attendance.remove_absence(child_id, absence_id)
+        note_changed_fields(request, ["absences"])
 
     @router.put(
         "/{child_id}/group", status_code=status.HTTP_204_NO_CONTENT, dependencies=admin_only

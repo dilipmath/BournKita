@@ -70,7 +70,7 @@ describe('Groups', () => {
       'GET /api/health': health,
       'GET /api/session': sessionAs('teacher'),
       'GET /api/groups': { status: 200, body: [{ ...bees, mine: false }, { ...monkeys, mine: true }, { ...owls, mine: false }] },
-      'GET /api/groups/5': { status: 200, body: { ...monkeys, children: [{ id: 7, firstName: 'Lena', lastName: 'Müller', alerts: [] }] } },
+      'GET /api/groups/5': { status: 200, body: { ...monkeys, day: '2027-01-04', children: [{ id: 7, firstName: 'Lena', lastName: 'Müller', alerts: [], attendance: null, absence: null, birthdayToday: false }] } },
     })
     const { unmount } = renderAt('/', <App />)
 
@@ -97,7 +97,7 @@ describe('Groups', () => {
       'GET /api/health': health,
       'GET /api/session': sessionAs('teacher'),
       'GET /api/groups': { status: 200, body: [{ ...owls, mine: false }] },
-      'GET /api/groups/7': { status: 200, body: { ...owls, children: [] } },
+      'GET /api/groups/7': { status: 200, body: { ...owls, day: '2027-01-04', children: [] } },
     })
     renderAt('/groups/7', <App />)
 
