@@ -39,6 +39,9 @@ Repeat = Literal["none", "daily", "weekly", "monthly", "yearly"]
 _MAX_TITLE_LENGTH = 200
 _MAX_NOTE_LENGTH = 2000
 _MAX_REPEAT_EVERY = 99
+# How many days before an occurrence a Reminder may go out: that morning, the day before, two days
+# before, a week before.
+REMIND_DAYS_BEFORE = (0, 1, 2, 7)
 # The longest span a Calendar asks for at once: more than a month view's six weeks, or an agenda.
 MAX_SPAN_DAYS = 100
 
@@ -59,6 +62,8 @@ events = Table(
     Column("repeat_every", Integer, nullable=False),
     # The last day an occurrence may start on; None: for ever.
     Column("repeat_until", Date),
+    # Days before an occurrence its Staff are emailed a Reminder (0: that morning); None: no Reminder.
+    Column("remind_days_before", Integer),
     Column("created_at", DateTime(timezone=True), nullable=False),
     CheckConstraint(f"repeat IN {get_args(Repeat)}", name="repeat"),
     CheckConstraint("ends_on >= starts_on", name="ends_after_start"),
@@ -80,6 +85,7 @@ class EventDetails:
     repeat: Repeat = "none"
     repeat_every: int = 1
     repeat_until: date | None = None
+    remind_days_before: int | None = None
 
 
 @dataclass(frozen=True)
@@ -96,6 +102,7 @@ class Event:
     repeat: Repeat
     repeat_every: int
     repeat_until: date | None
+    remind_days_before: int | None
 
 
 @dataclass(frozen=True)
@@ -123,6 +130,10 @@ class InvalidRepeat(Exception):
     """An Event repeats every 1 to 99 days, weeks, months or years."""
 
 
+class InvalidReminder(Exception):
+    """A Reminder goes out that morning, or 1, 2 or 7 days before."""
+
+
 class SpanTooLong(Exception):
     """A Calendar asks for more days at once than MAX_SPAN_DAYS."""
 
@@ -134,6 +145,8 @@ def _checked(details: EventDetails) -> EventDetails:
         raise NameRequired
     if len(title) > _MAX_TITLE_LENGTH or len(note) > _MAX_NOTE_LENGTH:
         raise TooLong
+    if details.remind_days_before not in (None, *REMIND_DAYS_BEFORE):
+        raise InvalidReminder
     if details.ends_on < details.starts_on:
         raise EndsBeforeStart
     timed = details.start_time is not None or details.end_time is not None
@@ -214,6 +227,7 @@ def _to_event(row: Row[Any]) -> Event:
         row.repeat,
         row.repeat_every,
         row.repeat_until,
+        row.remind_days_before,
     )
 
 
@@ -327,4 +341,5 @@ def _values(details: EventDetails) -> dict[str, Any]:
         "repeat": details.repeat,
         "repeat_every": details.repeat_every,
         "repeat_until": details.repeat_until,
+        "remind_days_before": details.remind_days_before,
     }

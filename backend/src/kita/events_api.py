@@ -1,10 +1,9 @@
-"""HTTP API for the Calendar: Admins and Teachers see every Event and may add, change and remove
-them. Events are not Child data, so not audited."""
+"""HTTP API for Events: Admins and Teachers add, change and remove them (the Calendar lists
+them). Events are not Child data, so not audited."""
 
 from datetime import date, time
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel
 
 from kita.api_support import CAMEL_CASE, Refusals, refusals_as_http_errors
@@ -15,6 +14,7 @@ from kita.events import (
     EventDetails,
     EventNotFound,
     Events,
+    InvalidReminder,
     InvalidRepeat,
     InvalidTimes,
     Occurrence,
@@ -43,6 +43,8 @@ class EventIn(BaseModel):
     repeat: Repeat = "none"
     repeat_every: int = 1
     repeat_until: date | None = None
+    # Days before each occurrence its Staff are reminded by email (0: that morning); None: never.
+    remind_days_before: int | None = None
 
     def details(self) -> EventDetails:
         return EventDetails(
@@ -56,6 +58,7 @@ class EventIn(BaseModel):
             self.repeat,
             self.repeat_every,
             self.repeat_until,
+            self.remind_days_before,
         )
 
 
@@ -73,6 +76,7 @@ class EventOut(BaseModel):
     repeat: Repeat
     repeat_every: int
     repeat_until: date | None
+    remind_days_before: int | None
 
     @classmethod
     def of(cls, event: Event) -> "EventOut":
@@ -93,12 +97,13 @@ class OccurrenceOut(BaseModel):
         return cls.model_validate(occurrence)
 
 
-_REFUSALS: Refusals = {
+EVENT_REFUSALS: Refusals = {
     NameRequired: (status.HTTP_422_UNPROCESSABLE_CONTENT, "name_required"),
     TooLong: (status.HTTP_422_UNPROCESSABLE_CONTENT, "too_long"),
     EndsBeforeStart: (status.HTTP_422_UNPROCESSABLE_CONTENT, "ends_before_start"),
     InvalidTimes: (status.HTTP_422_UNPROCESSABLE_CONTENT, "invalid_times"),
     InvalidRepeat: (status.HTTP_422_UNPROCESSABLE_CONTENT, "invalid_repeat"),
+    InvalidReminder: (status.HTTP_422_UNPROCESSABLE_CONTENT, "invalid_reminder"),
     SpanTooLong: (status.HTTP_422_UNPROCESSABLE_CONTENT, "span_too_long"),
     GroupNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
     EventNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
@@ -110,33 +115,22 @@ def events_router(identity: Identity, events: Events) -> APIRouter:
         prefix="/api/events", dependencies=[Depends(staff_member_dependency(identity))]
     )
 
-    @router.get("")
-    def calendar(
-        first: Annotated[date, Query(alias="from")],
-        last: Annotated[date, Query(alias="to")],
-        group_id: Annotated[int | None, Query(alias="groupId")] = None,
-    ) -> list[OccurrenceOut]:
-        """What happens from `from` to `to` (both included), in order. With `groupId`, that
-        Group's own and the whole Kita's Events; without, every Event (the Kita-wide Calendar)."""
-        with refusals_as_http_errors(_REFUSALS):
-            occurrences = events.occurrences(first, last, group_id)
-        return [OccurrenceOut.of(occurrence) for occurrence in occurrences]
-
+    # Their occurrences are listed by the Calendar (calendar_api).
     @router.post("", status_code=status.HTTP_201_CREATED)
     def add_event(event: EventIn) -> EventOut:
-        with refusals_as_http_errors(_REFUSALS):
+        with refusals_as_http_errors(EVENT_REFUSALS):
             return EventOut.of(events.add(event.details()))
 
     @router.put("/{event_id}")
     def update_event(event_id: int, event: EventIn) -> EventOut:
         """Changes every occurrence of the Event."""
-        with refusals_as_http_errors(_REFUSALS):
+        with refusals_as_http_errors(EVENT_REFUSALS):
             return EventOut.of(events.update(event_id, event.details()))
 
     @router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
     def remove_event(event_id: int) -> None:
         """Removes every occurrence of the Event."""
-        with refusals_as_http_errors(_REFUSALS):
+        with refusals_as_http_errors(EVENT_REFUSALS):
             events.remove(event_id)
 
     return router

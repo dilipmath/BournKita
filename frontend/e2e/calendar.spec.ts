@@ -23,7 +23,7 @@ test('Staff add a weekly event, see it repeat, then change and delete it', async
   const month = page.getByRole('table', { name: 'March 2031' })
   // Mondays 3, 10, 17, 24 and 31 March.
   await expect(month.getByRole('button', { name: `10:00 ${title}` })).toHaveCount(5)
-  await expect(month.getByRole('cell', { name: '10 March' })).toContainText(`10:00 ${title}`)
+  await expect(month.getByRole('cell', { name: '10 March', exact: true })).toContainText(`10:00 ${title}`)
 
   await page.getByRole('button', { name: 'Agenda' }).tap()
   await expect(page.getByRole('region', { name: 'Monday, 17 March' })).toContainText(`10:00–10:45 ${title}`)

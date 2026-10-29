@@ -193,3 +193,17 @@ def _relative_path(filename: str) -> str:
     cwd = os.getcwd().replace("\\", "/") + "/"
     # Anything else keeps only its file name, so no home directory or user name gets through.
     return path.removeprefix(cwd) if path.startswith(cwd) else path.rsplit("/", 1)[-1]
+
+
+def job_crash_report(
+    job: str, error: BaseException, version: str, occurred_at: datetime
+) -> CrashReport:
+    """A crash in a background job (e.g. "reminder job"), which no request started."""
+    return CrashReport(
+        source="api",
+        error_type=type(error).__name__,
+        location=job,
+        version=version,
+        frames=code_frames(error),
+        occurred_at=occurred_at,
+    )

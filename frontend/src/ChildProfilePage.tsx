@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import AlertMarker from './AlertMarker'
 import AlertsBanner from './AlertsBanner'
+import { fullDate } from './calendarDates'
 import { childPhotoUrl, deleteChild, fetchChild, genderLabel } from './api'
 import ChildForm from './ChildForm'
 import ChildGroup from './ChildGroup'
@@ -17,7 +18,7 @@ import RecordPlaceholder from './RecordPlaceholder'
 
 /** One Child's profile. Admins can edit and delete it from here. */
 export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const [loaded, reload] = useRecordAtAddress(fetchChild)
   const [confirming, setConfirming] = useState(false)
@@ -57,6 +58,8 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
         <ChildGroup child={child} canEdit={canEdit} reload={reload} />
         <dt>{t('gender')}</dt>
         <dd>{t(child.gender ? genderLabel[child.gender] : 'genderNotStated')}</dd>
+        <dt>{t('dateOfBirth')}</dt>
+        <dd>{child.dateOfBirth ? fullDate(child.dateOfBirth, i18n.language) : '–'}</dd>
         <dt>{t('languagesSpoken')}</dt>
         <dd>{child.languages || '–'}</dd>
         <dt>{t('foodPreferences')}</dt>

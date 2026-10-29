@@ -25,3 +25,18 @@ export function repeatText(t: TFunction, event: CalendarEvent, until: string | n
   const every = event.repeatEvery === 1 ? t(repeatLabel[event.repeat]) : t(`${everyLabel[event.repeat]}Count`, { count: event.repeatEvery })
   return until ? t('repeatsUntilDate', { every, date: until }) : every
 }
+
+/** The Reminders an Event can ask for, by days before (0: that morning), in the order offered. */
+export const reminderLabel: Record<number, string> = {
+  0: 'reminderThatMorning',
+  1: 'reminderDayBefore',
+  2: 'reminderTwoDaysBefore',
+  7: 'reminderWeekBefore',
+}
+
+/** E.g. "1 day before". */
+export function reminderText(t: TFunction, daysBefore: number): string {
+  const label = reminderLabel[daysBefore]
+  // Only the API's choices are offered; anything else is shown as it is.
+  return label ? t(label) : String(daysBefore)
+}

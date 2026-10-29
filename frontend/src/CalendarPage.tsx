@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { fetchCalendar, groupIcons, removeEvent, saveEvent, type CalendarEvent, type Occurrence } from './api'
+import { fetchCalendar, groupIcons, holidayKinds, removeEvent, saveEvent, type CalendarEvent, type CalendarSpan, type Occurrence } from './api'
 import { addDays, addMonths, dayAndMonth, daysFrom, fullDate, isDay, longDay, monthName, monthWeeks, sameMonth, startOfMonth, startOfWeek, weekdayNames } from './calendarDates'
 import { kitaToday } from './dates'
 import EventForm from './EventForm'
-import { repeatText } from './eventText'
+import { reminderText, repeatText } from './eventText'
 import GroupLabel from './GroupLabel'
 import ProblemAlert from './ProblemAlert'
 import { useProfileChange } from './profileChange'
@@ -35,6 +35,20 @@ function on(occurrences: Occurrence[], day: string): Occurrence[] {
   return occurrences.filter((occurrence) => occurrence.startsOn <= day && day <= occurrence.endsOn)
 }
 
+/** What a day holds: its Holidays, Birthdays and occurrences. */
+function heldOn(held: CalendarSpan, day: string) {
+  return {
+    holidays: held.holidays.filter((holiday) => holiday.startsOn <= day && day <= holiday.endsOn),
+    birthdays: held.birthdays.filter((birthday) => birthday.on === day),
+    occurrences: on(held.events, day),
+  }
+}
+
+function isEmpty(day: ReturnType<typeof heldOn>): boolean {
+  return day.holidays.length + day.birthdays.length + day.occurrences.length === 0
+}
+
+
 /** "10:00", or "10:00–10:45" with `withEnd`; nothing for an all-day Event. */
 function times(event: CalendarEvent, withEnd: boolean): string {
   if (event.startTime === null) return ''
@@ -42,9 +56,9 @@ function times(event: CalendarEvent, withEnd: boolean): string {
   return withEnd && event.endTime ? `${start}–${event.endTime.slice(0, 5)}` : start
 }
 
-/** Loads what happens from `first` to `last`; `reload` loads it again after a change. */
-function useOccurrences(first: string, last: string, groupId: number | null) {
-  const [loaded, setLoaded] = useState<{ key: string; occurrences: Occurrence[] | 'failed' }>()
+/** Loads what the days from `first` to `last` hold; `reload` loads it again after a change. */
+function useSpan(first: string, last: string, groupId: number | null) {
+  const [loaded, setLoaded] = useState<{ key: string; held: CalendarSpan | 'failed' }>()
   const [version, setVersion] = useState(0)
   const key = `${first}/${last}/${groupId}`
 
@@ -52,19 +66,19 @@ function useOccurrences(first: string, last: string, groupId: number | null) {
     // After moving on, a late answer about the span before must not show.
     let latest = true
     fetchCalendar(first, last, groupId)
-      .then((occurrences) => latest && setLoaded({ key, occurrences }))
-      .catch(() => latest && setLoaded({ key, occurrences: 'failed' }))
+      .then((held) => latest && setLoaded({ key, held }))
+      .catch(() => latest && setLoaded({ key, held: 'failed' }))
     return () => {
       latest = false
     }
   }, [first, last, groupId, key, version])
 
-  return { occurrences: loaded?.key === key ? loaded.occurrences : undefined, reload: () => setVersion((current) => current + 1) }
+  return { held: loaded?.key === key ? loaded.held : undefined, reload: () => setVersion((current) => current + 1) }
 }
 
 /** A Calendar of Events: a Group's (its own and the whole Kita's), or, at /calendar, the whole
  * Kita's with every Group's. Month, week and agenda views; Staff add, change and delete Events. */
-export default function CalendarPage() {
+export default function CalendarPage({ canImportHolidays }: { canImportHolidays: boolean }) {
   const { t, i18n } = useTranslation()
   const language = i18n.language
   const params = useParams()
@@ -82,7 +96,7 @@ export default function CalendarPage() {
   const shownFrom = view === 'month' ? startOfMonth(day) : first
   const shownTo = view === 'month' ? addDays(addMonths(day, 1), -1) : last
   const newEventDay = shownFrom <= kitaToday() && kitaToday() <= shownTo ? kitaToday() : shownFrom
-  const { occurrences, reload } = useOccurrences(first, last, groupId)
+  const { held, reload } = useSpan(first, last, groupId)
   // The occurrence whose details are open, or 'new' while an Event is added.
   const [open, setOpen] = useState<Occurrence | 'new' | null>(null)
   const { problem, change } = useProfileChange(reload)
@@ -110,21 +124,44 @@ export default function CalendarPage() {
     )
   }
 
-  function dayList(listed: string, empty: string | null) {
-    const here = on(occurrences === 'failed' || occurrences === undefined ? [] : occurrences, listed)
-    if (here.length === 0 && empty === null) return null
+  /** A day's Holidays, Birthdays (each leading to the Child's profile) and occurrences. */
+  function dayItems(day: ReturnType<typeof heldOn>, wide: boolean) {
+    return (
+      <>
+        {day.holidays.map((holiday) => (
+          <span key={`${holiday.kind}-${holiday.startsOn}-${holiday.name}`} className="holiday-chip">
+            <span aria-hidden="true">{holidayKinds[holiday.kind].icon} </span>
+            <span className="visually-hidden">{t(holidayKinds[holiday.kind].one)}: </span>
+            {holiday.name || t(holidayKinds[holiday.kind].one)}
+          </span>
+        ))}
+        {day.birthdays.map((birthday) => (
+          <Link key={`birthday-${birthday.childId}`} className="birthday-chip" to={`/children/${birthday.childId}`}>
+            <span aria-hidden="true">🎂 </span>
+            <span className="visually-hidden">{t('birthday')}: </span>
+            {birthday.firstName} {birthday.lastName}
+          </Link>
+        ))}
+        {day.occurrences.map((occurrence) => chip(occurrence, wide))}
+      </>
+    )
+  }
+
+  function dayList(held: CalendarSpan, listed: string, empty: string | null) {
+    const here = heldOn(held, listed)
+    if (isEmpty(here) && empty === null) return null
     const headingId = `day-${listed}`
     return (
       <section key={listed} className={listed === kitaToday() ? 'calendar-day today' : 'calendar-day'} aria-labelledby={headingId}>
         <h4 id={headingId}>{longDay(listed, language)}</h4>
-        {here.length === 0 ? <p>{empty}</p> : <div className="event-list">{here.map((occurrence) => chip(occurrence, true))}</div>}
+        {isEmpty(here) ? <p>{empty}</p> : <div className="event-list">{dayItems(here, true)}</div>}
       </section>
     )
   }
 
   function body() {
-    if (occurrences === undefined) return <p>{t('loading')}</p>
-    if (occurrences === 'failed') {
+    if (held === undefined) return <p>{t('loading')}</p>
+    if (held === 'failed') {
       return (
         <p className="status status-problem" role="alert">
           {t('somethingWentWrong')}
@@ -153,7 +190,7 @@ export default function CalendarPage() {
                       <span className="day-number" aria-hidden="true">
                         {Number(cell.slice(8))}
                       </span>
-                      {on(occurrences, cell).map((occurrence) => chip(occurrence, false))}
+                      {dayItems(heldOn(held, cell), false)}
                     </td>
                   )
                 })}
@@ -163,9 +200,13 @@ export default function CalendarPage() {
         </table>
       )
     }
-    if (view === 'week') return <div className="week">{daysFrom(first, last).map((listed) => dayList(listed, t('nothingOn')))}</div>
-    const listed = daysFrom(first, last).filter((agendaDay) => on(occurrences, agendaDay).length > 0)
-    return listed.length === 0 ? <p>{t('nothingOnAgenda', { count: AGENDA_DAYS })}</p> : <div className="agenda">{listed.map((agendaDay) => dayList(agendaDay, null))}</div>
+    if (view === 'week') return <div className="week">{daysFrom(first, last).map((listed) => dayList(held, listed, t('nothingOn')))}</div>
+    const listed = daysFrom(first, last).filter((agendaDay) => !isEmpty(heldOn(held, agendaDay)))
+    return listed.length === 0 ? (
+      <p>{t('nothingOnAgenda', { count: AGENDA_DAYS })}</p>
+    ) : (
+      <div className="agenda">{listed.map((agendaDay) => dayList(held, agendaDay, null))}</div>
+    )
   }
 
   const periodTitle = view === 'month' ? monthName(day, language) : `${dayAndMonth(first, language)} – ${fullDate(last, language)}`
@@ -197,9 +238,16 @@ export default function CalendarPage() {
             {t('next')}
           </button>
         </div>
-        <button type="button" className="primary" onClick={() => setOpen('new')}>
-          {t('addEvent')}
-        </button>
+        <div className="actions">
+          {canImportHolidays && (
+            <Link className="button" to="/holidays">
+              {t('holidays')}
+            </Link>
+          )}
+          <button type="button" className="primary" onClick={() => setOpen('new')}>
+            {t('addEvent')}
+          </button>
+        </div>
       </div>
       <h3>{periodTitle}</h3>
       {open === 'new' && <ProblemAlert problem={problem} />}
@@ -262,6 +310,7 @@ function EventDetails({ occurrence, onChanged, onClose }: DetailsProps) {
       <h3 id={headingId}>{event.title}</h3>
       <p>{when}</p>
       {repeats && <p>{repeats}</p>}
+      {event.remindDaysBefore !== null && <p>{t('reminderIs', { when: reminderText(t, event.remindDaysBefore) })}</p>}
       <p>{event.group ? <GroupLabel group={event.group} /> : t('wholeKita')}</p>
       {event.note && <p className="note">{event.note}</p>}
       <ProblemAlert problem={problem} />

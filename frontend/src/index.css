@@ -1135,3 +1135,58 @@ button.danger {
 .event-group {
   font-weight: 600;
 }
+
+/* Holidays and birthdays in the Calendar: set apart from Events, which are tapped for details. */
+.holiday-chip,
+.birthday-chip {
+  display: block;
+  margin-top: 2px;
+  padding: 2px 6px;
+  overflow: hidden;
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 6px;
+}
+
+.holiday-chip {
+  background: color-mix(in srgb, var(--accent) 15%, var(--surface));
+}
+
+.birthday-chip {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--text);
+  text-decoration: none;
+  border: 1px dashed var(--accent);
+}
+
+.event-list .holiday-chip,
+.event-list .birthday-chip {
+  min-height: 48px;
+  font-size: 1rem;
+  white-space: normal;
+}
+
+.event-list .holiday-chip {
+  display: flex;
+  align-items: center;
+}
+
+.holiday-import {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  align-self: stretch;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.holiday-import h3,
+.holiday-import p {
+  margin: 0;
+}

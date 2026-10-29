@@ -10,9 +10,11 @@ from kita import (  # noqa: F401
     contacts,
     events,
     groups,
+    holidays,
     identity,
     parents,
     photos,
+    reminders,
     tasks,
 )
 from kita.db import metadata

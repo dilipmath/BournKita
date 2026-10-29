@@ -91,7 +91,7 @@ email_verifications = Table(
 )
 
 # An active account has verified its email address and is not deactivated: only it can log in.
-_IS_ACTIVE = (users.c.email_verified_at.is_not(None), users.c.deactivated_at.is_(None))
+IS_ACTIVE = (users.c.email_verified_at.is_not(None), users.c.deactivated_at.is_(None))
 _ACCOUNT_COLUMNS = (
     users.c.id,
     users.c.email,
@@ -252,7 +252,7 @@ class Identity:
                     users.c.password_hash,
                     users.c.locked_until,
                 )
-                .where(users.c.email == normalise_email(email), *_IS_ACTIVE)
+                .where(users.c.email == normalise_email(email), *IS_ACTIVE)
                 # Parallel logins to one account take turns, so a burst of guesses cannot all
                 # pass the lock check before the first failure is counted.
                 .with_for_update()
@@ -296,7 +296,7 @@ class Identity:
                 .where(
                     sessions.c.token_hash == _token_hash(token),
                     sessions.c.last_active_at > now - self._inactivity_timeout,
-                    *_IS_ACTIVE,
+                    *IS_ACTIVE,
                 )
             ).one_or_none()
             if row is None:
@@ -385,7 +385,7 @@ class Identity:
             # Housekeeping: expired links can never be used again.
             connection.execute(delete(password_resets).where(password_resets.c.expires_at <= now))
             user_id = connection.scalar(
-                select(users.c.id).where(users.c.email == email, *_IS_ACTIVE).with_for_update()
+                select(users.c.id).where(users.c.email == email, *IS_ACTIVE).with_for_update()
             )
             if user_id is None:
                 return
@@ -417,7 +417,7 @@ class Identity:
                 return False
             reset = connection.execute(
                 update(users)
-                .where(users.c.id == user_id, *_IS_ACTIVE)
+                .where(users.c.id == user_id, *IS_ACTIVE)
                 # Also ends a Lockout: having the email account shows who this is.
                 .values(password_hash=_hasher.hash(password), failed_logins=0, locked_until=None)
             )
@@ -528,7 +528,7 @@ class Identity:
             return
         other_active_admins = connection.scalar(
             select(func.count()).where(
-                users.c.role == "admin", *_IS_ACTIVE, users.c.id != account.id
+                users.c.role == "admin", *IS_ACTIVE, users.c.id != account.id
             )
         )
         if not other_active_admins:

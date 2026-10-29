@@ -50,6 +50,11 @@ const refusals = {
   ends_before_start: 'endsBeforeStart',
   invalid_times: 'invalidTimes',
   invalid_repeat: 'invalidRepeat',
+  invalid_reminder: 'invalidReminder',
+  not_a_calendar: 'notACalendar',
+  repeating_holidays: 'repeatingHolidays',
+  no_holidays: 'noHolidays',
+  file_too_large: 'fileTooLarge',
 } as const
 
 export type Refusal = (typeof refusals)[keyof typeof refusals]
@@ -159,6 +164,8 @@ export type ChildDetails = {
   languages: string
   foodPreferences: string
   interests: string
+  // YYYY-MM-DD, or null when not recorded.
+  dateOfBirth: string | null
 }
 export type Child = ChildDetails & { id: number }
 // Each Child profile field's translation key where it differs from the field's name, e.g. for
@@ -170,6 +177,7 @@ export const childFieldLabel: Record<keyof ChildDetails, string> = {
   languages: 'languagesSpoken',
   foodPreferences: 'foodPreferences',
   interests: 'interests',
+  dateOfBirth: 'dateOfBirth',
 }
 
 /** The Children, by first name; `search` keeps those whose name contains it. */
@@ -589,18 +597,53 @@ export type CalendarEvent = {
   repeat: Repeat
   repeatEvery: number
   repeatUntil: string | null
+  // Days before each time it happens its Staff are emailed a Reminder (0: that morning); null: never.
+  remindDaysBefore: number | null
 }
 export type EventDetails = Omit<CalendarEvent, 'id' | 'group'> & { groupId: number | null }
 // One time an Event happens, from its first to its last day.
 export type Occurrence = { event: CalendarEvent; startsOn: string; endsOn: string }
 
-/** What happens from `from` to `to` (both included), in order: for a Group, its own and the
- * whole Kita's Events; for no Group, every Event. */
-export async function fetchCalendar(from: string, to: string, groupId: number | null): Promise<Occurrence[]> {
+// A Child's Birthday in a span: who, and the day (the year of birth is not shown).
+export type Birthday = { childId: number; firstName: string; lastName: string; on: string }
+export type HolidayKind = 'public' | 'school'
+// Each kind of Holiday: its icon and texts (the heading of its kind, one Holiday, the import button).
+export const holidayKinds = {
+  public: { icon: '🎉', heading: 'publicHolidays', one: 'publicHoliday', importButton: 'importPublicHolidays' },
+  school: { icon: '🏖️', heading: 'schoolHolidays', one: 'schoolHoliday', importButton: 'importSchoolHolidays' },
+} as const
+// A Holiday of the Kita's region, from its first to its last day.
+export type Holiday = { kind: HolidayKind; name: string; startsOn: string; endsOn: string }
+// What a span of days holds, each list in order.
+export type CalendarSpan = { events: Occurrence[]; birthdays: Birthday[]; holidays: Holiday[] }
+
+/** What happens from `from` to `to` (both included): for a Group, its own and the whole Kita's
+ * Events and its Children's Birthdays; for no Group, everything. Holidays in both. */
+export async function fetchCalendar(from: string, to: string, groupId: number | null): Promise<CalendarSpan> {
   const group = groupId === null ? '' : `&groupId=${groupId}`
-  const response = await fetch(`/api/events?from=${from}&to=${to}${group}`)
+  const response = await fetch(`/api/calendar?from=${from}&to=${to}${group}`)
   if (!response.ok) throw new Error(`Loading the Calendar failed: ${response.status}`)
-  return (await response.json()) as Occurrence[]
+  return (await response.json()) as CalendarSpan
+}
+
+// Each kind of Holidays imported so far: how many, from the first to the last day.
+export type HolidaysImported = { kind: HolidayKind; count: number; firstDay: string; lastDay: string }
+
+/** The Holidays imported so far, or 'adminsOnly'. */
+export async function fetchImportedHolidays(): Promise<HolidaysImported[] | Refusal> {
+  const response = await fetch('/api/holidays')
+  if (!response.ok) return refusalOf(response, 'Loading the holidays')
+  return (await response.json()) as HolidaysImported[]
+}
+
+/** Imports an iCal file's Holidays as `kind`, in place of all of that kind so far. Admins only.
+ * Resolves to how many were imported. */
+export async function importHolidays(kind: HolidayKind, file: File): Promise<number | Refusal> {
+  const form = new FormData()
+  form.append('file', file)
+  const response = await fetch(`/api/holidays/${kind}`, { method: 'PUT', body: form })
+  if (!response.ok) return refusalOf(response, 'Importing the holidays')
+  return ((await response.json()) as { imported: number }).imported
 }
 
 /** Adds an Event, or changes the one with `id` (every time it happens, if it repeats). */

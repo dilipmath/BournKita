@@ -1,5 +1,6 @@
+import asyncio
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from importlib.metadata import version
 from typing import Literal
 
@@ -12,6 +13,8 @@ from sqlalchemy.exc import OperationalError
 from kita.alerts import Alerts
 from kita.audit import Audit
 from kita.audit_api import audit_router, audited_route
+from kita.birthdays import Birthdays
+from kita.calendar_api import calendar_router
 from kita.children import Children
 from kita.children_api import children_router
 from kita.clock import Clock, SystemClock
@@ -23,6 +26,7 @@ from kita.crash import (
     WebCrashReport,
     api_crash_report,
     default_crash_sink,
+    job_crash_report,
     send_safely,
 )
 from kita.encryption import FieldCipher
@@ -30,6 +34,8 @@ from kita.events import Events
 from kita.events_api import events_router
 from kita.groups import Groups
 from kita.groups_api import groups_router
+from kita.holidays import Holidays
+from kita.holidays_api import holidays_router
 from kita.identity import Identity
 from kita.identity_api import (
     email_verification_router,
@@ -40,6 +46,7 @@ from kita.mail import Mailer, mailer_from_settings
 from kita.parents import Parents
 from kita.parents_api import parents_router
 from kita.photos import DiskFileStore, FileStore, Photos
+from kita.reminders import Reminders, remind_regularly
 from kita.settings import Settings
 from kita.staff_api import staff_router
 from kita.tasks import Tasks
@@ -72,9 +79,23 @@ def create_app(
         connect_args={"connect_timeout": settings.database_connect_timeout_seconds},
     )
 
+    def report_job_crash(error: Exception) -> None:
+        send_safely(crash_sink, job_crash_report("reminder job", error, app_version, clock.now()))
+
     @asynccontextmanager
-    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        job = None
+        if settings.reminder_check_seconds > 0:
+            job = asyncio.create_task(
+                remind_regularly(
+                    app.state.reminders, settings.reminder_check_seconds, report_job_crash
+                )
+            )
         yield
+        if job is not None:
+            job.cancel()
+            with suppress(asyncio.CancelledError):
+                await job
         engine.dispose()
 
     app = FastAPI(title="Kita Kids Database", lifespan=lifespan)
@@ -112,7 +133,13 @@ def create_app(
     app.include_router(audit_router(identity, audit, children))
     app.include_router(groups_router(identity, groups, alerts, audited_route_class))
     app.include_router(tasks_router(identity, Tasks(engine, clock)))
-    app.include_router(events_router(identity, Events(engine, clock)))
+    events = Events(engine, clock)
+    app.include_router(events_router(identity, events))
+    holidays = Holidays(engine)
+    app.include_router(holidays_router(identity, holidays))
+    app.include_router(calendar_router(identity, events, Birthdays(engine), holidays))
+    # Kept on the app for the Reminder job, and for tests, which run it themselves.
+    app.state.reminders = Reminders(engine, clock, reporting_mailer, events, settings.public_url)
 
     @app.exception_handler(Exception)
     async def report_crash(request: Request, error: Exception) -> JSONResponse:

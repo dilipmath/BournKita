@@ -18,6 +18,7 @@ from kita.audit_api import (
     part_of_logged_view,
 )
 from kita.children import (
+    BornInFuture,
     ChildDetails,
     ChildNotFound,
     ChildProfile,
@@ -68,6 +69,7 @@ class ChildIn(BaseModel):
     languages: str = ""
     food_preferences: str = ""
     interests: str = ""
+    date_of_birth: date | None = None
 
     def details(self) -> ChildDetails:
         return ChildDetails(**self.model_dump(by_alias=False))
@@ -233,6 +235,7 @@ _REFUSALS: Refusals = {
     AlreadyGiven: (status.HTTP_409_CONFLICT, "already_given"),
     NotGiven: (status.HTTP_409_CONFLICT, "not_given"),
     InFuture: (status.HTTP_422_UNPROCESSABLE_CONTENT, "in_future"),
+    BornInFuture: (status.HTTP_422_UNPROCESSABLE_CONTENT, "in_future"),
     OutOfOrder: (status.HTTP_422_UNPROCESSABLE_CONTENT, "out_of_order"),
 }
 

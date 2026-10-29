@@ -13,6 +13,7 @@ const lena = {
   languages: 'Deutsch, Türkisch',
   foodPreferences: 'Vegetarisch',
   interests: 'Malen, Dinosaurier',
+  dateOfBirth: null,
 }
 const lenaSummary = { id: 7, firstName: 'Lena', lastName: 'Müller' }
 const mia = { id: 8, firstName: 'Mia', lastName: 'Schmidt' }

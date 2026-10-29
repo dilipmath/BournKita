@@ -1,11 +1,13 @@
 """Children: Child profiles. Every Staff member may read them; only Admins may change them."""
 
 from dataclasses import asdict, dataclass, replace
+from datetime import date
 from typing import Any, Literal, get_args
 
 from sqlalchemy import (
     CheckConstraint,
     Column,
+    Date,
     DateTime,
     Engine,
     Integer,
@@ -18,7 +20,7 @@ from sqlalchemy import (
     update,
 )
 
-from kita.clock import Clock
+from kita.clock import Clock, today
 from kita.db import metadata, transaction
 
 Gender = Literal["girl", "boy", "diverse"]
@@ -33,6 +35,8 @@ children = Table(
     Column("languages", String(200), nullable=False),
     Column("food_preferences", String(2000), nullable=False),
     Column("interests", String(2000), nullable=False),
+    # Known to the Kita, or None.
+    Column("date_of_birth", Date),
     Column("created_at", DateTime(timezone=True), nullable=False),
     Column("updated_at", DateTime(timezone=True), nullable=False),
     CheckConstraint(f"gender IN {get_args(Gender)}", name="gender"),
@@ -50,6 +54,8 @@ class ChildDetails:
     languages: str
     food_preferences: str
     interests: str
+    # None when not recorded.
+    date_of_birth: date | None
 
 
 @dataclass(frozen=True)
@@ -74,6 +80,10 @@ class NameRequired(Exception):
     """A Child profile needs a first and a last name."""
 
 
+class BornInFuture(Exception):
+    """A date of birth cannot be after today (at the Kita)."""
+
+
 class TooLong(Exception):
     """An entry is longer than its column allows."""
 
@@ -86,6 +96,7 @@ _PROFILE_COLUMNS = (
     children.c.languages,
     children.c.food_preferences,
     children.c.interests,
+    children.c.date_of_birth,
 )
 
 
@@ -122,8 +133,15 @@ class Children:
         self._engine = engine
         self._clock = clock
 
-    def create(self, details: ChildDetails) -> ChildProfile:
+    def _checked(self, details: ChildDetails) -> ChildDetails:
+        """As _checked, and raises BornInFuture for a date of birth after today."""
         details = _checked(details)
+        if details.date_of_birth is not None and details.date_of_birth > today(self._clock):
+            raise BornInFuture
+        return details
+
+    def create(self, details: ChildDetails) -> ChildProfile:
+        details = self._checked(details)
         now = self._clock.now()
         with transaction(self._engine) as connection:
             child_id = connection.scalar(
@@ -176,7 +194,7 @@ class Children:
 
     def update(self, child_id: int, details: ChildDetails) -> tuple[ChildProfile, list[str]]:
         """Changes the profile; returns it with the names of the fields that changed."""
-        details = _checked(details)
+        details = self._checked(details)
         with transaction(self._engine) as connection:
             row = connection.execute(
                 select(*_PROFILE_COLUMNS).where(children.c.id == child_id).with_for_update()

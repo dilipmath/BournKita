@@ -5,6 +5,7 @@ import { fetchCurrentSession, fetchHealth, logOut, type Session } from './api'
 import AddParentPage from './AddParentPage'
 import AuditLogPage from './AuditLogPage'
 import CalendarPage from './CalendarPage'
+import HolidaysPage from './HolidaysPage'
 import ParentPage, { ParentEditPage } from './ParentPage'
 import ChildForm from './ChildForm'
 import ChildProfilePage, { ChildEditPage } from './ChildProfilePage'
@@ -65,7 +66,7 @@ export default function App() {
   }, [session, checkSession])
 
   const isAdmin = session?.role === 'admin'
-  const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyChildren' | 'adminsOnlyAuditLog' | 'adminsOnlyGroups') => (
+  const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyChildren' | 'adminsOnlyAuditLog' | 'adminsOnlyGroups' | 'adminsOnlyHolidays') => (
     <p className="status status-problem">{t(message)}</p>
   )
 
@@ -145,8 +146,9 @@ export default function App() {
           <Route path="/groups/:id" element={<GroupDashboard />} />
           <Route path="/groups/:id/board" element={<TaskBoardPage />} />
           <Route path="/groups/:id/backlog" element={<BacklogPage />} />
-          <Route path="/groups/:id/calendar" element={<CalendarPage />} />
-          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/groups/:id/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
+          <Route path="/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
+          <Route path="/holidays" element={isAdmin ? <HolidaysPage /> : adminsOnly('adminsOnlyHolidays')} />
           <Route path="/" element={<GroupPicker />} />
           <Route path="*" element={null} />
         </Routes>

@@ -6,7 +6,7 @@ import App from './App'
 import { fakeApi, health, renderAt, sessionAs } from './testing'
 
 const monkeys = { id: 2, name: 'Monkeys', icon: 'monkey' }
-const repeatsNot = { repeat: 'none', repeatEvery: 1, repeatUntil: null }
+const repeatsNot = { repeat: 'none', repeatEvery: 1, repeatUntil: null, remindDaysBefore: null }
 const trip = {
   id: 41,
   group: monkeys,
@@ -41,6 +41,7 @@ const music = {
   repeat: 'weekly',
   repeatEvery: 1,
   repeatUntil: null,
+  remindDaysBefore: 1,
 }
 
 function occurrence(event: typeof trip | typeof evening | typeof music, startsOn = event.startsOn, endsOn = event.endsOn) {
@@ -49,12 +50,17 @@ function occurrence(event: typeof trip | typeof evening | typeof music, startsOn
 
 const january = [occurrence(trip), occurrence(music, '2027-01-11', '2027-01-11'), occurrence(evening), occurrence(music, '2027-01-18', '2027-01-18')]
 
+/** A reply for the Calendar: these occurrences, and birthdays and holidays if given. */
+function span(events: unknown[] = [], more: { birthdays?: unknown[]; holidays?: unknown[] } = {}) {
+  return { events, birthdays: [], holidays: [], ...more }
+}
+
 function calendarApi(extra: Record<string, unknown> = {}) {
   return fakeApi({
     'GET /api/health': health,
     'GET /api/session': sessionAs('teacher'),
     'GET /api/groups': { status: 200, body: [{ ...monkeys, mine: true }] },
-    'GET /api/events?from=2026-12-28&to=2027-01-31': { status: 200, body: january },
+    'GET /api/calendar?from=2026-12-28&to=2027-01-31': { status: 200, body: span(january) },
     ...(extra as Record<string, { status: number; body?: unknown }>),
   })
 }
@@ -87,10 +93,10 @@ describe('Calendar', () => {
 
   it('moves through months, weeks and the agenda', async () => {
     const calls = calendarApi({
-      'GET /api/events?from=2027-02-01&to=2027-02-28': { status: 200, body: [] },
-      'GET /api/events?from=2027-01-11&to=2027-01-17': { status: 200, body: january.slice(0, 3) },
-      'GET /api/events?from=2027-01-13&to=2027-02-11': { status: 200, body: january.slice(2) },
-      'GET /api/events?from=2027-02-12&to=2027-03-13': { status: 200, body: [] },
+      'GET /api/calendar?from=2027-02-01&to=2027-02-28': { status: 200, body: span([]) },
+      'GET /api/calendar?from=2027-01-11&to=2027-01-17': { status: 200, body: span(january.slice(0, 3)) },
+      'GET /api/calendar?from=2027-01-13&to=2027-02-11': { status: 200, body: span(january.slice(2)) },
+      'GET /api/calendar?from=2027-02-12&to=2027-03-13': { status: 200, body: span([]) },
     })
     renderAt('/calendar', <App />)
 
@@ -111,7 +117,7 @@ describe('Calendar', () => {
     expect(screen.queryByRole('region', { name: 'Thursday, 14 January' })).toBeNull()
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
     expect(await screen.findByText('Nothing on in these 30 days.')).toBeInTheDocument()
-    expect(calls.map((call) => call.route)).toContain('GET /api/events?from=2027-02-12&to=2027-03-13')
+    expect(calls.map((call) => call.route)).toContain('GET /api/calendar?from=2027-02-12&to=2027-03-13')
   })
 
   it('shows a Group’s calendar, reached from its dashboard', async () => {
@@ -120,7 +126,7 @@ describe('Calendar', () => {
       'GET /api/session': sessionAs('teacher'),
       'GET /api/groups': { status: 200, body: [{ ...monkeys, mine: true }] },
       'GET /api/groups/2': { status: 200, body: { ...monkeys, children: [] } },
-      'GET /api/events?from=2026-12-28&to=2027-01-31&groupId=2': { status: 200, body: january },
+      'GET /api/calendar?from=2026-12-28&to=2027-01-31&groupId=2': { status: 200, body: span(january) },
     })
     renderAt('/groups/2', <App />)
 
@@ -148,6 +154,7 @@ describe('Calendar', () => {
     await userEvent.clear(within(form).getByLabelText('Every how many weeks'))
     await userEvent.type(within(form).getByLabelText('Every how many weeks'), '2')
     await userEvent.type(within(form).getByLabelText('Repeats until (optional)'), '2027-07-15')
+    await userEvent.selectOptions(within(form).getByLabelText('Reminder'), '1 day before')
     await userEvent.click(within(form).getByRole('button', { name: 'Save' }))
 
     expect(calls).toContainEqual({
@@ -163,6 +170,7 @@ describe('Calendar', () => {
         repeat: 'weekly',
         repeatEvery: 2,
         repeatUntil: '2027-07-15',
+        remindDaysBefore: 1,
       },
     })
     expect(screen.queryByRole('form', { name: 'Add event' })).toBeNull()
@@ -176,7 +184,7 @@ describe('Calendar', () => {
   })
 
   it('starts a new event on a day being looked at, and keeps its end from coming before its start', async () => {
-    calendarApi({ 'GET /api/events?from=2027-03-01&to=2027-03-07': { status: 200, body: [] } })
+    calendarApi({ 'GET /api/calendar?from=2027-03-01&to=2027-03-07': { status: 200, body: span([]) } })
     renderAt('/calendar?view=week&day=2027-03-03', <App />)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Add event' }))
@@ -209,6 +217,7 @@ describe('Calendar', () => {
     expect(details).toHaveTextContent('Every week')
     expect(details).toHaveTextContent('10:00–10:45')
     expect(details).toHaveTextContent('Whole Kita')
+    expect(details).toHaveTextContent('Reminder: 1 day before')
 
     await userEvent.click(within(details).getByRole('button', { name: 'Change Music' }))
     const form = within(details).getByRole('form', { name: 'Change Music' })
@@ -224,5 +233,30 @@ describe('Calendar', () => {
     expect(confirm).toHaveTextContent('Really delete “Music”, every time it happens?')
     await userEvent.click(within(confirm).getByRole('button', { name: 'Delete' }))
     expect(calls.map((call) => call.route)).toContain('DELETE /api/events/43')
+  })
+
+  it('shows Children’s birthdays and the holidays', async () => {
+    const birthdays = [{ childId: 7, firstName: 'Lena', lastName: 'Müller', on: '2027-01-14' }]
+    const holidays = [
+      { kind: 'public', name: 'Neujahr', startsOn: '2027-01-01', endsOn: '2027-01-01' },
+      { kind: 'school', name: 'Winterferien', startsOn: '2027-01-25', endsOn: '2027-01-27' },
+    ]
+    calendarApi({
+      'GET /api/calendar?from=2026-12-28&to=2027-01-31': { status: 200, body: span(january, { birthdays, holidays }) },
+      'GET /api/calendar?from=2027-01-13&to=2027-02-11': { status: 200, body: span([], { birthdays, holidays }) },
+    })
+    renderAt('/calendar', <App />)
+
+    const month = await screen.findByRole('table', { name: 'January 2027' })
+    const day = (date: string) => within(month).getByRole('cell', { name: date })
+    // A birthday leads to the Child's profile.
+    expect(within(day('14 January')).getByRole('link', { name: 'Birthday: Lena Müller' })).toHaveAttribute('href', '/children/7')
+    expect(day('1 January')).toHaveTextContent('Neujahr')
+    expect(day('26 January')).toHaveTextContent('Winterferien')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Agenda' }))
+    // Days with only a birthday or a holiday are listed too.
+    expect(await screen.findByRole('region', { name: 'Thursday, 14 January' })).toHaveTextContent('Lena Müller')
+    expect(screen.getByRole('region', { name: 'Tuesday, 26 January' })).toHaveTextContent('Winterferien')
   })
 })

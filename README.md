@@ -38,6 +38,10 @@ This stack sends all email to [Mailpit](https://mailpit.axllent.org/), which cat
 
 If an email cannot be sent, the action still completes (a new Staff member's account is still created) and the failure is filed as a crash report; the Admin can use "Send new link" later.
 
+Events can ask for a Reminder (that morning, or 1, 2 or 7 days before). A job inside the `api` service looks for due Reminders every 5 minutes (`KITA_REMINDER_CHECK_SECONDS`; `0` turns it off) and, from 07:00 Kita time, emails each active Staff member of the Event's Group (for the whole Kita: every one) once. A Reminder that could not be sent, or was missed while the server was off, goes out on a later run until the Event begins.
+
+Holidays come from iCal files (`.ics`): an Admin imports the region's public holidays and school holidays on the Holidays page (Calendar → Holidays), e.g. from a file downloaded from a holiday website. Importing a kind again replaces it. Files with repeating entries are refused; holiday files list each holiday with its dates.
+
 ## Develop
 
 Backend (Python, FastAPI) — needs the database from Compose (`docker compose up -d --wait db`):

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { CalendarEvent, EventDetails, Repeat } from './api'
 import GroupOptions from './GroupOptions'
 import { useGroups } from './useGroups'
-import { everyLabel, repeatLabel } from './eventText'
+import { everyLabel, reminderLabel, repeatLabel } from './eventText'
 
 type Props = {
   /** Names the form, e.g. "Add event". */
@@ -23,6 +23,7 @@ export default function EventForm({ label, event, groupId, day, onSave, onCancel
   const groups = useGroups()
   const forId = useId()
   const repeatsId = useId()
+  const remindId = useId()
   const [group, setGroup] = useState(String(event ? (event.group?.id ?? '') : (groupId ?? '')))
   const [title, setTitle] = useState(event?.title ?? '')
   const [note, setNote] = useState(event?.note ?? '')
@@ -35,6 +36,7 @@ export default function EventForm({ label, event, groupId, day, onSave, onCancel
   const [repeat, setRepeat] = useState<Repeat>(event?.repeat ?? 'none')
   const [repeatEvery, setRepeatEvery] = useState(String(event?.repeatEvery ?? 1))
   const [repeatUntil, setRepeatUntil] = useState(event?.repeatUntil ?? '')
+  const [remind, setRemind] = useState(event?.remindDaysBefore === null || event?.remindDaysBefore === undefined ? '' : String(event.remindDaysBefore))
   const [submitting, setSubmitting] = useState(false)
 
   /** A new start; an all-day Event's end moves along if it would come before it. */
@@ -59,6 +61,7 @@ export default function EventForm({ label, event, groupId, day, onSave, onCancel
       repeat,
       repeatEvery: repeats ? Number(repeatEvery) : 1,
       repeatUntil: repeats && repeatUntil ? repeatUntil : null,
+      remindDaysBefore: remind === '' ? null : Number(remind),
     }
     if (!(await onSave(details))) setSubmitting(false)
   }
@@ -122,6 +125,15 @@ export default function EventForm({ label, event, groupId, day, onSave, onCancel
           </label>
         </>
       )}
+      <label htmlFor={remindId}>{t('reminder')}</label>
+      <select id={remindId} value={remind} onChange={(changed) => setRemind(changed.target.value)}>
+        <option value="">{t('noReminder')}</option>
+        {Object.entries(reminderLabel).map(([days, label]) => (
+          <option key={days} value={days}>
+            {t(label)}
+          </option>
+        ))}
+      </select>
       <label>
         {t('note')}
         <textarea maxLength={2000} value={note} onChange={(changed) => setNote(changed.target.value)} />

@@ -2,10 +2,11 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { genderLabel, saveChild, type Child, type ChildDetails, type Gender, type Refusal } from './api'
+import { kitaToday } from './dates'
 
 type Problem = Refusal | 'somethingWentWrong' | null
 
-const empty: ChildDetails = { firstName: '', lastName: '', gender: null, languages: '', foodPreferences: '', interests: '' }
+const empty: ChildDetails = { firstName: '', lastName: '', gender: null, languages: '', foodPreferences: '', interests: '', dateOfBirth: null }
 
 /** Creates a Child profile, or edits `child`. Admins only; shows the profile once saved. */
 export default function ChildForm({ child }: { child?: Child }) {
@@ -14,13 +15,13 @@ export default function ChildForm({ child }: { child?: Child }) {
   const [details, setDetails] = useState<ChildDetails>(() => {
     if (!child) return empty
     // Only the fields this form edits, not e.g. the profile's parents.
-    const { firstName, lastName, gender, languages, foodPreferences, interests } = child
-    return { firstName, lastName, gender, languages, foodPreferences, interests }
+    const { firstName, lastName, gender, languages, foodPreferences, interests, dateOfBirth } = child
+    return { firstName, lastName, gender, languages, foodPreferences, interests, dateOfBirth }
   })
   const [problem, setProblem] = useState<Problem>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  function field(name: Exclude<keyof ChildDetails, 'gender'>) {
+  function field(name: Exclude<keyof ChildDetails, 'gender' | 'dateOfBirth'>) {
     return {
       value: details[name],
       onChange: (event: { target: { value: string } }) => setDetails({ ...details, [name]: event.target.value }),
@@ -66,6 +67,15 @@ export default function ChildForm({ child }: { child?: Child }) {
             </option>
           ))}
         </select>
+      </label>
+      <label>
+        {t('dateOfBirth')}
+        <input
+          type="date"
+          max={kitaToday()}
+          value={details.dateOfBirth ?? ''}
+          onChange={(event) => setDetails({ ...details, dateOfBirth: event.target.value || null })}
+        />
       </label>
       <label>
         {t('languagesSpoken')}

@@ -28,9 +28,9 @@ def calendar(
     client: TestClient, span: dict[str, str] = WEEK, group_id: int | None = None
 ) -> list[dict[str, Any]]:
     params = {**span, **({} if group_id is None else {"groupId": str(group_id)})}
-    response = client.get("/api/events", params=params)
+    response = client.get("/api/calendar", params=params)
     assert response.status_code == 200, response.text
-    occurrences: list[dict[str, Any]] = response.json()
+    occurrences: list[dict[str, Any]] = response.json()["events"]
     return occurrences
 
 
@@ -65,6 +65,7 @@ def test_staff_add_events_for_a_group_or_the_whole_kita(
         "repeat": "none",
         "repeatEvery": 1,
         "repeatUntil": None,
+        "remindDaysBefore": None,
     }
     assert occurrences[1]["event"]["id"] == evening
     assert occurrences[1]["event"]["group"] is None
@@ -87,7 +88,7 @@ def test_a_group_calendar_shows_its_own_and_the_kita_wide_events(admin: TestClie
     ]
     # The Kita-wide calendar shows everything.
     assert len(calendar(admin)) == 3
-    assert admin.get("/api/events", params={**WEEK, "groupId": "999"}).status_code == 404
+    assert admin.get("/api/calendar", params={**WEEK, "groupId": "999"}).status_code == 404
 
 
 def test_only_events_within_the_span_are_shown(admin: TestClient) -> None:
@@ -224,7 +225,8 @@ def test_an_event_needs_a_title_a_valid_time_and_a_valid_repeat(admin: TestClien
 
 def test_a_calendar_shows_at_most_100_days_at_once(admin: TestClient) -> None:
     def detail(span: dict[str, str]) -> Any:
-        return admin.get("/api/events", params=span).json()
+        found = admin.get("/api/calendar", params=span).json()
+        return found.get("events", found)
 
     assert detail({"from": "2027-01-01", "to": "2027-04-10"}) == []
     assert detail({"from": "2027-01-01", "to": "2027-04-11"}) == {"detail": "span_too_long"}
@@ -232,5 +234,5 @@ def test_a_calendar_shows_at_most_100_days_at_once(admin: TestClient) -> None:
 
 
 def test_the_calendar_needs_a_login(client: TestClient) -> None:
-    assert client.get("/api/events", params=WEEK).status_code == 401
+    assert client.get("/api/calendar", params=WEEK).status_code == 401
     assert client.post("/api/events", json=TRIP).status_code == 401

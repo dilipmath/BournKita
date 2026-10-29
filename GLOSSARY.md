@@ -9,7 +9,7 @@ A child cared for by the Kita, with a profile kept by Admins.
 _Avoid_: Kid, pupil, student
 
 **Child profile**:
-What the Kita records about one Child: name, gender, languages spoken, food preferences, interests, Alerts and the other safety data below. Admins keep it; every Staff member can read it.
+What the Kita records about one Child: name, date of birth, gender, languages spoken, food preferences, interests, Alerts and the other safety data below. Admins keep it; every Staff member can read it.
 _Avoid_: Record, file, Akte
 
 **Parent**:
@@ -65,8 +65,20 @@ Something on in the Kita, for one Group or the whole Kita: all-day (on one or se
 _Avoid_: Appointment, Termin (in code and docs), meeting (for Events in general)
 
 **Calendar**:
-The Events of the Kita in month, week and agenda views. A Group's Calendar shows its own Events and the whole Kita's; the Kita-wide Calendar shows every Event, each Group's marked with its icon.
+The Events of the Kita in month, week and agenda views, with the Holidays and the Children's Birthdays. A Group's Calendar shows its own Events and the whole Kita's, and its Children's Birthdays; the Kita-wide Calendar shows every Event, each Group's marked with its icon, and every Birthday.
 _Avoid_: Schedule, Kalender (in code and docs)
+
+**Holiday**:
+A public holiday or school holiday of the Kita's region, on one or several days. An Admin imports them from an iCal file; importing again replaces that kind's. They are the whole Kita's.
+_Avoid_: Vacation, Feiertag/Ferien (in code and docs), closing day (the Kita's own closing days are Events)
+
+**Birthday**:
+The day a Child turns a year older, worked out from the date of birth on their Child profile; never stored as an Event. The Calendar shows the Child's name and the day only.
+_Avoid_: Birthday event, Geburtstag (in code and docs)
+
+**Reminder**:
+An email about an Event coming up, which the Event asks for: that morning, or 1, 2 or 7 days before. It goes out from 07:00 at the Kita, once to each active Staff member of the Event's Group (or, for the whole Kita, to every one).
+_Avoid_: Notification, alert (Alert is a Child's allergy or condition), Erinnerung (in code and docs)
 
 **Staff member**:
 Any Kita employee who has a login.

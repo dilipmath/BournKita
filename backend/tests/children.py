@@ -11,6 +11,7 @@ LENA = {
     "languages": "Deutsch, Türkisch",
     "foodPreferences": "Vegetarisch",
     "interests": "Malen, Dinosaurier",
+    "dateOfBirth": None,
 }
 
 

@@ -33,3 +33,5 @@ class Settings(BaseSettings):
     encryption_key: SecretStr | None = None
     # Where photo files are kept (encrypted), e.g. on the Kita's network drive.
     photo_folder: Path = Path("photos")
+    # How often the Reminder job looks for Event Reminders due; 0: never (tests run it themselves).
+    reminder_check_seconds: int = 300

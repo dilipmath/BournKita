@@ -30,6 +30,8 @@ def settings() -> Settings:
     settings = Settings(
         database_url=test_url.render_as_string(hide_password=False),
         encryption_key=SecretStr(new_key()),
+        # The tests run the reminder job themselves, with their own clock.
+        reminder_check_seconds=0,
     )
     migrate(settings.database_url)
     return settings
