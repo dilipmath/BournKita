@@ -26,6 +26,8 @@ from kita.crash import (
     send_safely,
 )
 from kita.encryption import FieldCipher
+from kita.events import Events
+from kita.events_api import events_router
 from kita.groups import Groups
 from kita.groups_api import groups_router
 from kita.identity import Identity
@@ -110,6 +112,7 @@ def create_app(
     app.include_router(audit_router(identity, audit, children))
     app.include_router(groups_router(identity, groups, alerts, audited_route_class))
     app.include_router(tasks_router(identity, Tasks(engine, clock)))
+    app.include_router(events_router(identity, Events(engine, clock)))
 
     @app.exception_handler(Exception)
     async def report_crash(request: Request, error: Exception) -> JSONResponse:

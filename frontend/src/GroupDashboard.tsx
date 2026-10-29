@@ -18,9 +18,14 @@ export default function GroupDashboard() {
       <h2>
         <GroupLabel group={dashboard} />
       </h2>
-      <Link className="button" to={`/groups/${dashboard.id}/board`}>
-        {t('taskBoard')}
-      </Link>
+      <nav className="actions" aria-label={t('groupViews')}>
+        <Link className="button" to={`/groups/${dashboard.id}/board`}>
+          {t('taskBoard')}
+        </Link>
+        <Link className="button" to={`/groups/${dashboard.id}/calendar`}>
+          {t('calendar')}
+        </Link>
+      </nav>
       {dashboard.children.length === 0 ? (
         <p>{t('noChildrenInGroup')}</p>
       ) : (

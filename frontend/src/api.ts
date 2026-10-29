@@ -47,6 +47,9 @@ const refusals = {
   group_name_taken: 'groupNameTaken',
   not_in_group: 'notInGroup',
   backlog_changed: 'backlogChanged',
+  ends_before_start: 'endsBeforeStart',
+  invalid_times: 'invalidTimes',
+  invalid_repeat: 'invalidRepeat',
 } as const
 
 export type Refusal = (typeof refusals)[keyof typeof refusals]
@@ -567,5 +570,49 @@ export async function moveTask(groupId: number, taskId: number, status: TaskStat
 export async function removeTask(groupId: number, taskId: number): Promise<true | Refusal> {
   const response = await fetch(`/api/groups/${groupId}/tasks/${taskId}`, { method: 'DELETE' })
   if (!response.ok) return refusalOf(response, 'Deleting the Task')
+  return true
+}
+
+// The Calendar: Events for a Group (group set) or the whole Kita (group null). An all-day Event
+// has no times and may span days; a timed one is on one day. Dates are YYYY-MM-DD, times
+// HH:MM:SS (sent as HH:MM), all the Kita's.
+export type Repeat = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly'
+export type CalendarEvent = {
+  id: number
+  group: Group | null
+  title: string
+  note: string
+  startsOn: string
+  endsOn: string
+  startTime: string | null
+  endTime: string | null
+  repeat: Repeat
+  repeatEvery: number
+  repeatUntil: string | null
+}
+export type EventDetails = Omit<CalendarEvent, 'id' | 'group'> & { groupId: number | null }
+// One time an Event happens, from its first to its last day.
+export type Occurrence = { event: CalendarEvent; startsOn: string; endsOn: string }
+
+/** What happens from `from` to `to` (both included), in order: for a Group, its own and the
+ * whole Kita's Events; for no Group, every Event. */
+export async function fetchCalendar(from: string, to: string, groupId: number | null): Promise<Occurrence[]> {
+  const group = groupId === null ? '' : `&groupId=${groupId}`
+  const response = await fetch(`/api/events?from=${from}&to=${to}${group}`)
+  if (!response.ok) throw new Error(`Loading the Calendar failed: ${response.status}`)
+  return (await response.json()) as Occurrence[]
+}
+
+/** Adds an Event, or changes the one with `id` (every time it happens, if it repeats). */
+export async function saveEvent(details: EventDetails, id?: number): Promise<CalendarEvent | Refusal> {
+  const response = id === undefined ? await sendJson('/api/events', 'POST', details) : await sendJson(`/api/events/${id}`, 'PUT', details)
+  if (!response.ok) return refusalOf(response, 'Saving the Event')
+  return (await response.json()) as CalendarEvent
+}
+
+/** Removes an Event, every time it happens. Resolves to true once removed. */
+export async function removeEvent(id: number): Promise<true | Refusal> {
+  const response = await fetch(`/api/events/${id}`, { method: 'DELETE' })
+  if (!response.ok) return refusalOf(response, 'Deleting the Event')
   return true
 }

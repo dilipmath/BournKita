@@ -60,6 +60,14 @@ _Avoid_: Owner, responsible, Zuständige (in code and docs)
 A Group's To do Tasks in the order its Staff choose, most important first. A Task's priority is its place in the Backlog; there is no separate priority level.
 _Avoid_: Priority list, queue, Warteschlange (in code and docs)
 
+**Event**:
+Something on in the Kita, for one Group or the whole Kita: all-day (on one or several days) or timed (on one day, from a start to an end time), at the Kita's local time. It may repeat every few days, weeks, months or years, optionally until a date; changing or deleting a repeating Event changes every time it happens. Each time it happens is an occurrence.
+_Avoid_: Appointment, Termin (in code and docs), meeting (for Events in general)
+
+**Calendar**:
+The Events of the Kita in month, week and agenda views. A Group's Calendar shows its own Events and the whole Kita's; the Kita-wide Calendar shows every Event, each Group's marked with its icon.
+_Avoid_: Schedule, Kalender (in code and docs)
+
 **Staff member**:
 Any Kita employee who has a login.
 _Avoid_: User, employee, teacher (as a kind of person)

@@ -4,6 +4,7 @@ import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { fetchCurrentSession, fetchHealth, logOut, type Session } from './api'
 import AddParentPage from './AddParentPage'
 import AuditLogPage from './AuditLogPage'
+import CalendarPage from './CalendarPage'
 import ParentPage, { ParentEditPage } from './ParentPage'
 import ChildForm from './ChildForm'
 import ChildProfilePage, { ChildEditPage } from './ChildProfilePage'
@@ -101,6 +102,7 @@ export default function App() {
               {t('start')}
             </NavLink>
             <NavLink to="/children">{t('children')}</NavLink>
+            <NavLink to="/calendar">{t('calendar')}</NavLink>
             {isAdmin && (
               <NavLink to="/groups" end>
                 {t('groups')}
@@ -143,6 +145,8 @@ export default function App() {
           <Route path="/groups/:id" element={<GroupDashboard />} />
           <Route path="/groups/:id/board" element={<TaskBoardPage />} />
           <Route path="/groups/:id/backlog" element={<BacklogPage />} />
+          <Route path="/groups/:id/calendar" element={<CalendarPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/" element={<GroupPicker />} />
           <Route path="*" element={null} />
         </Routes>
