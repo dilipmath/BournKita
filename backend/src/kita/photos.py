@@ -233,6 +233,21 @@ class Photos:
             ).all()
         return [Photo(row.id, row.uploaded_at) for row in rows]
 
+    def held_of_child(self, child_id: int) -> list[Photo]:
+        """All the Child's photos, shown or not (without photo Consent), oldest first; for a
+        data-subject request."""
+        with transaction(self._engine) as connection:
+            rows = connection.execute(
+                select(photos.c.id, photos.c.uploaded_at)
+                .where(photos.c.child_id == child_id)
+                .order_by(photos.c.id)
+            ).all()
+        return [Photo(row.id, row.uploaded_at) for row in rows]
+
+    def held_file(self, photo_id: int) -> bytes:
+        """The full-size file of any photo, by ID; for a data-subject request."""
+        return self._file(photo_id, "full")
+
     def add(self, child_id: int, data: bytes) -> Photo:
         files = _prepared(data)
         uploaded_at = self._clock.now()

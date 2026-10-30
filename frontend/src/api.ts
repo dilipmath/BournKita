@@ -305,6 +305,20 @@ export async function fetchParent(id: number): Promise<ParentWithChildren | null
   return (await response.json()) as ParentWithChildren
 }
 
+/** Where an Admin downloads everything held about a Parent and their Children, as a ZIP file
+ * (data.json and the photos), for a data-access request. */
+export function parentExportUrl(id: number): string {
+  return `/api/parents/${id}/export`
+}
+
+/** Deletes for good everything held about a Parent and their Children, archived ones too, for a
+ * deletion request. Admins only; cannot be undone. Resolves to true once deleted. */
+export async function deleteParentData(id: number): Promise<true | Refusal> {
+  const response = await fetch(`/api/parents/${id}/data`, { method: 'DELETE' })
+  if (!response.ok) return refusalOf(response, 'Deleting the Parent’s data')
+  return true
+}
+
 /** Records a Parent, or changes the one with `id`. Admins only. */
 export async function saveParent(details: ParentDetails, id?: number): Promise<Parent | Refusal> {
   const response =

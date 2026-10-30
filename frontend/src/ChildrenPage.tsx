@@ -6,8 +6,9 @@ import { fetchChildren, type ChildSummary } from './api'
 /** The list of Children, searchable by name. Admins also get the way to a new profile. */
 export default function ChildrenPage({ canEdit }: { canEdit: boolean }) {
   const { t } = useTranslation()
-  // Set by the profile page after deleting, so the list can say what happened.
-  const deleted = (useLocation().state as { deleted?: string } | null)?.deleted
+  // Set after deleting a Child profile, or a Parent's data for good, so the list can say what
+  // happened.
+  const notice = useLocation().state as { deleted?: string; deletedPermanently?: string } | null
   const [search, setSearch] = useState('')
   const [children, setChildren] = useState<ChildSummary[] | undefined>(undefined)
   const [failed, setFailed] = useState(false)
@@ -30,9 +31,14 @@ export default function ChildrenPage({ canEdit }: { canEdit: boolean }) {
   return (
     <section className="page">
       <h2>{t('children')}</h2>
-      {deleted && (
+      {notice?.deleted && (
         <p className="status status-ok" role="status">
-          {t('childDeleted', { name: deleted })}
+          {t('childDeleted', { name: notice.deleted })}
+        </p>
+      )}
+      {notice?.deletedPermanently && (
+        <p className="status status-ok" role="status">
+          {t('parentDataDeleted', { name: notice.deletedPermanently })}
         </p>
       )}
       {canEdit && (

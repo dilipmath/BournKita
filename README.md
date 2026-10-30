@@ -42,6 +42,8 @@ Events can ask for a Reminder (that morning, or 1, 2 or 7 days before). A job in
 
 Deleting a Child profile moves it to the archive (Admins only, in the menu), with all its data and photos; it is in no current view, and an Admin can restore it from there. A job inside the `api` service purges archived Children for good once the retention period has passed since they were deleted: `KITA_ARCHIVE_RETENTION_MONTHS` (default 12, a placeholder until the data-protection assessment sets it). The purge also deletes their Parents who have no other Child, and runs every hour (`KITA_PURGE_CHECK_SECONDS`; `0` turns it off).
 
+For data-subject requests, an Admin opens the Parent's page: "Export all data (ZIP)" downloads everything held about the Parent and their Children, archived ones included (`data.json` plus the photos as JPEG files); "Delete all data" deletes all of it for good at once, with the photo files, and cannot be undone. The audit log records both, but none of the deleted data.
+
 Holidays come from iCal files (`.ics`): an Admin imports the region's public holidays and school holidays on the Holidays page (Calendar → Holidays), e.g. from a file downloaded from a holiday website. Importing a kind again replaces it. Files with repeating entries are refused; holiday files list each holiday with its dates.
 
 ## Develop

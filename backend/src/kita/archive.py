@@ -2,16 +2,17 @@
 undone, until the retention period ends and they are purged."""
 
 import calendar
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 
-from sqlalchemy import Engine, delete, select, update
+from sqlalchemy import Connection, Engine, delete, select, update
 
 from kita.children import CURRENT, ChildNotFound, children
 from kita.clock import KITA_TIME_ZONE, Clock, today
 from kita.db import transaction
 from kita.parents import child_parents, parents
-from kita.photos import Photos
+from kita.photos import LeftoverFiles, Photos
 
 
 @dataclass(frozen=True)
@@ -99,39 +100,45 @@ class Archive:
             due = [
                 row.id for row in archived if self._purge_on(row.archived_at) <= today(self._clock)
             ]
-            if not due:
-                return
-            # Parents of these Children who are linked to no other.
-            parent_ids = list(
-                connection.scalars(
-                    select(child_parents.c.parent_id)
-                    .where(child_parents.c.child_id.in_(due))
-                    .except_(
-                        select(child_parents.c.parent_id).where(
-                            child_parents.c.child_id.not_in(due)
-                        )
-                    )
-                )
-            )
-            leftovers = [self._photos.leftovers_of_child(child_id) for child_id in due]
-            leftovers.append(self._photos.leftovers_of_parents(parent_ids))
-            # Their other data goes with them (deleted in cascade).
-            # Checked again as they go: a Parent linked to another Child meanwhile stays.
-            linked_elsewhere = (
-                select(child_parents.c.parent_id)
-                .where(
-                    child_parents.c.parent_id == parents.c.id,
-                    child_parents.c.child_id.not_in(due),
-                )
-                .exists()
-            )
-            connection.execute(
-                delete(parents).where(parents.c.id.in_(parent_ids), ~linked_elsewhere)
-            )
-            connection.execute(delete(children).where(children.c.id.in_(due)))
+            leftovers = delete_for_good(connection, self._photos, due)
         # Only now: deleted before, a failed purge would keep records whose files are gone.
-        for files in leftovers:
-            self._photos.delete_files(files)
+        self._photos.delete_files(leftovers)
 
     def _purge_on(self, archived_at: datetime) -> date:
         return _months_after(archived_at.astimezone(KITA_TIME_ZONE).date(), self._retention_months)
+
+
+def delete_for_good(
+    connection: Connection, photos: Photos, child_ids: Sequence[int], parent_ids: Sequence[int] = ()
+) -> LeftoverFiles:
+    """Deletes these Children for good, current or archived, with all their data, and these
+    Parents and the Children's, unless linked to another Child (current or archived). Returns
+    the photo files to delete once that is saved."""
+    candidates = set(parent_ids) | set(
+        connection.scalars(
+            select(child_parents.c.parent_id).where(child_parents.c.child_id.in_(child_ids))
+        )
+    )
+    linked_elsewhere = (
+        select(child_parents.c.parent_id)
+        .where(
+            child_parents.c.parent_id == parents.c.id,
+            child_parents.c.child_id.not_in(child_ids),
+        )
+        .exists()
+    )
+    # Locked, so none is linked to another Child before they go.
+    gone_parents = list(
+        connection.scalars(
+            select(parents.c.id)
+            .where(parents.c.id.in_(candidates), ~linked_elsewhere)
+            .with_for_update()
+        )
+    )
+    # Found before the records go.
+    files = [photos.leftovers_of_child(child_id) for child_id in child_ids]
+    files.append(photos.leftovers_of_parents(gone_parents))
+    # Their other data goes with them (deleted in cascade).
+    connection.execute(delete(parents).where(parents.c.id.in_(gone_parents)))
+    connection.execute(delete(children).where(children.c.id.in_(child_ids)))
+    return LeftoverFiles(tuple(name for each in files for name in each.names))

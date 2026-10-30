@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { fetchParent } from './api'
 import ParentContacts from './ParentContacts'
+import ParentDataRequests from './ParentDataRequests'
 import ParentForm from './ParentForm'
 import { useRecordAtAddress } from './recordAtAddress'
 import RecordPlaceholder from './RecordPlaceholder'
@@ -34,6 +35,7 @@ export default function ParentPage({ canEdit }: { canEdit: boolean }) {
           {t('edit')}
         </Link>
       )}
+      {canEdit && <ParentDataRequests key={parent.id} parent={parent} />}
     </section>
   )
 }

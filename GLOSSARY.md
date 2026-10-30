@@ -154,7 +154,19 @@ _Avoid_: Storage period, Aufbewahrungsfrist (in code and docs)
 
 **Purge**:
 Deleting, for good, an archived Child whose Retention period has ended: the profile, all its data and photo files, and its Parents who have no other Child. It cannot be undone. A job does it by itself.
-_Avoid_: Cleanup, hard delete (that is a deletion request, done at once)
+_Avoid_: Cleanup, hard delete (a Deletion request is done at once, on request)
+
+**Data-subject request**:
+A Parent's request about the data the Kita holds on them and their Children: a Data-access request or a Deletion request. An Admin answers both from the Parent's page.
+_Avoid_: DSGVO request, Betroffenenanfrage (in code and docs)
+
+**Data-access request**:
+A Parent's request to see everything the Kita holds about them and their Children. An Admin answers it with an export from the Parent's page: a ZIP file with all the data (data.json) and the photos, archived Children included.
+_Avoid_: Auskunftsersuchen (in code and docs), data dump
+
+**Deletion request**:
+A Parent's request to delete everything the Kita holds about them and their Children. An Admin does it at once from the Parent's page: the Parent and their Children (current and archived) go for good, with all data and photo files, and so do the Children's other Parents who are left with no Child. Unlike the Archive it cannot be undone; the Audit log keeps that it happened, not the data.
+_Avoid_: Hard delete (in docs), erasure, Löschantrag (in code and docs)
 
 **Audit log**:
 The record of who viewed, created, changed or deleted which Child's data, and when. For a change it names the fields, never their old or new values. Only Admins read it, and nobody edits it.

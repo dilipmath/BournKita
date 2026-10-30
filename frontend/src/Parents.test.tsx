@@ -138,4 +138,39 @@ describe('Parents', () => {
     expect(await screen.findByRole('link', { name: '0171 555' })).toBeInTheDocument()
     expect(calls).toContainEqual({ route: 'PUT /api/parents/3', body: { ...anna, id: undefined, phone: '0171 555' } })
   })
+
+  it('lets an Admin export a Parent’s data and delete it permanently', async () => {
+    const calls = fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': sessionAs('admin'),
+      'GET /api/parents/3': { status: 200, body: { ...anna, children: [{ id: 7, firstName: 'Lena', lastName: 'Müller' }] } },
+      'DELETE /api/parents/3/data': { status: 204 },
+      'GET /api/children': { status: 200, body: [] },
+    })
+    renderAt('/parents/3', <App />)
+
+    expect(await screen.findByRole('link', { name: 'Export all data (ZIP)' })).toHaveAttribute('href', '/api/parents/3/export')
+    await userEvent.click(screen.getByRole('button', { name: 'Delete all data' }))
+    const confirm = screen.getByRole('group', { name: 'Delete all data' })
+    expect(confirm).toHaveTextContent(
+      'Really delete everything about Anna Müller and their Children (Lena Müller), archived ones too, with all their photos? The Children’s other Parents go too if they have no other Child. This cannot be undone.',
+    )
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Delete permanently' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Everything about Anna Müller and their Children was deleted permanently.')
+    expect(calls).toContainEqual({ route: 'DELETE /api/parents/3/data', body: undefined })
+  })
+
+  it('offers Teachers neither the export nor the deletion', async () => {
+    fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': sessionAs('teacher'),
+      'GET /api/parents/3': { status: 200, body: { ...anna, children: [] } },
+    })
+    renderAt('/parents/3', <App />)
+
+    expect(await screen.findByRole('heading', { name: 'Anna Müller' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Export all data (ZIP)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Delete all data' })).not.toBeInTheDocument()
+  })
 })

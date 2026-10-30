@@ -32,6 +32,8 @@ from kita.crash import (
     job_crash_report,
     send_safely,
 )
+from kita.data_requests import DataRequests, HeldData
+from kita.data_requests_api import data_requests_router
 from kita.emergency_list import EmergencyLists
 from kita.emergency_list_api import emergency_list_router
 from kita.encryption import FieldCipher
@@ -150,9 +152,13 @@ def create_app(
     )
     app.include_router(archive_router(identity, archive, audited_route_class))
     app.include_router(parents_router(identity, parents, photos, audited_route_class))
-    app.include_router(
-        incidents_router(identity, Incidents(engine, clock, cipher), audited_route_class)
+    incidents = Incidents(engine, clock, cipher)
+    app.include_router(incidents_router(identity, incidents, audited_route_class))
+    held = HeldData(
+        children, parents, contacts, alerts, consents, photos, attendance, incidents, groups
     )
+    data_requests = DataRequests(engine, clock, held)
+    app.include_router(data_requests_router(identity, data_requests, photos, audited_route_class))
     app.include_router(audit_router(identity, audit, children))
     birthdays = Birthdays(engine)
     app.include_router(

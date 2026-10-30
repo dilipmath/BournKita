@@ -187,6 +187,19 @@ class Parents:
                 self._parent(connection, parent_id), self._children(connection, parent_id)
             )
 
+    def all_child_ids(self, parent_id: int) -> list[int]:
+        """The Parent's Children, current and archived, by ID; for a data-subject request.
+        Raises ParentNotFound."""
+        with transaction(self._engine) as connection:
+            self._parent(connection, parent_id)
+            return list(
+                connection.scalars(
+                    select(child_parents.c.child_id)
+                    .where(child_parents.c.parent_id == parent_id)
+                    .order_by(child_parents.c.child_id)
+                )
+            )
+
     def of_child(self, child_id: int) -> list[LinkedParent]:
         with transaction(self._engine) as connection:
             rows = connection.execute(

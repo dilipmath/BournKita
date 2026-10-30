@@ -81,6 +81,13 @@ def note_changed_fields(request: Request, fields: Sequence[str]) -> None:
     request.state.audit_changed_fields = [to_camel(field) for field in fields]
 
 
+def note_deleted_permanently(request: Request) -> None:
+    """Called by an endpoint that deletes Children's data for good (a deletion request): each
+    entry is a deletion of the field "permanently", with no data of theirs."""
+    note_changed_fields(request, ["permanently"])
+    request.state.audit_action = "deleted"
+
+
 def _noted_changed_fields(request: Request) -> list[str] | None:
     fields: list[str] | None = getattr(request.state, "audit_changed_fields", None)
     return fields
@@ -155,7 +162,9 @@ def _record(audit: Audit, request: Request, response: Response, subject: _Subjec
     changed_fields = _noted_changed_fields(request)
     if changed_fields == []:
         return  # Saved without changing anything.
-    action = _ACTIONS[request.method] if changed_fields is None else "changed"
+    action: AuditAction = getattr(request.state, "audit_action", None) or (
+        _ACTIONS[request.method] if changed_fields is None else "changed"
+    )
     for child_id in child_ids:
         audit.record(staff_member_of(request).email, action, int(child_id), changed_fields or ())
 

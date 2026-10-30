@@ -274,6 +274,26 @@ class Attendance:
             ).all()
         return {row.child_id: self._to_absence(row) for row in rows}
 
+    def held_days(self, child_id: int) -> dict[date, AttendanceDay]:
+        """Every day the Child was checked in, oldest first; for a data-subject request."""
+        with transaction(self._engine) as connection:
+            rows = connection.execute(
+                select(attendance)
+                .where(attendance.c.child_id == child_id)
+                .order_by(attendance.c.on)
+            ).all()
+        return {row.on: AttendanceDay(row.checked_in_at, row.checked_out_at) for row in rows}
+
+    def held_absences(self, child_id: int) -> list[Absence]:
+        """All the Child's Absences, past and coming, by start; for a data-subject request."""
+        with transaction(self._engine) as connection:
+            rows = connection.execute(
+                select(absences)
+                .where(absences.c.child_id == child_id)
+                .order_by(absences.c.starts_on)
+            ).all()
+        return [self._to_absence(row) for row in rows]
+
     def coming_absences(self, child_id: int) -> list[Absence]:
         """The Child's Absences that have not ended yet, by start: today's and later ones."""
         on = today(self._clock)

@@ -241,6 +241,19 @@ class Incidents:
             )
         return FollowedUp(FollowUp(follow_up_id, note, author, now), child_id)
 
+    def held_of_child(self, child_id: int) -> list[Incident]:
+        """All the Child's Incidents, current or archived, oldest first; for a data-subject
+        request."""
+        with transaction(self._engine) as connection:
+            ids = list(
+                connection.scalars(
+                    select(incidents.c.id)
+                    .where(incidents.c.child_id == child_id)
+                    .order_by(incidents.c.happened_on, incidents.c.reported_at, incidents.c.id)
+                )
+            )
+            return self._loaded(connection, ids)
+
     def log(self, matching: IncidentFilter) -> list[Incident]:
         """The Incidents matching, newest first."""
         # Only the current Children's: an archived Child's come back if it is restored.

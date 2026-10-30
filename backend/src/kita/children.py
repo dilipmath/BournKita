@@ -1,7 +1,7 @@
 """Children: Child profiles. Every Staff member may read them; only Admins may change them."""
 
 from dataclasses import asdict, dataclass, replace
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Literal, get_args
 
 from sqlalchemy import (
@@ -200,6 +200,19 @@ class Children:
         if row is None:
             raise ChildNotFound
         return _to_profile(row)
+
+    def held_profile(self, child_id: int) -> tuple[ChildProfile, datetime | None]:
+        """The profile, current or archived, with when it was archived (None: current); for a
+        data-subject request. Raises ChildNotFound."""
+        with transaction(self._engine) as connection:
+            row = connection.execute(
+                select(*_PROFILE_COLUMNS, children.c.archived_at).where(children.c.id == child_id)
+            ).one_or_none()
+        if row is None:
+            raise ChildNotFound
+        values = row._asdict()
+        archived_at = values.pop("archived_at")
+        return ChildProfile(**values), archived_at
 
     def ensure_current(self, child_id: int) -> None:
         """Raises ChildNotFound unless the Child is current (not archived)."""
