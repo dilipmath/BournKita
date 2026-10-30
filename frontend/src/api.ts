@@ -8,7 +8,8 @@ export async function fetchHealth(): Promise<Health> {
 }
 
 // Who is logged in, and how long the session survives without activity.
-export type Session = { email: string; role: 'admin' | 'teacher'; inactivityTimeoutMinutes: number }
+// A Guest sees the Kita-wide calendar only, read-only.
+export type Session = { email: string; role: 'admin' | 'teacher' | 'guest'; inactivityTimeoutMinutes: number }
 
 /** The current session, or null when nobody is logged in. */
 export async function fetchCurrentSession(): Promise<Session | null> {

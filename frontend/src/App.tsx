@@ -69,6 +69,7 @@ export default function App() {
   }, [session, checkSession])
 
   const isAdmin = session?.role === 'admin'
+  const isGuest = session?.role === 'guest'
   const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyChildren' | 'adminsOnlyAuditLog' | 'adminsOnlyArchive' | 'adminsOnlyGroups' | 'adminsOnlyHolidays') => (
     <p className="status status-problem">{t(message)}</p>
   )
@@ -102,12 +103,14 @@ export default function App() {
         <section className="session">
           <p>{t('loggedInAs', { email: session.email })}</p>
           <nav aria-label={t('mainNavigation')}>
-            <NavLink to="/" end>
-              {t('start')}
-            </NavLink>
-            <NavLink to="/children">{t('children')}</NavLink>
+            {!isGuest && (
+              <NavLink to="/" end>
+                {t('start')}
+              </NavLink>
+            )}
+            {!isGuest && <NavLink to="/children">{t('children')}</NavLink>}
             <NavLink to="/calendar">{t('calendar')}</NavLink>
-            <NavLink to="/incidents">{t('incidentLog')}</NavLink>
+            {!isGuest && <NavLink to="/incidents">{t('incidentLog')}</NavLink>}
             {isAdmin && (
               <NavLink to="/groups" end>
                 {t('groups')}
@@ -131,7 +134,13 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="*" element={session === null && <LoginForm onLoggedIn={setSession} />} />
       </Routes>
-      {session && (
+      {session && isGuest && (
+        <Routes>
+          {/* A Guest sees the Kita-wide calendar only, read-only, whatever the address. */}
+          <Route path="*" element={<CalendarPage canImportHolidays={false} readOnly />} />
+        </Routes>
+      )}
+      {session && !isGuest && (
         <Routes>
           <Route
             path="/staff"

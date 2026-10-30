@@ -1,7 +1,7 @@
 """HTTP API for logging in and out, and the access check other endpoints depend on."""
 
 from collections.abc import Callable
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import (
     APIRouter,
@@ -53,15 +53,21 @@ class Session(BaseModel):
     inactivity_timeout_minutes: int
 
 
-def staff_member_dependency(identity: Identity) -> Callable[..., StaffMember]:
+def staff_member_dependency(
+    identity: Identity, guests_allowed: bool = False
+) -> Callable[..., StaffMember]:
     """A FastAPI dependency giving the logged-in Staff member; answers 401 when there is none.
     Every endpoint that needs a login depends on this instead of reading the cookie itself.
-    The Staff member is also kept as `request.state.staff_member`, e.g. for the audit log."""
+    The Staff member is also kept as `request.state.staff_member`, e.g. for the audit log.
+    Guests are refused (403) unless `guests_allowed`: only what shows no personal data allows
+    them, so a new endpoint keeps them out without having to remember to."""
 
     def current_staff_member(request: Request, token: SessionToken = None) -> StaffMember:
         staff_member = identity.current_staff_member(token) if token else None
         if staff_member is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="not_logged_in")
+        if staff_member.role == "guest" and not guests_allowed:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, detail="not_for_guests")
         request.state.staff_member = staff_member
         return staff_member
 
@@ -74,10 +80,14 @@ def staff_member_of(request: Request) -> StaffMember:
     return staff_member
 
 
-_ROLE_ONLY: dict[Role, str] = {"admin": "admins_only", "teacher": "teachers_only"}
+# The Roles a route can be kept for; Guests are refused everywhere anyway (see
+# staff_member_dependency).
+StaffRole = Literal["admin", "teacher"]
+
+_ROLE_ONLY: dict[StaffRole, str] = {"admin": "admins_only", "teacher": "teachers_only"}
 
 
-def role_dependency(identity: Identity, role: Role) -> Callable[..., StaffMember]:
+def role_dependency(identity: Identity, role: StaffRole) -> Callable[..., StaffMember]:
     """Like staff_member_dependency, but also answers 403 unless the Staff member has `role`."""
     current_staff_member = staff_member_dependency(identity)
 
@@ -144,7 +154,10 @@ def identity_router(identity: Identity, settings: Settings) -> APIRouter:
         "path": "/api",
     }
     timeout_minutes = int(identity.inactivity_timeout.total_seconds() // 60)
-    CurrentStaffMember = Annotated[StaffMember, Depends(staff_member_dependency(identity))]
+    # Guests too: they log in like everyone else.
+    CurrentStaffMember = Annotated[
+        StaffMember, Depends(staff_member_dependency(identity, guests_allowed=True))
+    ]
 
     def session_of(staff_member: StaffMember) -> Session:
         return Session(

@@ -40,6 +40,8 @@ If an email cannot be sent, the action still completes (a new Staff member's acc
 
 Events can ask for a Reminder (that morning, or 1, 2 or 7 days before). A job inside the `api` service looks for due Reminders every 5 minutes (`KITA_REMINDER_CHECK_SECONDS`; `0` turns it off) and, from 07:00 Kita time, emails each active Staff member of the Event's Group (for the whole Kita: every one) once. A Reminder that could not be sent, or was missed while the server was off, goes out on a later run until the Event begins.
 
+Admins can also create Guest accounts: a Guest logs in like anyone else but sees only the Kita-wide Calendar (the whole Kita's Events and the Holidays), read-only. Every other part of the API refuses Guests unless it explicitly lets them in, so no personal data reaches them; they get no Reminders either.
+
 Deleting a Child profile moves it to the archive (Admins only, in the menu), with all its data and photos; it is in no current view, and an Admin can restore it from there. A job inside the `api` service purges archived Children for good once the retention period has passed since they were deleted: `KITA_ARCHIVE_RETENTION_MONTHS` (default 12, a placeholder until the data-protection assessment sets it). The purge also deletes their Parents who have no other Child, and runs every hour (`KITA_PURGE_CHECK_SECONDS`; `0` turns it off).
 
 For data-subject requests, an Admin opens the Parent's page: "Export all data (ZIP)" downloads everything held about the Parent and their Children, archived ones included (`data.json` plus the photos as JPEG files); "Delete all data" deletes all of it for good at once, with the photo files, and cannot be undone. The audit log records both, but none of the deleted data.

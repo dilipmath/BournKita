@@ -77,13 +77,15 @@ function useSpan(first: string, last: string, groupId: number | null) {
 }
 
 /** A Calendar of Events: a Group's (its own and the whole Kita's), or, at /calendar, the whole
- * Kita's with every Group's. Month, week and agenda views; Staff add, change and delete Events. */
-export default function CalendarPage({ canImportHolidays }: { canImportHolidays: boolean }) {
+ * Kita's with every Group's. Month, week and agenda views; Staff add, change and delete Events.
+ * `readOnly` (for Guests): nothing to add, change or delete. */
+export default function CalendarPage({ canImportHolidays, readOnly = false }: { canImportHolidays: boolean; readOnly?: boolean }) {
   const { t, i18n } = useTranslation()
   const language = i18n.language
   const params = useParams()
   const groupId = params.id === undefined ? null : Number(params.id)
-  const group = useGroups()?.find((listed) => listed.id === groupId)
+  // Only a Group's Calendar needs them (and Guests may not list the Groups).
+  const group = useGroups(groupId !== null)?.find((listed) => listed.id === groupId)
   // Kept in the address, so Back and a reload keep the view.
   const [search, setSearch] = useSearchParams()
   const view: View = views.includes(search.get('view') as View) ? (search.get('view') as View) : 'month'
@@ -244,9 +246,11 @@ export default function CalendarPage({ canImportHolidays }: { canImportHolidays:
               {t('holidays')}
             </Link>
           )}
-          <button type="button" className="primary" onClick={() => setOpen('new')}>
-            {t('addEvent')}
-          </button>
+          {!readOnly && (
+            <button type="button" className="primary" onClick={() => setOpen('new')}>
+              {t('addEvent')}
+            </button>
+          )}
         </div>
       </div>
       <h3>{periodTitle}</h3>
@@ -268,6 +272,7 @@ export default function CalendarPage({ canImportHolidays }: { canImportHolidays:
         <EventDetails
           key={`${open.event.id}-${open.startsOn}`}
           occurrence={open}
+          readOnly={readOnly}
           onChanged={() => {
             setOpen(null)
             reload()
@@ -280,11 +285,11 @@ export default function CalendarPage({ canImportHolidays }: { canImportHolidays:
   )
 }
 
-type DetailsProps = { occurrence: Occurrence; onChanged: () => void; onClose: () => void }
+type DetailsProps = { occurrence: Occurrence; readOnly: boolean; onChanged: () => void; onClose: () => void }
 
 /** One occurrence of an Event: when, how it repeats, for whom; Staff change or delete the Event
  * from here (every time it happens, if it repeats). */
-function EventDetails({ occurrence, onChanged, onClose }: DetailsProps) {
+function EventDetails({ occurrence, readOnly, onChanged, onClose }: DetailsProps) {
   const { t, i18n } = useTranslation()
   const language = i18n.language
   const { event } = occurrence
@@ -338,12 +343,16 @@ function EventDetails({ occurrence, onChanged, onClose }: DetailsProps) {
         </div>
       ) : (
         <div className="actions">
-          <button type="button" aria-label={t('changeNamed', { name: event.title })} onClick={() => setChanging(true)}>
-            {t('edit')}
-          </button>
-          <button type="button" aria-label={t('deleteNamed', { name: event.title })} onClick={() => setConfirming(true)}>
-            {t('delete')}
-          </button>
+          {!readOnly && (
+            <>
+              <button type="button" aria-label={t('changeNamed', { name: event.title })} onClick={() => setChanging(true)}>
+                {t('edit')}
+              </button>
+              <button type="button" aria-label={t('deleteNamed', { name: event.title })} onClick={() => setConfirming(true)}>
+                {t('delete')}
+              </button>
+            </>
+          )}
           <button type="button" onClick={onClose}>
             {t('close')}
           </button>

@@ -5,7 +5,7 @@ import re
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError
@@ -36,7 +36,8 @@ from kita.identity_emails import password_reset_email, verification_email
 from kita.mail import Mailer, MailNotSent
 from kita.settings import Settings
 
-Role = Literal["admin", "teacher"]
+# guest: read-only, sees the Kita-wide Calendar and no personal data.
+Role = Literal["admin", "teacher", "guest"]
 # invited: email address not verified yet, so no password and no login.
 AccountStatus = Literal["invited", "active", "deactivated"]
 
@@ -61,7 +62,7 @@ users = Table(
     Column("deactivated_at", DateTime(timezone=True)),
     Column("failed_logins", Integer, nullable=False, server_default="0"),
     Column("locked_until", DateTime(timezone=True)),
-    CheckConstraint("role IN ('admin', 'teacher')", name="role"),
+    CheckConstraint(f"role IN {get_args(Role)}", name="role"),
     UniqueConstraint("email"),
 )
 

@@ -85,7 +85,7 @@ Something on in the Kita, for one Group or the whole Kita: all-day (on one or se
 _Avoid_: Appointment, Termin (in code and docs), meeting (for Events in general)
 
 **Calendar**:
-The Events of the Kita in month, week and agenda views, with the Holidays and the Children's Birthdays. A Group's Calendar shows its own Events and the whole Kita's, and its Children's Birthdays; the Kita-wide Calendar shows every Event, each Group's marked with its icon, and every Birthday.
+The Events of the Kita in month, week and agenda views, with the Holidays and the Children's Birthdays. A Group's Calendar shows its own Events and the whole Kita's, and its Children's Birthdays; the Kita-wide Calendar shows every Event, each Group's marked with its icon, and every Birthday. A Guest's Calendar shows only the whole Kita's Events and the Holidays.
 _Avoid_: Schedule, Kalender (in code and docs)
 
 **Holiday**:
@@ -119,7 +119,7 @@ The Role for everyday group work; can view Child profiles but not change them.
 _Avoid_: Erzieher (in code and docs), educator
 
 **Guest**:
-A read-only Role that never sees personal data.
+A read-only Role that never sees personal data: it sees the Kita-wide Calendar only (the whole Kita's Events and the Holidays, no Birthdays, no Group's Events) and changes nothing. A Guest gets no Reminders and is never an Assignee.
 _Avoid_: Visitor, anonymous user
 
 **Staff account**:

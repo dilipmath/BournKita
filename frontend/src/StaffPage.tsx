@@ -18,8 +18,8 @@ import GroupLabel from './GroupLabel'
 // What went wrong, as a translation key, with the account concerned where the message names it.
 type Problem = { key: Refusal | 'somethingWentWrong' | 'accountCreatedEmailNotSent'; email?: string } | null
 
-const roles: Role[] = ['admin', 'teacher']
-const roleLabel = { admin: 'roleAdmin', teacher: 'roleTeacher' } as const
+const roles: Role[] = ['admin', 'teacher', 'guest']
+const roleLabel = { admin: 'roleAdmin', teacher: 'roleTeacher', guest: 'roleGuest' } as const
 const statusLabel = { invited: 'statusInvited', active: 'statusActive', deactivated: 'statusDeactivated' } as const
 
 function RoleOptions() {

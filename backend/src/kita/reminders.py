@@ -129,8 +129,9 @@ class Reminders:
 
     def _remind(self, occurrence: Occurrence) -> None:
         event = occurrence.event
-        # Active Staff members, of the Group or of the whole Kita.
-        recipients = select(users.c.id, users.c.email).where(*IS_ACTIVE)
+        # Active Staff members, of the Group or of the whole Kita; not Guests, who only read the
+        # calendar.
+        recipients = select(users.c.id, users.c.email).where(*IS_ACTIVE, users.c.role != "guest")
         if event.group is not None:
             recipients = recipients.join(group_staff, group_staff.c.user_id == users.c.id).where(
                 group_staff.c.group_id == event.group.id

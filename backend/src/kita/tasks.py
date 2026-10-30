@@ -134,11 +134,16 @@ def _checked(details: TaskDetails) -> TaskDetails:
 
 
 def _assignable_in(group_id: int) -> Any:
-    """The active Staff members who work in the Group: whom its Tasks can be given to."""
+    """The active Staff members who work in the Group: whom its Tasks can be given to. Not
+    Guests, who only read the Calendar."""
     return (
         select(users.c.id, users.c.email)
         .join(group_staff, group_staff.c.user_id == users.c.id)
-        .where(group_staff.c.group_id == group_id, users.c.deactivated_at.is_(None))
+        .where(
+            group_staff.c.group_id == group_id,
+            users.c.deactivated_at.is_(None),
+            users.c.role != "guest",
+        )
     )
 
 
