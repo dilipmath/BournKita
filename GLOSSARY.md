@@ -52,6 +52,14 @@ _Avoid_: Presence list, Anwesenheit (in code and docs), register
 Days a Child will not come, from one day to another, with a reason: sick, holiday (the family's own time off, not a Holiday of the region) or other. A Child who is absent cannot be checked in, and an Absence cannot cover a day the Child was checked in. The coming ones are on the Child profile. The reason is health data, so stored encrypted.
 _Avoid_: Leave, sick note, Fehlzeit (in code and docs)
 
+**Incident**:
+An accident or other incident involving a Child: the day (and time, if known) it happened, what happened, who was informed, and who reported it. Any Staff member reports one; once saved it is a fixed record that nobody changes or deletes. Teachers see the Incidents they reported; Admins see all, in the Incident log. What happened and who was informed are stored encrypted.
+_Avoid_: Accident report (Incidents are not only accidents), Unfallbericht (in code and docs), event (an Event is in the Calendar)
+
+**Follow-up**:
+An Admin's note on an Incident, added later (e.g. "Parents called back, no doctor needed"). Stored encrypted; like the Incident, never changed.
+_Avoid_: Comment, update, Nachtrag (in code and docs)
+
 **Task board**:
 A Group's board of Tasks in three columns: To do, Doing and Done. Admins and Teachers can work on every Group's board; it shows that Group's Tasks only.
 _Avoid_: Kanban, task list, Aufgabenliste (in code and docs)

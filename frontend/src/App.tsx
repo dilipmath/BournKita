@@ -6,6 +6,7 @@ import AddParentPage from './AddParentPage'
 import AuditLogPage from './AuditLogPage'
 import CalendarPage from './CalendarPage'
 import HolidaysPage from './HolidaysPage'
+import IncidentLogPage from './IncidentLogPage'
 import ParentPage, { ParentEditPage } from './ParentPage'
 import ChildForm from './ChildForm'
 import ChildProfilePage, { ChildEditPage } from './ChildProfilePage'
@@ -104,6 +105,7 @@ export default function App() {
             </NavLink>
             <NavLink to="/children">{t('children')}</NavLink>
             <NavLink to="/calendar">{t('calendar')}</NavLink>
+            <NavLink to="/incidents">{t('incidentLog')}</NavLink>
             {isAdmin && (
               <NavLink to="/groups" end>
                 {t('groups')}
@@ -149,6 +151,7 @@ export default function App() {
           <Route path="/groups/:id/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
           <Route path="/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
           <Route path="/holidays" element={isAdmin ? <HolidaysPage /> : adminsOnly('adminsOnlyHolidays')} />
+          <Route path="/incidents" element={<IncidentLogPage isAdmin={isAdmin} />} />
           <Route path="/" element={<GroupPicker />} />
           <Route path="*" element={null} />
         </Routes>

@@ -13,6 +13,7 @@ from kita import (  # noqa: F401
     groups,
     holidays,
     identity,
+    incidents,
     parents,
     photos,
     reminders,

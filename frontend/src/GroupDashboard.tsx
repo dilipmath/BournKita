@@ -14,6 +14,7 @@ import {
 import { longDay } from './calendarDates'
 import { kitaTime } from './dates'
 import GroupLabel from './GroupLabel'
+import IncidentReport from './IncidentReport'
 import ProblemAlert from './ProblemAlert'
 import { useProfileChange } from './profileChange'
 import { useRecordAtAddress } from './recordAtAddress'
@@ -151,6 +152,7 @@ function ChildToday({ child, day, reload }: ChildProps) {
         </div>
       )}
       <ProblemAlert problem={problem} />
+      <IncidentReport childId={child.id} name={name} />
     </li>
   )
 }

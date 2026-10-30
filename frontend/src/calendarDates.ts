@@ -90,3 +90,8 @@ export function isDay(text: string): boolean {
 export function startOfMonth(day: string): string {
   return addMonths(day, 0)
 }
+
+/** E.g. "Monday, 4 January 2027". */
+export function longDate(day: string, language: string): string {
+  return `${format(day, language, { weekday: 'long' })}, ${fullDate(day, language)}`
+}

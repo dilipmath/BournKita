@@ -11,6 +11,7 @@ import ChildGroup from './ChildGroup'
 import ConsentsSection from './ConsentsSection'
 import ContactsSection from './ContactsSection'
 import GallerySection from './GallerySection'
+import IncidentReport from './IncidentReport'
 import ParentsSection from './ParentsSection'
 import ProblemAlert from './ProblemAlert'
 import type { Problem } from './profileChange'
@@ -72,6 +73,7 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
         <dt>{t('interests')}</dt>
         <dd>{child.interests || '–'}</dd>
       </dl>
+      <IncidentReport childId={child.id} name={name} />
       <ContactsSection
         kind="pickUp"
         childId={child.id}

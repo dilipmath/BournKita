@@ -1282,3 +1282,82 @@ button.big {
     flex: 1;
   }
 }
+
+/* The Incident log: filters in a row that wraps, then one entry per Incident. */
+.page.incident-log {
+  max-width: 800px;
+  align-items: stretch;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+}
+
+.filters .field,
+.filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.incident {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-left: 8px solid var(--bad);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.incident h3,
+.incident p {
+  margin: 0;
+}
+
+.incident .note,
+.follow-ups .note {
+  white-space: pre-line;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
+}
+
+.follow-ups {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px;
+  list-style: none;
+  border-left: 3px solid var(--accent);
+}
+
+.follow-up-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.follow-up-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.incident-report {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}

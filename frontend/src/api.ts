@@ -61,6 +61,9 @@ const refusals = {
   absent_today: 'absentToday',
   present_then: 'presentThen',
   overlapping_absence: 'overlappingAbsence',
+  description_required: 'descriptionRequired',
+  informed_required: 'informedRequired',
+  note_required: 'noteRequired',
 } as const
 
 export type Refusal = (typeof refusals)[keyof typeof refusals]
@@ -697,4 +700,45 @@ export async function removeEvent(id: number): Promise<true | Refusal> {
   const response = await fetch(`/api/events/${id}`, { method: 'DELETE' })
   if (!response.ok) return refusalOf(response, 'Deleting the Event')
   return true
+}
+
+// An Incident: an accident or other incident involving a Child, a fixed record once reported.
+// happenedOn is YYYY-MM-DD; happenedAt HH:MM:SS (sent as HH:MM) or null; reportedAt UTC.
+export type IncidentDetails = { happenedOn: string; happenedAt: string | null; description: string; informed: string }
+// An Admin's note on an Incident, added later (e.g. "Parents called back").
+export type FollowUp = { id: number; note: string; author: string | null; at: string }
+export type Incident = IncidentDetails & {
+  id: number
+  child: ChildSummary
+  reportedBy: string | null
+  reportedAt: string
+  followUps: FollowUp[]
+}
+// Which Incidents to list; unset fields match every one.
+export type IncidentFilter = { childId?: number; groupId?: number; since?: string; until?: string }
+
+/** Reports an Incident of a Child. */
+export async function reportIncident(childId: number, details: IncidentDetails): Promise<Incident | Refusal> {
+  const response = await sendJson(`/api/children/${childId}/incidents`, 'POST', details)
+  if (!response.ok) return refusalOf(response, 'Reporting the Incident')
+  return (await response.json()) as Incident
+}
+
+/** The Incidents matching, newest first: all for an Admin, those they reported for a Teacher. */
+export async function fetchIncidents(filter: IncidentFilter = {}): Promise<Incident[]> {
+  const query = new URLSearchParams()
+  for (const key of ['childId', 'groupId', 'since', 'until'] as const) {
+    if (filter[key] !== undefined) query.set(key, String(filter[key]))
+  }
+  const search = query.toString()
+  const response = await fetch(`/api/incidents${search ? `?${search}` : ''}`)
+  if (!response.ok) throw new Error(`Loading the Incident log failed: ${response.status}`)
+  return (await response.json()) as Incident[]
+}
+
+/** Adds a Follow-up to an Incident. Admins only. */
+export async function addFollowUp(incidentId: number, note: string): Promise<FollowUp | Refusal> {
+  const response = await sendJson(`/api/incidents/${incidentId}/follow-ups`, 'POST', { note })
+  if (!response.ok) return refusalOf(response, 'Adding the Follow-up')
+  return (await response.json()) as FollowUp
 }

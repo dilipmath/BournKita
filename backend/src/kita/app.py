@@ -43,6 +43,8 @@ from kita.identity_api import (
     identity_router,
     password_reset_router,
 )
+from kita.incidents import Incidents
+from kita.incidents_api import incidents_router
 from kita.mail import Mailer, mailer_from_settings
 from kita.parents import Parents
 from kita.parents_api import parents_router
@@ -133,6 +135,9 @@ def create_app(
         )
     )
     app.include_router(parents_router(identity, parents, photos, audited_route_class))
+    app.include_router(
+        incidents_router(identity, Incidents(engine, clock, cipher), audited_route_class)
+    )
     app.include_router(audit_router(identity, audit, children))
     birthdays = Birthdays(engine)
     app.include_router(

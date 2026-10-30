@@ -22,3 +22,15 @@ export function kitaTime(moment: string, language: string): string {
     timeZone: KITA_TIME_ZONE,
   }).format(new Date(moment))
 }
+
+/** The day and time at the Kita of a moment the API gives (UTC), e.g. "4 January 2027, 10:20". */
+export function kitaDateTime(moment: string, language: string): string {
+  return new Intl.DateTimeFormat(language.startsWith('de') ? 'de-DE' : 'en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: KITA_TIME_ZONE,
+  }).format(new Date(moment))
+}
