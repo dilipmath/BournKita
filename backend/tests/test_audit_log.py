@@ -2,14 +2,14 @@ from collections.abc import Callable, Iterator
 from datetime import timedelta
 
 import pytest
-from fastapi import APIRouter
+from fastapi import APIRouter, FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 
 from kita.audit import Audit
 from kita.audit_api import UnauditableRoute, audited_route, not_about_one_child
 from kita.settings import Settings
-from tests.accounts import ADMIN_EMAIL, TEACHER_EMAIL
+from tests.accounts import ADMIN_EMAIL, TEACHER_EMAIL, log_in
 from tests.children import LENA, create_child
 from tests.fakes import FixedClock
 
@@ -49,8 +49,8 @@ def test_changing_a_child_profile_records_which_fields_changed_but_not_their_val
     assert (created["action"], created["childId"]) == ("created", child_id)
 
 
-def test_deleting_a_child_profile_is_recorded_and_the_entries_outlive_it(
-    admin: TestClient,
+def test_deleting_a_child_profile_is_recorded_and_the_entries_outlive_its_purge(
+    app: FastAPI, admin: TestClient, clock: FixedClock
 ) -> None:
     child_id = create_child(admin)
     admin.get(f"/api/children/{child_id}")
@@ -59,7 +59,13 @@ def test_deleting_a_child_profile_is_recorded_and_the_entries_outlive_it(
 
     entries = admin.get("/api/audit-log").json()
     assert [entry["action"] for entry in entries] == ["deleted", "viewed", "created"]
-    # The name is gone with the profile; the entries keep the Child's number.
+    # Named while in the archive.
+    assert {entry["childName"] for entry in entries} == {"Lena Müller"}
+    # Purged a year later: the name is gone with the profile; the entries keep its number.
+    clock.now_value += timedelta(days=366)
+    app.state.archive.purge_due()
+    assert log_in(admin).status_code == 200
+    entries = admin.get("/api/audit-log").json()
     assert {(entry["childId"], entry["childName"]) for entry in entries} == {(child_id, None)}
 
 

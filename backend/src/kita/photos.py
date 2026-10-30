@@ -276,7 +276,7 @@ class Photos:
 
     def leftovers_of_child(self, child_id: int) -> LeftoverFiles:
         """The files of all the Child's photos, shown or not, and of their contacts' photos,
-        for when the Child is deleted."""
+        for when the Child is purged."""
         with transaction(self._engine) as connection:
             photo_ids = connection.scalars(
                 select(photos.c.id).where(
@@ -287,6 +287,10 @@ class Photos:
                 )
             ).all()
         return _leftovers(photo_ids)
+
+    def leftovers_of_parents(self, parent_ids: Sequence[int]) -> LeftoverFiles:
+        """The files of these Parents' photos, for when they are deleted."""
+        return _leftovers(list(self.photos_of_parents(parent_ids).values()))
 
     def leftovers_of_contact(self, child_id: int, contact_id: int) -> LeftoverFiles:
         """The files of the contact's photo, if any, for when the contact is removed."""

@@ -1,5 +1,5 @@
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, suppress
 from importlib.metadata import version
 from typing import Literal
@@ -11,6 +11,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 
 from kita.alerts import Alerts
+from kita.archive import Archive
+from kita.archive_api import archive_router
 from kita.attendance import Attendance
 from kita.audit import Audit
 from kita.audit_api import audit_router, audited_route
@@ -47,11 +49,12 @@ from kita.identity_api import (
 )
 from kita.incidents import Incidents
 from kita.incidents_api import incidents_router
+from kita.jobs import run_regularly
 from kita.mail import Mailer, mailer_from_settings
 from kita.parents import Parents
 from kita.parents_api import parents_router
 from kita.photos import DiskFileStore, FileStore, Photos
-from kita.reminders import Reminders, remind_regularly
+from kita.reminders import Reminders
 from kita.settings import Settings
 from kita.staff_api import staff_router
 from kita.tasks import Tasks
@@ -84,20 +87,26 @@ def create_app(
         connect_args={"connect_timeout": settings.database_connect_timeout_seconds},
     )
 
-    def report_job_crash(error: Exception) -> None:
-        send_safely(crash_sink, job_crash_report("reminder job", error, app_version, clock.now()))
+    def crash_reporter(job: str) -> Callable[[Exception], None]:
+        def report(error: Exception) -> None:
+            send_safely(crash_sink, job_crash_report(job, error, app_version, clock.now()))
+
+        return report
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        job = None
-        if settings.reminder_check_seconds > 0:
-            job = asyncio.create_task(
-                remind_regularly(
-                    app.state.reminders, settings.reminder_check_seconds, report_job_crash
-                )
-            )
+        # Each job with how often it runs; 0 turns it off (tests run them themselves).
+        schedule = [
+            ("reminder job", app.state.reminders.send_due, settings.reminder_check_seconds),
+            ("archive purge job", app.state.archive.purge_due, settings.purge_check_seconds),
+        ]
+        jobs = [
+            asyncio.create_task(run_regularly(work, every_seconds, crash_reporter(name)))
+            for name, work, every_seconds in schedule
+            if every_seconds > 0
+        ]
         yield
-        if job is not None:
+        for job in jobs:
             job.cancel()
             with suppress(asyncio.CancelledError):
                 await job
@@ -121,6 +130,8 @@ def create_app(
         engine, clock, cipher, file_store or DiskFileStore(settings.photo_folder), consents
     )
     groups = Groups(engine)
+    # Kept on the app for the purge job, and for tests, which run it themselves.
+    app.state.archive = archive = Archive(engine, clock, photos, settings.archive_retention_months)
     app.include_router(staff_router(identity, groups))
     app.include_router(
         children_router(
@@ -133,9 +144,11 @@ def create_app(
             consents,
             photos,
             groups,
+            archive,
             audited_route_class,
         )
     )
+    app.include_router(archive_router(identity, archive, audited_route_class))
     app.include_router(parents_router(identity, parents, photos, audited_route_class))
     app.include_router(
         incidents_router(identity, Incidents(engine, clock, cipher), audited_route_class)

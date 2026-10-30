@@ -5,7 +5,7 @@ from datetime import date
 
 from sqlalchemy import Engine, select
 
-from kita.children import children
+from kita.children import CURRENT, children
 from kita.db import transaction
 from kita.groups import child_groups
 
@@ -39,7 +39,7 @@ class Birthdays:
         or with no Group, of every Child whose date of birth is recorded."""
         query = select(
             children.c.id, children.c.first_name, children.c.last_name, children.c.date_of_birth
-        ).where(children.c.date_of_birth.is_not(None))
+        ).where(children.c.date_of_birth.is_not(None), CURRENT)
         if group_id is not None:
             query = query.join(child_groups, child_groups.c.child_id == children.c.id).where(
                 child_groups.c.group_id == group_id

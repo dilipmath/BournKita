@@ -53,7 +53,7 @@ Days a Child will not come, from one day to another, with a reason: sick, holida
 _Avoid_: Leave, sick note, Fehlzeit (in code and docs)
 
 **Incident**:
-An accident or other incident involving a Child: the day (and time, if known) it happened, what happened, who was informed, and who reported it. Any Staff member reports one; once saved it is a fixed record that nobody changes or deletes. Teachers see the Incidents they reported; Admins see all, in the Incident log. What happened and who was informed are stored encrypted.
+An accident or other incident involving a Child: the day (and time, if known) it happened, what happened, who was informed, and who reported it. Any Staff member reports one; once saved it is a fixed record that nobody changes or deletes (only the Purge of its Child does). Teachers see the Incidents they reported; Admins see all, in the Incident log. What happened and who was informed are stored encrypted.
 _Avoid_: Accident report (Incidents are not only accidents), Unfallbericht (in code and docs), event (an Event is in the Calendar)
 
 **Follow-up**:
@@ -143,6 +143,18 @@ A temporary block on logging in to a Staff account after too many failed logins 
 _Avoid_: Ban, suspension, deactivation
 
 ## Data protection
+
+**Archive**:
+Where a Child profile goes when an Admin deletes it, with all its data (Parents' links, contacts, Alerts, Attendance, Incidents, photos), kept apart from the current Children: an archived Child is in no current view. Only Admins see the archive, and an Admin can restore a Child from it with everything it had. When the Retention period ends, the Purge deletes it for good.
+_Avoid_: Trash, recycle bin, soft delete (in docs), Papierkorb (in code and docs)
+
+**Retention period**:
+How long an archived Child profile is kept before the Purge: 12 months unless the Kita's data-protection assessment says otherwise (`KITA_ARCHIVE_RETENTION_MONTHS`).
+_Avoid_: Storage period, Aufbewahrungsfrist (in code and docs)
+
+**Purge**:
+Deleting, for good, an archived Child whose Retention period has ended: the profile, all its data and photo files, and its Parents who have no other Child. It cannot be undone. A job does it by itself.
+_Avoid_: Cleanup, hard delete (that is a deletion request, done at once)
 
 **Audit log**:
 The record of who viewed, created, changed or deleted which Child's data, and when. For a change it names the fields, never their old or new values. Only Admins read it, and nobody edits it.

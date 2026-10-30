@@ -90,7 +90,7 @@ export default function ChildProfilePage({ canEdit }: { canEdit: boolean }) {
       <ProblemAlert problem={problem} />
       {canEdit &&
         (confirming ? (
-          // A second, deliberate step: deleting cannot be undone.
+          // A second, deliberate step, though an Admin can restore it from the archive.
           <div className="confirm" role="group" aria-label={t('deleteProfile')} tabIndex={-1} ref={confirmation}>
             <p>{t('confirmDeleteChild', { name })}</p>
             <div className="actions">

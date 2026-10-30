@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 from PIL import Image
 
 from tests.children import create_child
-from tests.contacts import NACHBAR, add_contact
 from tests.fakes import MemoryFileStore
 from tests.photos import give_photo_consent, jpeg, size_of, upload
 
@@ -120,20 +119,6 @@ def test_an_admin_deletes_a_photo_and_its_files(
     assert len(file_store.files) == 2  # The second photo's thumbnail and full size.
     entries = admin.get("/api/audit-log", params={"action": "changed"}).json()
     assert [entry["changedFields"] for entry in entries][:3] == [["photos"]] * 3
-
-
-def test_deleting_a_child_deletes_their_and_their_contacts_photo_files(
-    admin: TestClient, file_store: MemoryFileStore
-) -> None:
-    lena = create_child(admin)
-    give_photo_consent(admin, lena)
-    upload(admin, f"/api/children/{lena}/photos", jpeg())
-    tom = add_contact(admin, lena, "pickUp", NACHBAR)
-    upload(admin, f"/api/children/{lena}/contacts/{tom}/photo", jpeg(), method="PUT")
-
-    assert admin.delete(f"/api/children/{lena}").status_code == 204
-
-    assert file_store.files == {}
 
 
 def test_a_tablet_keeps_photos_but_asks_each_time_whether_it_may_still_show_them(

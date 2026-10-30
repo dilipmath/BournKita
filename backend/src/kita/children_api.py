@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from kita.alerts import AlertNotFound, Alerts
 from kita.alerts_api import AlertIn, AlertOut
 from kita.api_support import CAMEL_CASE, Refusals, refusals_as_http_errors
+from kita.archive import Archive
 from kita.attendance import Attendance
 from kita.attendance_api import ATTENDANCE_REFUSALS, AbsenceIn, AbsenceOut, AttendanceStep
 from kita.audit_api import (
@@ -255,12 +256,25 @@ def children_router(
     consents: Consents,
     photos: Photos,
     groups: Groups,
+    archive: Archive,
     audited_route_class: type[APIRoute],
 ) -> APIRouter:
     """`audited_route_class` comes from audited_route."""
+
+    def current_child_only(request: Request) -> None:
+        """Answers 404 for every address of an archived Child (/api/children/{child_id}/…): its
+        data is kept, but in no current view, and nobody changes it until it is restored."""
+        child_id = request.path_params.get("child_id")
+        if child_id is not None and child_id.isdigit():
+            with refusals_as_http_errors(_REFUSALS):
+                children.ensure_current(int(child_id))
+
     router = APIRouter(
         prefix="/api/children",
-        dependencies=[Depends(staff_member_dependency(identity))],
+        dependencies=[
+            Depends(staff_member_dependency(identity)),
+            Depends(current_child_only),
+        ],
         # Every view and change of a Child's data goes into the audit log.
         route_class=audited_route_class,
     )
@@ -541,10 +555,10 @@ def children_router(
             )
 
     @router.delete("/{child_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=admin_only)
-    def delete_child(child_id: int, background: BackgroundTasks) -> None:
-        leftovers = photos.leftovers_of_child(child_id)
+    def delete_child(child_id: int) -> None:
+        """Moves the Child to the archive, from where an Admin can restore it until it is purged.
+        Its photos stay too."""
         with refusals_as_http_errors(_REFUSALS):
-            children.delete(child_id)
-        background.add_task(photos.delete_files, leftovers)
+            archive.archive(child_id)
 
     return router

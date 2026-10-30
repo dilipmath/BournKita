@@ -14,7 +14,6 @@ from sqlalchemy import (
     Row,
     String,
     Table,
-    delete,
     insert,
     select,
     update,
@@ -39,8 +38,15 @@ children = Table(
     Column("date_of_birth", Date),
     Column("created_at", DateTime(timezone=True), nullable=False),
     Column("updated_at", DateTime(timezone=True), nullable=False),
+    # When an Admin deleted the profile, which moved it to the archive; None for current
+    # Children.
+    Column("archived_at", DateTime(timezone=True), index=True),
     CheckConstraint(f"gender IN {get_args(Gender)}", name="gender"),
 )
+
+# Keeps the current Children, not the archived ones: every query for Children in current views
+# uses it, so archived Children appear in none.
+CURRENT = children.c.archived_at.is_(None)
 
 
 @dataclass(frozen=True)
@@ -73,7 +79,7 @@ class ChildSummary:
 
 
 class ChildNotFound(Exception):
-    """No Child profile has this ID."""
+    """No current Child profile has this ID (an archived one is not current)."""
 
 
 class NameRequired(Exception):
@@ -155,8 +161,10 @@ class Children:
     def summaries(self, search: str = "") -> list[ChildSummary]:
         """All Children, by first name. `search` keeps those whose first, last or full name
         contains it, ignoring case."""
-        query = select(children.c.id, children.c.first_name, children.c.last_name).order_by(
-            children.c.first_name, children.c.last_name, children.c.id
+        query = (
+            select(children.c.id, children.c.first_name, children.c.last_name)
+            .where(CURRENT)
+            .order_by(children.c.first_name, children.c.last_name, children.c.id)
         )
         search = " ".join(search.split())
         if search:
@@ -172,7 +180,8 @@ class Children:
         return [ChildSummary(**row._asdict()) for row in rows]
 
     def names(self, child_ids: set[int]) -> dict[int, str]:
-        """The full names of those of these Children whose profiles still exist."""
+        """The full names of those of these Children whose profiles still exist, current or
+        archived."""
         if not child_ids:
             return {}
         with transaction(self._engine) as connection:
@@ -186,18 +195,29 @@ class Children:
     def profile(self, child_id: int) -> ChildProfile:
         with transaction(self._engine) as connection:
             row = connection.execute(
-                select(*_PROFILE_COLUMNS).where(children.c.id == child_id)
+                select(*_PROFILE_COLUMNS).where(children.c.id == child_id, CURRENT)
             ).one_or_none()
         if row is None:
             raise ChildNotFound
         return _to_profile(row)
+
+    def ensure_current(self, child_id: int) -> None:
+        """Raises ChildNotFound unless the Child is current (not archived)."""
+        with transaction(self._engine) as connection:
+            found = connection.scalar(
+                select(children.c.id).where(children.c.id == child_id, CURRENT)
+            )
+        if found is None:
+            raise ChildNotFound
 
     def update(self, child_id: int, details: ChildDetails) -> tuple[ChildProfile, list[str]]:
         """Changes the profile; returns it with the names of the fields that changed."""
         details = self._checked(details)
         with transaction(self._engine) as connection:
             row = connection.execute(
-                select(*_PROFILE_COLUMNS).where(children.c.id == child_id).with_for_update()
+                select(*_PROFILE_COLUMNS)
+                .where(children.c.id == child_id, CURRENT)
+                .with_for_update()
             ).one_or_none()
             if row is None:
                 raise ChildNotFound
@@ -209,9 +229,3 @@ class Children:
                 .values(**asdict(details), updated_at=self._clock.now())
             )
         return ChildProfile(id=child_id, **asdict(details)), changed
-
-    def delete(self, child_id: int) -> None:
-        with transaction(self._engine) as connection:
-            deleted = connection.execute(delete(children).where(children.c.id == child_id))
-        if deleted.rowcount != 1:
-            raise ChildNotFound

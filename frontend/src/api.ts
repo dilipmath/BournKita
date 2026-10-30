@@ -226,10 +226,28 @@ export async function saveChild(details: ChildDetails, id?: number): Promise<Chi
   return (await response.json()) as Child
 }
 
-/** Deletes a Child profile for good. Admins only. Resolves to true once deleted. */
+/** Deletes a Child profile: it moves to the archive, from where an Admin can restore it until it
+ * is purged. Admins only. Resolves to true once deleted. */
 export async function deleteChild(id: number): Promise<true | Refusal> {
   const response = await fetch(`/api/children/${id}`, { method: 'DELETE' })
   if (!response.ok) return refusalOf(response, 'Deleting the Child profile')
+  return true
+}
+
+// A deleted Child profile in the archive; purgeOn is the Kita's day it is deleted for good.
+export type ArchivedChild = { id: number; firstName: string; lastName: string; archivedAt: string; purgeOn: string }
+
+/** The archive, most recently deleted first. Admins only. */
+export async function fetchArchive(): Promise<ArchivedChild[] | Refusal> {
+  const response = await fetch('/api/archive')
+  if (!response.ok) return refusalOf(response, 'Loading the archive')
+  return (await response.json()) as ArchivedChild[]
+}
+
+/** Makes an archived Child current again, with all its data. Admins only. Resolves to true once restored. */
+export async function restoreChild(id: number): Promise<true | Refusal> {
+  const response = await fetch(`/api/archive/${id}/restore`, { method: 'POST' })
+  if (!response.ok) return refusalOf(response, 'Restoring the Child profile')
   return true
 }
 

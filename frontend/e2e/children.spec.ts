@@ -30,7 +30,7 @@ test('an Admin creates, finds, edits and deletes a Child profile', async ({ page
 
   await page.getByRole('button', { name: 'Delete' }).tap()
   await page.getByRole('button', { name: 'Delete profile' }).tap()
-  await expect(page.getByRole('status')).toHaveText(`The profile of Lena ${lastName} was deleted.`)
+  await expect(page.getByRole('status')).toHaveText(`The profile of Lena ${lastName} was deleted and is in the archive.`)
   await page.getByRole('searchbox', { name: 'Search by name' }).fill(lastName.toLowerCase())
   await expect(page.getByText('No Children found.')).toBeVisible()
 })

@@ -23,7 +23,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.exc import IntegrityError
 
-from kita.children import ChildNotFound, ChildSummary, NameRequired, TooLong, children
+from kita.children import CURRENT, ChildNotFound, ChildSummary, NameRequired, TooLong, children
 from kita.db import metadata, transaction
 from kita.identity import AccountNotFound, users
 
@@ -218,7 +218,7 @@ class Groups:
             rows = connection.execute(
                 select(children.c.id, children.c.first_name, children.c.last_name)
                 .join(child_groups, child_groups.c.child_id == children.c.id)
-                .where(child_groups.c.group_id == group_id)
+                .where(child_groups.c.group_id == group_id, CURRENT)
                 .order_by(children.c.first_name, children.c.last_name, children.c.id)
             ).all()
         return [ChildSummary(row.id, row.first_name, row.last_name) for row in rows]

@@ -2,11 +2,8 @@
 some days before). A job checks every few minutes; from 07:00 at the Kita on the day a reminder
 is due, it goes out, once to each Staff member."""
 
-import asyncio
-from collections.abc import Callable
 from datetime import date, time, timedelta
 
-from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import (
     Column,
     Date,
@@ -161,16 +158,3 @@ class Reminders:
             except IntegrityError:
                 # The Event or the account was deleted meanwhile: nothing left to remind of.
                 return
-
-
-async def remind_regularly(
-    reminders: Reminders, every_seconds: int, report_crash: Callable[[Exception], None]
-) -> None:
-    """The Reminder job: sends due Reminders every `every_seconds`, until cancelled. A failing run
-    is reported, and the next one tries again."""
-    while True:
-        try:
-            await run_in_threadpool(reminders.send_due)
-        except Exception as error:  # noqa: BLE001 - the job must outlive any one failing run.
-            report_crash(error)
-        await asyncio.sleep(every_seconds)

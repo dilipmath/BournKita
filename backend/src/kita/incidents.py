@@ -25,7 +25,7 @@ from sqlalchemy import (
     update,
 )
 
-from kita.children import ChildNotFound, ChildSummary, TooLong, children
+from kita.children import CURRENT, ChildNotFound, ChildSummary, TooLong, children
 from kita.clock import Clock, today
 from kita.db import metadata, transaction
 from kita.encryption import FieldCipher
@@ -177,7 +177,8 @@ class Incidents:
         if details.happened_on > today(self._clock):
             raise HappenedInFuture
         with transaction(self._engine) as connection:
-            if connection.scalar(select(children.c.id).where(children.c.id == child_id)) is None:
+            current = select(children.c.id).where(children.c.id == child_id, CURRENT)
+            if connection.scalar(current) is None:
                 raise ChildNotFound
             # The encrypted values are bound to the row's ID, so they follow once it exists.
             incident_id = connection.scalar(
@@ -205,7 +206,8 @@ class Incidents:
             return self._loaded(connection, [incident_id])[0]
 
     def add_follow_up(self, incident_id: int, note: str, author: str) -> FollowedUp:
-        """Adds an Admin's Follow-up to the Incident."""
+        """Adds an Admin's Follow-up to the Incident; raises IncidentNotFound if there is none, or
+        its Child is archived."""
         note = note.strip()
         if not note:
             raise NoteRequired
@@ -213,8 +215,11 @@ class Incidents:
             raise TooLong
         now = self._clock.now()
         with transaction(self._engine) as connection:
+            # Not for an archived Child's Incident: nobody changes it until it is restored.
             child_id = connection.scalar(
-                select(incidents.c.child_id).where(incidents.c.id == incident_id)
+                select(incidents.c.child_id)
+                .join(children, children.c.id == incidents.c.child_id)
+                .where(incidents.c.id == incident_id, CURRENT)
             )
             if child_id is None:
                 raise IncidentNotFound
@@ -238,8 +243,16 @@ class Incidents:
 
     def log(self, matching: IncidentFilter) -> list[Incident]:
         """The Incidents matching, newest first."""
-        query = select(incidents.c.id).order_by(
-            incidents.c.happened_on.desc(), incidents.c.reported_at.desc(), incidents.c.id.desc()
+        # Only the current Children's: an archived Child's come back if it is restored.
+        query = (
+            select(incidents.c.id)
+            .join(children, children.c.id == incidents.c.child_id)
+            .where(CURRENT)
+            .order_by(
+                incidents.c.happened_on.desc(),
+                incidents.c.reported_at.desc(),
+                incidents.c.id.desc(),
+            )
         )
         if matching.child_id is not None:
             query = query.where(incidents.c.child_id == matching.child_id)

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { fetchCurrentSession, fetchHealth, logOut, type Session } from './api'
 import AddParentPage from './AddParentPage'
+import ArchivePage from './ArchivePage'
 import AuditLogPage from './AuditLogPage'
 import CalendarPage from './CalendarPage'
 import HolidaysPage from './HolidaysPage'
@@ -68,7 +69,7 @@ export default function App() {
   }, [session, checkSession])
 
   const isAdmin = session?.role === 'admin'
-  const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyChildren' | 'adminsOnlyAuditLog' | 'adminsOnlyGroups' | 'adminsOnlyHolidays') => (
+  const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyChildren' | 'adminsOnlyAuditLog' | 'adminsOnlyArchive' | 'adminsOnlyGroups' | 'adminsOnlyHolidays') => (
     <p className="status status-problem">{t(message)}</p>
   )
 
@@ -114,6 +115,7 @@ export default function App() {
             )}
             {isAdmin && <NavLink to="/staff">{t('staffAccounts')}</NavLink>}
             {isAdmin && <NavLink to="/audit-log">{t('auditLog')}</NavLink>}
+            {isAdmin && <NavLink to="/archive">{t('archive')}</NavLink>}
           </nav>
           {/* Even when the server cannot be reached, the logged-in view must not stay on screen. */}
           <button type="button" onClick={() => void logOut().catch(() => undefined).finally(() => setSession(null))}>
@@ -145,6 +147,7 @@ export default function App() {
           <Route path="/parents/:id" element={<ParentPage canEdit={isAdmin} />} />
           <Route path="/parents/:id/edit" element={isAdmin ? <ParentEditPage /> : adminsOnly('adminsOnlyChildren')} />
           <Route path="/audit-log" element={isAdmin ? <AuditLogPage /> : adminsOnly('adminsOnlyAuditLog')} />
+          <Route path="/archive" element={isAdmin ? <ArchivePage /> : adminsOnly('adminsOnlyArchive')} />
           <Route path="/groups" element={isAdmin ? <GroupsPage /> : adminsOnly('adminsOnlyGroups')} />
           <Route path="/groups/:id" element={<GroupDashboard />} />
           <Route path="/groups/:id/board" element={<TaskBoardPage />} />

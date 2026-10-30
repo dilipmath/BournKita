@@ -101,14 +101,14 @@ describe('child profiles', () => {
     renderAt('/children/7', <App />)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
-    expect(screen.getByText('Really delete the profile of Lena Müller? This cannot be undone.')).toBeInTheDocument()
+    expect(screen.getByText('Really delete the profile of Lena Müller? It moves to the archive, from where an Admin can restore it.')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(calls.map((call) => call.route)).not.toContain('DELETE /api/children/7')
 
     await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
     await userEvent.click(screen.getByRole('button', { name: 'Delete profile' }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('The profile of Lena Müller was deleted.')
+    expect(await screen.findByRole('status')).toHaveTextContent('The profile of Lena Müller was deleted and is in the archive.')
     expect(await screen.findByRole('link', { name: 'Mia Schmidt' })).toBeInTheDocument()
   })
 

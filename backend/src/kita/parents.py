@@ -24,7 +24,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from kita.children import ChildNotFound, ChildSummary, NameRequired, TooLong, children
+from kita.children import CURRENT, ChildNotFound, ChildSummary, NameRequired, TooLong, children
 from kita.clock import Clock
 from kita.db import metadata, transaction
 from kita.encryption import FieldCipher
@@ -281,7 +281,7 @@ class Parents:
         rows = connection.execute(
             select(children.c.id, children.c.first_name, children.c.last_name)
             .join(child_parents, child_parents.c.child_id == children.c.id)
-            .where(child_parents.c.parent_id == parent_id)
+            .where(child_parents.c.parent_id == parent_id, CURRENT)
             .order_by(children.c.first_name, children.c.last_name, children.c.id)
         ).all()
         return [ChildSummary(**row._asdict()) for row in rows]
