@@ -742,3 +742,11 @@ export async function addFollowUp(incidentId: number, note: string): Promise<Fol
   if (!response.ok) return refusalOf(response, 'Adding the Follow-up')
   return (await response.json()) as FollowUp
 }
+
+/** Where the emergency list PDF is: one Group's, or (with none) the whole Kita's, in the app's language. */
+export function emergencyListUrl(groupId: number | null, language: string): string {
+  const params = new URLSearchParams()
+  if (groupId !== null) params.set('groupId', String(groupId))
+  params.set('language', language.startsWith('de') ? 'de' : 'en')
+  return `/api/emergency-list?${params}`
+}

@@ -13,6 +13,7 @@ import ChildProfilePage, { ChildEditPage } from './ChildProfilePage'
 import ChildrenPage from './ChildrenPage'
 import ForgotPasswordPage from './ForgotPasswordPage'
 import GroupDashboard from './GroupDashboard'
+import EmergencyListLink from './EmergencyListLink'
 import GroupPicker from './GroupPicker'
 import GroupsPage from './GroupsPage'
 import BacklogPage from './BacklogPage'
@@ -152,7 +153,17 @@ export default function App() {
           <Route path="/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
           <Route path="/holidays" element={isAdmin ? <HolidaysPage /> : adminsOnly('adminsOnlyHolidays')} />
           <Route path="/incidents" element={<IncidentLogPage isAdmin={isAdmin} />} />
-          <Route path="/" element={<GroupPicker />} />
+          <Route
+            path="/"
+            element={
+              <>
+                <GroupPicker />
+                <div className="actions">
+                  <EmergencyListLink />
+                </div>
+              </>
+            }
+          />
           <Route path="*" element={null} />
         </Routes>
       )}

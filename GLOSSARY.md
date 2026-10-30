@@ -60,6 +60,10 @@ _Avoid_: Accident report (Incidents are not only accidents), Unfallbericht (in c
 An Admin's note on an Incident, added later (e.g. "Parents called back, no doctor needed"). Stored encrypted; like the Incident, never changed.
 _Avoid_: Comment, update, Nachtrag (in code and docs)
 
+**Emergency list**:
+A printout (PDF) of the Children at the Kita right now (checked in, not yet checked out), for one Group or the whole Kita, with their Alerts and whom to call: their Parents and Emergency contacts. Any Staff member prints it, for an evacuation or to have it on paper when the system or the power is down.
+_Avoid_: Evacuation list, Notfallliste (in code and docs)
+
 **Task board**:
 A Group's board of Tasks in three columns: To do, Doing and Done. Admins and Teachers can work on every Group's board; it shows that Group's Tasks only.
 _Avoid_: Kanban, task list, Aufgabenliste (in code and docs)

@@ -266,6 +266,12 @@ class Groups:
             raise GroupNotFound
         return Group(row.name, row.icon, row.id)
 
+    def all(self) -> list[Group]:
+        """All Groups, by name."""
+        with transaction(self._engine) as connection:
+            rows = connection.execute(select(groups).order_by(func.lower(groups.c.name))).all()
+        return [Group(row.name, row.icon, row.id) for row in rows]
+
     def staff_groups(self) -> dict[int, list[int]]:
         """The Groups each Staff member works in, by account ID; those in none are left out."""
         with transaction(self._engine) as connection:

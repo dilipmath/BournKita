@@ -30,6 +30,8 @@ from kita.crash import (
     job_crash_report,
     send_safely,
 )
+from kita.emergency_list import EmergencyLists
+from kita.emergency_list_api import emergency_list_router
 from kita.encryption import FieldCipher
 from kita.events import Events
 from kita.events_api import events_router
@@ -143,6 +145,8 @@ def create_app(
     app.include_router(
         groups_router(identity, groups, alerts, attendance, birthdays, audited_route_class)
     )
+    emergency_lists = EmergencyLists(clock, children, groups, attendance, alerts, parents, contacts)
+    app.include_router(emergency_list_router(identity, emergency_lists, audited_route_class))
     app.include_router(tasks_router(identity, Tasks(engine, clock)))
     events = Events(engine, clock)
     app.include_router(events_router(identity, events))

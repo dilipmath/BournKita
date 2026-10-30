@@ -12,6 +12,7 @@ import {
   type GroupChild,
 } from './api'
 import { longDay } from './calendarDates'
+import EmergencyListLink from './EmergencyListLink'
 import { kitaTime } from './dates'
 import GroupLabel from './GroupLabel'
 import IncidentReport from './IncidentReport'
@@ -52,6 +53,7 @@ export default function GroupDashboard() {
         <Link className="button" to={`/groups/${dashboard.id}/calendar`}>
           {t('calendar')}
         </Link>
+        <EmergencyListLink groupId={dashboard.id} />
       </nav>
       <h3>{t('todayIs', { day: longDay(dashboard.day, i18n.language) })}</h3>
       {birthdays.length > 0 && (

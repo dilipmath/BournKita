@@ -15,6 +15,7 @@ dependencies = [
     "pillow>=13.0.0",
     "python-multipart>=0.0.32",
     "icalendar>=6",
+    "weasyprint>=66",
 ]
 
 [project.scripts]
@@ -29,6 +30,7 @@ dev = [
     "hypothesis>=6.170.12",
     "aiosmtpd>=1.4.6",
     "trustme>=1.2.1",
+    "pypdf>=6",
 ]
 
 [build-system]
@@ -44,6 +46,11 @@ testpaths = ["tests"]
 [tool.mypy]
 strict = true
 files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+# WeasyPrint ships no type information.
+module = ["weasyprint"]
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 100

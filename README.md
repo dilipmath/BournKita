@@ -44,7 +44,7 @@ Holidays come from iCal files (`.ics`): an Admin imports the region's public hol
 
 ## Develop
 
-Backend (Python, FastAPI) — needs the database from Compose (`docker compose up -d --wait db`):
+Backend (Python, FastAPI) — needs the database from Compose (`docker compose up -d --wait db`), and Pango for the emergency list PDF ([WeasyPrint](https://doc.courtbouillon.org/weasyprint/stable/first_steps.html); on Debian/Ubuntu `apt install libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core`):
 
 ```
 cd backend
