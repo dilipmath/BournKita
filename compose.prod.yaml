@@ -1,0 +1,110 @@
+# The production stack, on the Kita's server: the app over HTTPS for the Kita's own host name
+# (Caddy's own certificate authority), and nightly and weekly backups. See "Run in production" in
+# the README. Settings come from a .env file beside this one (see .env.prod.example):
+#
+#   docker compose -f compose.prod.yaml up -d --build --wait
+#
+# Only the web server is reachable from the network; the database, the API and the backups are
+# not. Never forward its ports from the internet: the app is for the Kita's network only.
+name: kita
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kita
+      POSTGRES_PASSWORD: ${KITA_DB_PASSWORD:?Set KITA_DB_PASSWORD in .env}
+      POSTGRES_DB: kita
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kita -d kita"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      KITA_DATABASE_URL: postgresql+psycopg://kita:${KITA_DB_PASSWORD}@db:5432/kita
+      KITA_PUBLIC_URL: https://${KITA_HOSTNAME:?Set KITA_HOSTNAME in .env}
+      # Required: without it the app does not start. Make one with `kita-admin generate-key` and
+      # keep a copy apart from the backups; without it, no backup can be read.
+      KITA_ENCRYPTION_KEY: ${KITA_ENCRYPTION_KEY:?Set KITA_ENCRYPTION_KEY in .env}
+      KITA_CRASH_REPORT_EMAIL: ${KITA_CRASH_REPORT_EMAIL:-}
+      KITA_FEEDBACK_EMAIL: ${KITA_FEEDBACK_EMAIL:-}
+      KITA_ARCHIVE_RETENTION_MONTHS: ${KITA_ARCHIVE_RETENTION_MONTHS:-12}
+      # Unset: emails are only written to the api log.
+      KITA_SMTP_HOST: ${KITA_SMTP_HOST:-}
+      KITA_SMTP_PORT: ${KITA_SMTP_PORT:-587}
+      KITA_SMTP_SECURITY: ${KITA_SMTP_SECURITY:-starttls}
+      KITA_SMTP_USERNAME: ${KITA_SMTP_USERNAME:-}
+      KITA_SMTP_PASSWORD: ${KITA_SMTP_PASSWORD:-}
+      KITA_MAIL_FROM: ${KITA_MAIL_FROM:-Kita Kids Database <kita@localhost>}
+      KITA_PHOTO_FOLDER: /data/photos
+    volumes:
+      - photos:/data/photos
+    # Large uploads wait here while they are read; in memory, an unencrypted photo never reaches
+    # the disk.
+    tmpfs:
+      - /tmp
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile.prod", "--adapter", "caddyfile"]
+    environment:
+      KITA_HOSTNAME: ${KITA_HOSTNAME}
+    ports:
+      # HTTP only redirects to HTTPS. Keep 80 and 443: links in emails and the redirect assume
+      # them (other ports are for backup/test-restore.sh, beside a running stack).
+      - "${KITA_HTTP_PORT:-80}:80"
+      - "${KITA_HTTPS_PORT:-443}:443"
+    volumes:
+      # Caddy's certificate authority: its root certificate is installed on every tablet, so it
+      # must survive updates (see the README).
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+
+  backup:
+    build: ./backup
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: kita
+      PGPASSWORD: ${KITA_DB_PASSWORD}
+      PGDATABASE: kita
+      # The off-site backup is encrypted to this age public key; the private key is kept away
+      # from the server (see the README).
+      KITA_BACKUP_AGE_RECIPIENT: ${KITA_BACKUP_AGE_RECIPIENT:?Set KITA_BACKUP_AGE_RECIPIENT in .env}
+      KITA_BACKUP_KEEP_NIGHTLY: ${KITA_BACKUP_KEEP_NIGHTLY:-14}
+      KITA_BACKUP_KEEP_WEEKLY: ${KITA_BACKUP_KEEP_WEEKLY:-8}
+    volumes:
+      # Read for the backups, written by a restore.
+      - photos:/photos
+      # The second drive, for the nightly backups.
+      - ${KITA_BACKUP_DIR:?Set KITA_BACKUP_DIR in .env}:/backups
+      # Where the weekly encrypted backup goes to leave the building (e.g. a swapped USB drive).
+      - ${KITA_OFFSITE_DIR:?Set KITA_OFFSITE_DIR in .env}:/offsite
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
+  photos:
+  caddy-data:
+  caddy-config:

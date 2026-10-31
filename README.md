@@ -18,7 +18,7 @@ The `api` service applies database migrations when it starts. Create the first A
 docker compose exec api kita-admin create-admin --email you@example.com
 ```
 
-This only works while no accounts exist. Further Staff members are created by an Admin on the Staff accounts page; each gets an email with a link (valid 7 days) for choosing their password. Links in emails point to `KITA_PUBLIC_URL` (default `http://localhost:8080`). Staff members who forgot their password ask for a reset link on the login page (valid 1 hour, works once; using it ends all their sessions). Five failed logins in a row lock an account for 15 minutes; choosing a new password with a reset link unlocks it. Sessions end after 30 minutes without activity (`KITA_SESSION_INACTIVITY_MINUTES`). This development stack serves plain HTTP, so it turns off the session cookie's `Secure` flag (`KITA_SESSION_COOKIE_SECURE=false`); otherwise tablets on the network could not stay logged in. The production stack with HTTPS (#31) must leave it on.
+This only works while no accounts exist. Further Staff members are created by an Admin on the Staff accounts page; each gets an email with a link (valid 7 days) for choosing their password. Links in emails point to `KITA_PUBLIC_URL` (default `http://localhost:8080`). Staff members who forgot their password ask for a reset link on the login page (valid 1 hour, works once; using it ends all their sessions). Five failed logins in a row lock an account for 15 minutes; choosing a new password with a reset link unlocks it. Sessions end after 30 minutes without activity (`KITA_SESSION_INACTIVITY_MINUTES`). This development stack serves plain HTTP, so it turns off the session cookie's `Secure` flag (`KITA_SESSION_COOKIE_SECURE=false`); otherwise tablets on the network could not stay logged in. The production stack (`compose.prod.yaml`, HTTPS) leaves it on.
 
 Addresses, contact and health data are stored encrypted (AES-256-GCM) with the key in `KITA_ENCRYPTION_KEY`; the app does not start without it. This development stack has a fixed, public default key. For real data, make one with `docker compose exec api kita-admin generate-key`, keep it apart from the database backups, and never lose it: without the key, encrypted data cannot be read. Photos are kept encrypted with the same key, as files in `KITA_PHOTO_FOLDER` (here a Docker volume); back that folder up together with the database.
 
@@ -49,6 +49,55 @@ Deleting a Child profile moves it to the archive (Admins only, in the menu), wit
 For data-subject requests, an Admin opens the Parent's page: "Export all data (ZIP)" downloads everything held about the Parent and their Children, archived ones included (`data.json` plus the photos as JPEG files); "Delete all data" deletes all of it for good at once, with the photo files, and cannot be undone. The audit log records both, but none of the deleted data.
 
 Holidays come from iCal files (`.ics`): an Admin imports the region's public holidays and school holidays on the Holidays page (Calendar → Holidays), e.g. from a file downloaded from a holiday website. Importing a kind again replaces it. Files with repeating entries are refused; holiday files list each holiday with its dates.
+
+## Run in production
+
+On the Kita's server (Linux with Docker, its disk encrypted), with `compose.prod.yaml`: the app over HTTPS for the Kita's own host name, reachable only inside the Kita's network, plus nightly and weekly backups. Never forward its ports from the internet.
+
+1. Copy `.env.prod.example` to `.env`, fill it in, and make it readable by root only (`chmod 600 .env`). It says how to make the two keys: the app's encryption key (`kita-admin generate-key`) and the off-site backup's age key pair (`age-keygen`). Keep the encryption key and the age private key apart from the server and the backups, e.g. printed, in the Kita's safe: without them no backup can be read, and with them anyone holding a backup can.
+2. Make the host name (`KITA_HOSTNAME`, e.g. `kita.home.arpa`) point to the server in the router's DNS. Not a `.local` name: tablets look those up themselves, past the router.
+3. Start it: `docker compose -f compose.prod.yaml up -d --build --wait`, then create the first Admin: `docker compose -f compose.prod.yaml exec api kita-admin create-admin --email you@example.com`.
+4. Install Caddy's root certificate on every tablet, once, so they trust the app's HTTPS: copy it out with `docker compose -f compose.prod.yaml cp web:/data/caddy/pki/authorities/local/root.crt kita-root.crt` and install it as a trusted certificate authority (Android: Settings → Security → Encryption & credentials → Install a certificate → CA certificate; iPad: open the file, install the profile, then turn on full trust under Settings → General → About → Certificate Trust Settings). It stays the same across updates (it is kept in the `caddy-data` volume); never delete that volume.
+
+Updates: `git pull` and the same `up -d --build --wait`; the API applies new database migrations when it starts.
+
+### Backups
+
+The `backup` service runs them at the Kita's local time and logs them (`docker compose -f compose.prod.yaml logs backup`):
+
+- **Nightly, 01:30**, onto the second drive (`KITA_BACKUP_DIR`): a dump of the database and a snapshot of the photo folder. The photos are encrypted with the app's key already; each snapshot shares the files of unchanged photos with the one before. The last 14 are kept (`KITA_BACKUP_KEEP_NIGHTLY`).
+- **Weekly, Sunday 04:00**, to `KITA_OFFSITE_DIR`: the newest nightly backup as one file, encrypted to the age public key, for taking out of the building (e.g. a USB drive swapped each week). Only the age private key opens it, so the server cannot read its own off-site copies. The last 8 are kept (`KITA_BACKUP_KEEP_WEEKLY`).
+
+The nightly database dumps hold everything the app does not encrypt itself (e.g. names), readable by root only: encrypt the second drive like the server's own disk. The off-site copies are encrypted anyway.
+
+Data deleted in the app (a Purge or a Deletion request) stays in the backups until they are dropped: up to 14 days on the second drive and 8 weeks off-site. The data-protection assessment should say whether that is acceptable.
+
+A failed backup is written to the backup log only; check it now and then. The weekly one refuses to send off a nightly backup more than two days old, so failing nightly backups also show there.
+
+Run one by hand with `docker compose -f compose.prod.yaml exec backup nightly` (or `weekly`).
+
+### Restore
+
+Always into a fresh database and photo folder: the restore refuses to overwrite data that is still there. You need the app's encryption key (`KITA_ENCRYPTION_KEY`) in `.env` as it was when the backup was made.
+
+```
+docker compose -f compose.prod.yaml down
+docker volume rm kita_db-data kita_photos        # only if the old data is to go!
+docker compose -f compose.prod.yaml up -d --wait db
+docker compose -f compose.prod.yaml run --rm backup restore latest        # or: restore 2027-01-04
+docker compose -f compose.prod.yaml up -d --wait
+```
+
+Leave the `kita_caddy-data` volume: it holds the certificate authority the tablets trust. On a new server, start from empty volumes; the tablets then need the new root certificate (step 4 above).
+
+From an off-site backup, when the second drive is lost too: put the backup file into `KITA_OFFSITE_DIR` and the age private key into a file (e.g. `/root/age-identity.txt`), then instead of `restore latest`:
+
+```
+docker compose -f compose.prod.yaml run --rm -v /root/age-identity.txt:/run/age-identity.txt:ro backup \
+  restore-offsite /offsite/kita-2027-01-04.tar.age /run/age-identity.txt
+```
+
+`bash backup/test-restore.sh` tests all of this end to end (CI runs it on every push): it starts the production stack with test settings, records a Child with an Alert and a photo over HTTPS, runs both backups, restores each into a fresh database and photo folder, and checks through the API that everything is back.
 
 ## Develop
 

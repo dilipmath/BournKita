@@ -1,0 +1,3 @@
+# Shell scripts and the backup image's files run in Linux containers: always LF.
+*.sh text eol=lf
+backup/* text eol=lf

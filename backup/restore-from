@@ -1,0 +1,25 @@
+#!/bin/sh
+# Loads a database dump and a photo snapshot into the database and the photo folder, which must
+# both be empty (a fresh database, as after reinstalling): so a restore never mixes with, or
+# overwrites, data that is still there.
+#   restore-from DUMP PHOTO_FOLDER
+set -eu
+dump=$1
+photos=$2
+[ -f "$dump" ] || { echo "No such dump: $dump" >&2; exit 1; }
+[ -d "$photos" ] || { echo "No such photo snapshot: $photos" >&2; exit 1; }
+
+tables=$(psql --tuples-only --no-align --command \
+  "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'")
+if [ "$tables" != 0 ]; then
+  echo "The database is not empty: restore only into a fresh one (see the README)." >&2
+  exit 1
+fi
+if [ -n "$(ls -A /photos)" ]; then
+  echo "The photo folder is not empty: restore only into a fresh one (see the README)." >&2
+  exit 1
+fi
+
+pg_restore --exit-on-error --no-owner --dbname="$PGDATABASE" "$dump"
+rsync --archive "$photos/" /photos/
+echo "Restored $(basename "$dump") and its photos."

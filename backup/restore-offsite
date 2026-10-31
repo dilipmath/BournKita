@@ -1,0 +1,13 @@
+#!/bin/sh
+# Restores an off-site backup into a fresh (empty) database and photo folder, with the age
+# private key (the identity file) that was kept away from the server:
+#   restore-offsite /offsite/kita-2027-01-04.tar.age /run/age-identity.txt
+set -eu
+backup=${1:?"restore-offsite BACKUP.tar.age IDENTITY_FILE"}
+identity=${2:?"restore-offsite BACKUP.tar.age IDENTITY_FILE"}
+unpacked=$(mktemp -d)
+trap 'rm -rf "$unpacked"' EXIT
+age --decrypt --identity "$identity" "$backup" | tar -C "$unpacked" -xf -
+dump=$(ls -1 "$unpacked"/db/kita-*.dump)
+day=$(basename "$dump" .dump | sed 's/^kita-//')
+restore-from "$dump" "$unpacked/photos/$day"

@@ -64,3 +64,11 @@ jobs:
       # Starts the throwaway e2e stack, runs the tests, prints the stack's logs if they fail.
       - run: npm run test:e2e
         working-directory: frontend
+
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The production stack: HTTPS, the nightly and weekly backups, and restoring both into a
+      # fresh database and photo folder.
+      - run: bash backup/test-restore.sh

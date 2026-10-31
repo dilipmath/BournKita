@@ -1,0 +1,34 @@
+#!/bin/sh
+# The nightly backup, onto the second drive (/backups): a dump of the database and a snapshot of
+# the photo folder (files of unchanged photos are shared with the snapshot before, so each night
+# only adds what is new). Keeps the last KITA_BACKUP_KEEP_NIGHTLY of each (default 14).
+set -eu
+# Only root reads them: the database dump holds what the app does not encrypt (e.g. names).
+umask 077
+day=$(date +%F)
+keep=${KITA_BACKUP_KEEP_NIGHTLY:-14}
+mkdir -p /backups/db /backups/photos
+
+# Written aside and then moved, so a failed dump never looks like a good one.
+pg_dump --format=custom --file="/backups/db/kita-$day.dump.partial"
+mv "/backups/db/kita-$day.dump.partial" "/backups/db/kita-$day.dump"
+
+# A half-written snapshot of a failed night is no backup.
+rm -rf /backups/photos/*.partial
+# The newest earlier snapshot (they sort by day).
+previous=""
+for snapshot in /backups/photos/*/; do
+  case "$snapshot" in
+    */"$day"/) ;;
+    *) [ -d "$snapshot" ] && previous=$snapshot ;;
+  esac
+done
+# The photos are encrypted already (with the app's key), so they are copied as they are.
+rsync --archive --delete ${previous:+--link-dest="$previous"} /photos/ "/backups/photos/$day.partial/"
+rm -rf "/backups/photos/$day"
+mv "/backups/photos/$day.partial" "/backups/photos/$day"
+
+# The oldest go, beyond the newest $keep.
+ls -1 /backups/db/kita-*.dump | head -n "-$keep" | xargs -r rm -f
+ls -1d /backups/photos/*/ | head -n "-$keep" | xargs -r rm -rf
+echo "Nightly backup $day done."

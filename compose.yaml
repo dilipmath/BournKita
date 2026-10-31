@@ -21,7 +21,7 @@ services:
       KITA_DATABASE_URL: postgresql+psycopg://kita:kita@db:5432/kita
       KITA_CRASH_REPORT_EMAIL: ${KITA_CRASH_REPORT_EMAIL:-}
       # This stack serves plain HTTP, where browsers drop Secure cookies (except on localhost).
-      # The production stack with HTTPS (#31) turns it back on.
+      # The production stack (compose.prod.yaml, HTTPS) leaves it on.
       KITA_SESSION_COOKIE_SECURE: ${KITA_SESSION_COOKIE_SECURE:-false}
       # Outgoing email goes to Mailpit, which catches it instead of delivering it:
       # read it at http://localhost:8025. Point these at a real mail server to send for real.
@@ -32,9 +32,9 @@ services:
       KITA_SMTP_PASSWORD: ${KITA_SMTP_PASSWORD:-}
       KITA_MAIL_FROM: ${KITA_MAIL_FROM:-Kita Kids Database <kita@localhost>}
       # Encrypts addresses, contact and health data. This default is for development only and
-      # is public; the production stack (#31) needs its own (`kita-admin generate-key`).
+      # is public; the production stack (compose.prod.yaml) needs its own (`kita-admin generate-key`).
       KITA_ENCRYPTION_KEY: ${KITA_ENCRYPTION_KEY:-fdrh6GyPYGiTyjJtXojo6BBpfYqHzLJ9jiZhxclYbjA=}
-      # Photo files, encrypted with the key above. Production (#31) puts them on the network drive.
+      # Photo files, encrypted with the key above. Production backs them up nightly (compose.prod.yaml).
       KITA_PHOTO_FOLDER: /data/photos
     volumes:
       - photos:/data/photos

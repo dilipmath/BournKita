@@ -1,0 +1,12 @@
+#!/bin/sh
+# Restores a nightly backup from the second drive into a fresh (empty) database and photo folder:
+#   restore latest | restore 2027-01-04
+# Start only the database first, and the app after: see the README.
+set -eu
+day=${1:?"restore latest | restore YYYY-MM-DD"}
+if [ "$day" = latest ]; then
+  dump=$(ls -1 /backups/db/kita-*.dump 2> /dev/null | tail -n 1 || true)
+  [ -n "$dump" ] || { echo "No nightly backup found." >&2; exit 1; }
+  day=$(basename "$dump" .dump | sed 's/^kita-//')
+fi
+restore-from "/backups/db/kita-$day.dump" "/backups/photos/$day"

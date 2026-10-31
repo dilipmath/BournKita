@@ -1,0 +1,28 @@
+#!/bin/sh
+# The weekly off-site backup (/offsite, e.g. a drive that leaves the building): the newest
+# nightly backup, packed and encrypted to the age public key KITA_BACKUP_AGE_RECIPIENT. Only the
+# matching private key, kept away from the server, can read it. Keeps the last
+# KITA_BACKUP_KEEP_WEEKLY (default 8).
+set -eu
+umask 077
+keep=${KITA_BACKUP_KEEP_WEEKLY:-8}
+dump=$(ls -1 /backups/db/kita-*.dump 2> /dev/null | tail -n 1 || true)
+[ -n "$dump" ] || { echo "No nightly backup to send off-site yet." >&2; exit 1; }
+day=$(basename "$dump" .dump | sed 's/^kita-//')
+[ -d "/backups/photos/$day" ] || { echo "The photos of $day are missing." >&2; exit 1; }
+# Rather no off-site copy (and an error in the log) than last month's sent off as this week's.
+# Days as numbers (20270104), which compare like the days.
+two_days_ago=$(date -d "@$(($(date +%s) - 2 * 86400))" +%Y%m%d)
+if [ "$(echo "$day" | tr -d -)" -lt "$two_days_ago" ]; then
+  echo "The newest nightly backup is from $day: the nightly backups are failing." >&2
+  exit 1
+fi
+
+mkdir -p /offsite
+target="/offsite/kita-$day.tar.age"
+tar -C /backups -cf - "db/kita-$day.dump" "photos/$day" |
+  age --recipient "$KITA_BACKUP_AGE_RECIPIENT" --output "$target.partial"
+mv "$target.partial" "$target"
+
+ls -1 /offsite/kita-*.tar.age | head -n "-$keep" | xargs -r rm -f
+echo "Off-site backup $target done."
