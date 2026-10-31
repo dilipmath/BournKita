@@ -1,13 +1,24 @@
 #!/bin/sh
-# Starts the backup schedule, once the settings it needs are there: rather now, at start, than
-# on the first night or Sunday nobody watches.
-set -eu
-case "${KITA_BACKUP_AGE_RECIPIENT:-}" in
-  age1*) ;;
-  *) echo "KITA_BACKUP_AGE_RECIPIENT must be an age public key (age1…): see the README." >&2; exit 1 ;;
-esac
-for folder in /backups /offsite; do
-  touch "$folder/.writable" && rm "$folder/.writable" ||
-    { echo "Cannot write to $folder: check KITA_BACKUP_DIR and KITA_OFFSITE_DIR." >&2; exit 1; }
+# Starts the backup schedule once the settings it needs are there. If they are not (e.g. the
+# backup drive is missing), it says so in the log and as a crash report, and checks again every
+# hour, rather than waiting for the first night nobody watches.
+set -u
+
+ready() {
+  case "${KITA_BACKUP_AGE_RECIPIENT:-}" in
+    age1*) ;;
+    *) echo "KITA_BACKUP_AGE_RECIPIENT must be an age public key (age1…): see the README." >&2; return 1 ;;
+  esac
+  for folder in /backups /offsite; do
+    if ! { touch "$folder/.writable" && rm "$folder/.writable"; } 2> /dev/null; then
+      echo "Cannot write to $folder: check KITA_BACKUP_DIR and KITA_OFFSITE_DIR." >&2
+      return 1
+    fi
+  done
+}
+
+until ready; do
+  report-failure service
+  sleep 3600
 done
 exec crond -f -l 8

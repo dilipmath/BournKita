@@ -87,14 +87,14 @@ api "/api/children/$child/photos/$photo/full" -o "$work/stored.jpg"
 all_back
 
 step "Running the nightly and the weekly backup"
-compose exec -T backup nightly
-compose exec -T backup weekly
+compose exec -T backup run-job nightly
+compose exec -T backup run-job weekly
 ls "$work/offsite"/*.age > /dev/null || fail "no off-site backup"
 
 step "Restoring the nightly backup into a fresh database and photo folder"
 compose down --volumes
 compose up --detach --wait db
-compose run --rm -T backup restore latest
+compose run --rm --no-deps -T backup restore latest
 compose up --detach --wait
 all_back
 
@@ -105,9 +105,23 @@ compose down --volumes
 compose run --rm --no-deps -T backup sh -c 'rm -rf /backups/*'
 compose up --detach --wait db
 offsite=$(basename "$(ls "$work/offsite"/*.age | tail -n 1)")
-compose run --rm -T -v "$(host_path "$work/identity.txt"):/run/age-identity.txt:ro" backup \
+compose run --rm --no-deps -T -v "$(host_path "$work/identity.txt"):/run/age-identity.txt:ro" backup \
   restore-offsite "/offsite/$offsite" /run/age-identity.txt
 compose up --detach --wait
 all_back
+
+step "Reporting a failed backup as a crash report"
+compose stop db
+if compose exec -T backup run-job nightly > /dev/null 2>&1; then
+  fail "the nightly backup did not fail without its database"
+fi
+compose logs api | grep -q "Crash in api nightly backup (BackupFailed" ||
+  fail "the failed backup was not reported"
+compose start db > /dev/null
+# Only the backup service inside the stack reports failures, not anyone in the network.
+status=$(curl --silent -k -o /dev/null -w '%{http_code}' -X POST \
+  -H 'Content-Type: application/json' --data '{"backup":"nightly"}' \
+  "https://localhost:$KITA_HTTPS_PORT/api/crash-reports/backups")
+[ "$status" = 404 ] || fail "backup failures can be reported from outside ($status)"
 
 echo "Restore test passed."

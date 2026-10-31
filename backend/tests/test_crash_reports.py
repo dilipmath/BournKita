@@ -166,3 +166,33 @@ def test_reports_are_still_logged_in_full_when_emailed(
 
     assert "TypeError" in caplog.text
     assert "/assets/index-a1b2c3.js:1:2345" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("backup", "location"),
+    [
+        ("nightly", "nightly backup"),
+        ("weekly", "weekly backup"),
+        ("service", "backup service"),
+    ],
+)
+def test_a_failed_backup_is_filed_as_a_crash_report(
+    client: TestClient, crash_sink: RecordingCrashSink, clock: FixedClock, backup: str, location: str
+) -> None:
+    response = client.post("/api/crash-reports/backups", json={"backup": backup})
+
+    assert response.status_code == 202
+    [report] = crash_sink.reports
+    assert (report.source, report.error_type, report.location) == ("api", "BackupFailed", location)
+    assert report.frames == ()
+    assert report.occurred_at == clock.now_value
+
+
+@pytest.mark.parametrize("backup", ["reminder job", "nightly backup", "nightly; rm -rf /", ""])
+def test_only_the_backups_can_report_a_failure(
+    client: TestClient, crash_sink: RecordingCrashSink, backup: str
+) -> None:
+    response = client.post("/api/crash-reports/backups", json={"backup": backup})
+
+    assert response.status_code == 422
+    assert crash_sink.reports == []

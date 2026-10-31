@@ -4,6 +4,9 @@
 # matching private key, kept away from the server, can read it. Keeps the last
 # KITA_BACKUP_KEEP_WEEKLY (default 8).
 set -eu
+# A failing step in a pipe fails the backup too (e.g. tar reading a broken drive).
+# shellcheck disable=SC3040 # Not POSIX, but busybox ash (this image's sh) has it.
+set -o pipefail
 umask 077
 keep=${KITA_BACKUP_KEEP_WEEKLY:-8}
 dump=$(ls -1 /backups/db/kita-*.dump 2> /dev/null | tail -n 1 || true)

@@ -72,9 +72,9 @@ The nightly database dumps hold everything the app does not encrypt itself (e.g.
 
 Data deleted in the app (a Purge or a Deletion request) stays in the backups until they are dropped: up to 14 days on the second drive and 8 weeks off-site. The data-protection assessment should say whether that is acceptable.
 
-A failed backup is written to the backup log only; check it now and then. The weekly one refuses to send off a nightly backup more than two days old, so failing nightly backups also show there.
+A failed backup is reported like a crash: logged by the `api` service and emailed to `KITA_CRASH_REPORT_EMAIL`, saying which backup failed; the backup log says why. Set that address, or nobody hears of it. So is a backup service that cannot start its schedule (e.g. the backup drive is missing); it checks again every hour. The weekly backup also refuses to send off a nightly one more than two days old, so failing nightly backups are reported a second time. Only a backup service that is not running at all reports nothing: check `docker compose -f compose.prod.yaml ps` now and then.
 
-Run one by hand with `docker compose -f compose.prod.yaml exec backup nightly` (or `weekly`).
+Run one by hand with `docker compose -f compose.prod.yaml exec backup run-job nightly` (or `weekly`).
 
 ### Restore
 
@@ -84,7 +84,7 @@ Always into a fresh database and photo folder: the restore refuses to overwrite 
 docker compose -f compose.prod.yaml down
 docker volume rm kita_db-data kita_photos        # only if the old data is to go!
 docker compose -f compose.prod.yaml up -d --wait db
-docker compose -f compose.prod.yaml run --rm backup restore latest        # or: restore 2027-01-04
+docker compose -f compose.prod.yaml run --rm --no-deps backup restore latest        # or: restore 2027-01-04
 docker compose -f compose.prod.yaml up -d --wait
 ```
 
@@ -93,7 +93,7 @@ Leave the `kita_caddy-data` volume: it holds the certificate authority the table
 From an off-site backup, when the second drive is lost too: put the backup file into `KITA_OFFSITE_DIR` and the age private key into a file (e.g. `/root/age-identity.txt`), then instead of `restore latest`:
 
 ```
-docker compose -f compose.prod.yaml run --rm -v /root/age-identity.txt:/run/age-identity.txt:ro backup \
+docker compose -f compose.prod.yaml run --rm --no-deps -v /root/age-identity.txt:/run/age-identity.txt:ro backup \
   restore-offsite /offsite/kita-2027-01-04.tar.age /run/age-identity.txt
 ```
 

@@ -102,6 +102,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      # Reports failed backups (see backup/report-failure).
+      api:
+        condition: service_healthy
 
 volumes:
   db-data:

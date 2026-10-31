@@ -207,3 +207,30 @@ def job_crash_report(
         frames=code_frames(error),
         occurred_at=occurred_at,
     )
+
+
+# What of the backup service (see backup/) can fail and report it: a night's or a week's backup,
+# or the service itself (e.g. a backup drive missing when it starts).
+Backup = Literal["nightly", "weekly", "service"]
+_BACKUP_LOCATIONS: dict[Backup, str] = {
+    "nightly": "nightly backup",
+    "weekly": "weekly backup",
+    "service": "backup service",
+}
+
+
+class BackupFailureReport(BaseModel):
+    """A backup that failed, from the backup service inside the stack: which one, nothing else
+    (its log on the server says why)."""
+
+    backup: Backup
+
+    def to_crash_report(self, version: str, occurred_at: datetime) -> CrashReport:
+        return CrashReport(
+            source="api",
+            error_type="BackupFailed",
+            location=_BACKUP_LOCATIONS[self.backup],
+            version=version,
+            frames=(),
+            occurred_at=occurred_at,
+        )

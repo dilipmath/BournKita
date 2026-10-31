@@ -1,0 +1,9 @@
+#!/bin/sh
+# Has the app report a failed backup like a crash (logged, and emailed to KITA_CRASH_REPORT_EMAIL):
+# a broken backup drive must not go unnoticed. Only which backup failed goes along; the backup log
+# says why.
+#   report-failure nightly | weekly | service
+set -u
+wget --quiet --output-document=/dev/null --header='Content-Type: application/json' \
+  --post-data="{\"backup\":\"$1\"}" "${KITA_API_URL:-http://api:8000}/api/crash-reports/backups" ||
+  echo "The failure could not be reported either: is the api service running?" >&2

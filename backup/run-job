@@ -1,0 +1,14 @@
+#!/bin/sh
+# Runs the nightly or the weekly backup, as cron does, and reports it if it fails.
+#   run-job nightly | run-job weekly
+set -u
+case "${1:-}" in
+  nightly | weekly) job=$1 ;;
+  *) echo "run-job nightly | run-job weekly" >&2; exit 2 ;;
+esac
+if "$job"; then
+  exit 0
+fi
+echo "The $job backup failed; reporting it." >&2
+report-failure "$job"
+exit 1

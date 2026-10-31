@@ -24,6 +24,7 @@ from kita.clock import Clock, SystemClock
 from kita.consents import Consents
 from kita.contacts import Contacts
 from kita.crash import (
+    BackupFailureReport,
     CrashReportingMailer,
     CrashReportSink,
     WebCrashReport,
@@ -188,6 +189,11 @@ def create_app(
     @app.post("/api/crash-reports", status_code=status.HTTP_202_ACCEPTED)
     def receive_web_crash_report(report: WebCrashReport) -> None:
         send_safely(crash_sink, report.to_crash_report(clock.now()))
+
+    # From the backup service inside the stack; the web server does not pass it on from outside.
+    @app.post("/api/crash-reports/backups", status_code=status.HTTP_202_ACCEPTED)
+    def receive_backup_failure(report: BackupFailureReport) -> None:
+        send_safely(crash_sink, report.to_crash_report(app_version, clock.now()))
 
     @app.get("/api/health")
     def health(response: Response) -> Health:

@@ -3,6 +3,8 @@
 # the photo folder (files of unchanged photos are shared with the snapshot before, so each night
 # only adds what is new). Keeps the last KITA_BACKUP_KEEP_NIGHTLY of each (default 14).
 set -eu
+# shellcheck disable=SC3040 # Not POSIX, but busybox ash (this image's sh) has it.
+set -o pipefail
 # Only root reads them: the database dump holds what the app does not encrypt (e.g. names).
 umask 077
 day=$(date +%F)

@@ -69,6 +69,7 @@ def test_every_route_that_needs_a_login_refuses_a_guest_but_the_calendar(
     assert without_login == {
         ("GET", "/api/health"),
         ("POST", "/api/crash-reports"),
+        ("POST", "/api/crash-reports/backups"),
         ("POST", "/api/session"),
         ("POST", "/api/email-verifications"),
         ("POST", "/api/password-resets"),
