@@ -81,8 +81,14 @@ class _Export:
             **asdict(profile),
             "archived_at": archived_at,
             "group": None if group is None else group.name,
+            # By name only: another Parent's address, phone and email are theirs, not part of
+            # this Parent's request (their own details are under "parent").
             "parents": [
-                {**asdict(linked.parent), "may_pick_up": linked.may_pick_up}
+                {
+                    "first_name": linked.parent.first_name,
+                    "last_name": linked.parent.last_name,
+                    "may_pick_up": linked.may_pick_up,
+                }
                 for linked in held.parents.of_child(child_id)
             ],
             "contacts": [

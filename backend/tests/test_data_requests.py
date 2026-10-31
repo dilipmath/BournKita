@@ -13,6 +13,14 @@ from tests.parents import ANNA, create_parent, link
 from tests.photos import give_photo_consent, jpeg, size_of, upload
 from tests.test_incidents import FALL, incident_log, report
 
+# Lena's father, with his own contact details.
+JAN = {
+    "firstName": "Jan",
+    "address": "Ahornweg 3, 10117 Berlin",
+    "phone": "+49 30 7777777",
+    "email": "jan.mueller@example.org",
+}
+
 
 def export(client: TestClient, parent_id: int) -> tuple[dict[str, Any], dict[str, bytes]]:
     """The export's data.json, and every file in it by name."""
@@ -52,13 +60,14 @@ def test_the_export_covers_every_kind_of_data_and_the_photo_files(
     admin: TestClient, teacher: TestClient, clock: FixedClock
 ) -> None:
     anna = create_parent(admin)
-    jan = create_parent(admin, firstName="Jan")
+    jan = create_parent(admin, **JAN)
     lena = create_child(admin)
     put_in_group(admin, lena, create_group(admin))
     link(admin, lena, anna)
     link(admin, lena, jan)
     admin.put(f"/api/children/{lena}/parents/{jan}", json={"mayPickUp": False})
     assert upload(admin, f"/api/parents/{anna}/photo", jpeg(), "PUT").is_success
+    assert upload(admin, f"/api/parents/{jan}/photo", jpeg(), "PUT").is_success
     oma = add_contact(admin, lena, "pickUp", OMA)
     upload(admin, f"/api/children/{lena}/contacts/{oma}/photo", jpeg(), "PUT")
     admin.post(f"/api/children/{lena}/alerts", json={"kind": "allergy", "name": "Peanuts"})
@@ -77,10 +86,14 @@ def test_the_export_covers_every_kind_of_data_and_the_photo_files(
 
     child = data["children"][0]
     assert child["group"] == "Monkeys"
-    assert [(p["firstName"], p["mayPickUp"]) for p in child["parents"]] == [
-        ("Anna", True),
-        ("Jan", False),
+    # Names only: Jan's address, phone, email and photo are not Anna's to have.
+    assert child["parents"] == [
+        {"firstName": "Anna", "lastName": "Müller", "mayPickUp": True},
+        {"firstName": "Jan", "lastName": "Müller", "mayPickUp": False},
     ]
+    for his in (JAN["address"], JAN["phone"], JAN["email"]):
+        assert his not in files["data.json"].decode()
+    assert f"photos/parent-{jan}.jpg" not in files
     assert child["contacts"] == [
         {**OMA, "id": oma, "kind": "pickUp", "note": "", "photo": f"photos/contact-{oma}.jpg"}
     ]

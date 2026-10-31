@@ -165,7 +165,7 @@ A Parent's request about the data the Kita holds on them and their Children: a D
 _Avoid_: DSGVO request, Betroffenenanfrage (in code and docs)
 
 **Data-access request**:
-A Parent's request to see everything the Kita holds about them and their Children. An Admin answers it with an export from the Parent's page: a ZIP file with all the data (data.json) and the photos, archived Children included.
+A Parent's request to see everything the Kita holds about them and their Children. An Admin answers it with an export from the Parent's page: a ZIP file with all the data (data.json) and the photos, archived Children included. The Children's other Parents appear by name only: their contact details are not this Parent's to have.
 _Avoid_: Auskunftsersuchen (in code and docs), data dump
 
 **Deletion request**:
