@@ -15,6 +15,7 @@ import ChildrenPage from './ChildrenPage'
 import ForgotPasswordPage from './ForgotPasswordPage'
 import GroupDashboard from './GroupDashboard'
 import EmergencyListLink from './EmergencyListLink'
+import FeedbackButton from './FeedbackButton'
 import GroupPicker from './GroupPicker'
 import GroupsPage from './GroupsPage'
 import BacklogPage from './BacklogPage'
@@ -179,6 +180,8 @@ export default function App() {
           <Route path="*" element={null} />
         </Routes>
       )}
+      {/* On every page, for everyone logged in (Guests too). */}
+      {session && <FeedbackButton />}
       {pathname === '/' && (
         <section>
           <h2>{t('systemStatus')}</h2>

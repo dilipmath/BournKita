@@ -24,6 +24,8 @@ Addresses, contact and health data are stored encrypted (AES-256-GCM) with the k
 
 Crash reports from the browser and the API are always logged by the `api` service. Setting `KITA_CRASH_REPORT_EMAIL` also emails them to that address. Reports never contain error messages, query strings, deeper page paths or other free text, so no names, addresses or health data.
 
+Every page has a Feedback button (for everyone logged in, Guests too): a problem, change request or idea, with the page it came from and who sent it. It is stored (the text encrypted) and emailed to `KITA_FEEDBACK_EMAIL`, or to `KITA_CRASH_REPORT_EMAIL` when that is unset; with neither, it is only stored. Admins can read it all at `GET /api/feedback`. If the email cannot be sent, the feedback is kept and the failure is filed as a crash report.
+
 ### Email
 
 This stack sends all email to [Mailpit](https://mailpit.axllent.org/), which catches it instead of delivering it: read it at http://localhost:8025. To send real email, point the `api` service at a mail server:

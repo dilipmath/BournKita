@@ -41,3 +41,6 @@ class Settings(BaseSettings):
     # How often the purge job looks for archived Children whose retention period has ended; 0:
     # never (tests run it themselves).
     purge_check_seconds: int = 3600
+    # Where feedback from the app's pages is emailed; unset: to crash_report_email, and with
+    # neither, feedback is only stored.
+    feedback_email: str | None = None

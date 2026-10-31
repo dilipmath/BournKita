@@ -34,8 +34,14 @@ def test_an_admin_creates_a_guest_account(admin: TestClient, guest: TestClient) 
     assert (session["email"], session["role"]) == (GUEST_EMAIL, "guest")
 
 
-# What a Guest may do once logged in: see who they are, log out, read the Kita-wide calendar.
-GUEST_ROUTES = {("GET", "/api/session"), ("DELETE", "/api/session"), ("GET", "/api/calendar")}
+# What a Guest may do once logged in: see who they are, log out, read the Kita-wide Calendar,
+# send feedback.
+GUEST_ROUTES = {
+    ("GET", "/api/session"),
+    ("DELETE", "/api/session"),
+    ("GET", "/api/calendar"),
+    ("POST", "/api/feedback"),
+}
 
 
 def test_every_route_that_needs_a_login_refuses_a_guest_but_the_calendar(

@@ -104,6 +104,10 @@ _Avoid_: Notification, alert (Alert is a Child's allergy or condition), Erinneru
 Any Kita employee who has a login.
 _Avoid_: User, employee, teacher (as a kind of person)
 
+**Feedback**:
+A problem, change request or idea that anyone logged in (Guests too) sends from any page, with that page and who sent it. It is stored and emailed to the developer. The form asks not to name Children or give health details, since it leaves the Kita by email.
+_Avoid_: Ticket, bug report (Feedback is not only about bugs), Rückmeldung (in code and docs)
+
 ## Access
 
 **Role**:

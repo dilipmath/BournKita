@@ -1361,3 +1361,19 @@ button.big {
   align-items: flex-start;
   gap: 8px;
 }
+
+/* The feedback button, below every page's content. */
+.feedback {
+  margin-top: 2rem;
+  border-top: 1px solid #ddd;
+  padding-top: 1rem;
+}
+
+.feedback form {
+  max-width: 36rem;
+}
+
+.feedback textarea {
+  width: 100%;
+  min-height: 6rem;
+}

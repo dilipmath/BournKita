@@ -65,6 +65,7 @@ const refusals = {
   description_required: 'descriptionRequired',
   informed_required: 'informedRequired',
   note_required: 'noteRequired',
+  text_required: 'textRequired',
 } as const
 
 export type Refusal = (typeof refusals)[keyof typeof refusals]
@@ -782,4 +783,15 @@ export function emergencyListUrl(groupId: number | null, language: string): stri
   if (groupId !== null) params.set('groupId', String(groupId))
   params.set('language', language.startsWith('de') ? 'de' : 'en')
   return `/api/emergency-list?${params}`
+}
+
+export type FeedbackKind = 'problem' | 'changeRequest' | 'idea'
+
+/** Sends feedback to the developer, with the app's address it came from (its path only, so no
+ * search text). Everyone logged in, Guests too. Resolves to true once stored (the email may still
+ * have failed; the feedback is kept). */
+export async function sendFeedback(kind: FeedbackKind, text: string, page: string): Promise<true | Refusal> {
+  const response = await sendJson('/api/feedback', 'POST', { kind, text, page })
+  if (!response.ok) return refusalOf(response, 'Sending feedback')
+  return true
 }

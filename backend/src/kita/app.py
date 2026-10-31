@@ -39,6 +39,8 @@ from kita.emergency_list_api import emergency_list_router
 from kita.encryption import FieldCipher
 from kita.events import Events
 from kita.events_api import events_router
+from kita.feedback import Feedbacks
+from kita.feedback_api import feedback_router
 from kita.groups import Groups
 from kita.groups_api import groups_router
 from kita.holidays import Holidays
@@ -172,6 +174,9 @@ def create_app(
     holidays = Holidays(engine)
     app.include_router(holidays_router(identity, holidays))
     app.include_router(calendar_router(identity, events, birthdays, holidays))
+    feedback_to = settings.feedback_email or settings.crash_report_email
+    feedbacks = Feedbacks(engine, clock, cipher, reporting_mailer, feedback_to)
+    app.include_router(feedback_router(identity, feedbacks))
     # Kept on the app for the Reminder job, and for tests, which run it themselves.
     app.state.reminders = Reminders(engine, clock, reporting_mailer, events, settings.public_url)
 
