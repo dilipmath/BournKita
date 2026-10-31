@@ -2,6 +2,7 @@
 logins. Addresses and contact details are stored encrypted."""
 
 from dataclasses import asdict, dataclass, fields
+from datetime import datetime
 from typing import Any, Literal
 
 from sqlalchemy import (
@@ -111,6 +112,15 @@ class ParentSummary:
     last_name: str
 
 
+@dataclass(frozen=True)
+class HeldParent:
+    """A Parent as the Kita holds them, with when they were recorded."""
+
+    parent: Parent
+    created_at: datetime
+    updated_at: datetime
+
+
 class ParentNotFound(Exception):
     """No Parent has this ID."""
 
@@ -186,6 +196,15 @@ class Parents:
             return ParentWithChildren(
                 self._parent(connection, parent_id), self._children(connection, parent_id)
             )
+
+    def held_parent(self, parent_id: int) -> HeldParent:
+        """The Parent with when they were recorded and last changed; for a Data-access request.
+        Raises ParentNotFound."""
+        with transaction(self._engine) as connection:
+            row = connection.execute(select(parents).where(parents.c.id == parent_id)).one_or_none()
+        if row is None:
+            raise ParentNotFound
+        return HeldParent(self._to_parent(row), row.created_at, row.updated_at)
 
     def all_child_ids(self, parent_id: int) -> list[int]:
         """The Parent's Children, current and archived, by ID; for a data-subject request.

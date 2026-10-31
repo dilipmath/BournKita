@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Literal, get_args
+from typing import Any, Literal, get_args
 
 from sqlalchemy import (
     ARRAY,
@@ -12,6 +12,7 @@ from sqlalchemy import (
     DateTime,
     Engine,
     Integer,
+    Row,
     String,
     Table,
     insert,
@@ -112,7 +113,18 @@ class Audit:
             query = query.where(tuple_(audit_log.c.at, audit_log.c.id) < tuple_(previous, before))
         with transaction(self._engine) as connection:
             rows = connection.execute(query).all()
-        return [
-            AuditEntry(**{**row._asdict(), "changed_fields": tuple(row.changed_fields)})
-            for row in rows
-        ]
+        return [_to_entry(row) for row in rows]
+
+    def of_child(self, child_id: int) -> list[AuditEntry]:
+        """All the entries about the Child, oldest first; for a Data-access request."""
+        with transaction(self._engine) as connection:
+            rows = connection.execute(
+                select(audit_log)
+                .where(audit_log.c.child_id == child_id)
+                .order_by(audit_log.c.at, audit_log.c.id)
+            ).all()
+        return [_to_entry(row) for row in rows]
+
+
+def _to_entry(row: Row[Any]) -> AuditEntry:
+    return AuditEntry(**{**row._asdict(), "changed_fields": tuple(row.changed_fields)})

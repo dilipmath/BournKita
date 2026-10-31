@@ -3,6 +3,7 @@
 import hashlib
 import re
 import secrets
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Literal, get_args
@@ -31,7 +32,7 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 
 from kita.clock import Clock
-from kita.db import metadata
+from kita.db import metadata, transaction
 from kita.identity_emails import password_reset_email, verification_email
 from kita.mail import Mailer, MailNotSent
 from kita.settings import Settings
@@ -285,6 +286,17 @@ class Identity:
                 )
             )
             return token, StaffMember(email=user.email, role=user.role)
+
+    def roles_of(self, emails: Collection[str]) -> dict[str, Role]:
+        """The Role each of these Staff accounts has now, by email address; for a Data-access
+        request, which names Staff members by Role only."""
+        if not emails:
+            return {}
+        with transaction(self._engine) as connection:
+            rows = connection.execute(
+                select(users.c.email, users.c.role).where(users.c.email.in_(emails))
+            ).all()
+        return {row.email: row.role for row in rows}
 
     def current_staff_member(self, token: str) -> StaffMember | None:
         """The Staff member whose session this is, or None if there is no live session.

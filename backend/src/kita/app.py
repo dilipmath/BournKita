@@ -158,7 +158,17 @@ def create_app(
     incidents = Incidents(engine, clock, cipher)
     app.include_router(incidents_router(identity, incidents, audited_route_class))
     held = HeldData(
-        children, parents, contacts, alerts, consents, photos, attendance, incidents, groups
+        children,
+        parents,
+        contacts,
+        alerts,
+        consents,
+        photos,
+        attendance,
+        incidents,
+        groups,
+        audit,
+        identity,
     )
     data_requests = DataRequests(engine, clock, held)
     app.include_router(data_requests_router(identity, data_requests, photos, audited_route_class))

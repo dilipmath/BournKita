@@ -1,11 +1,13 @@
 import json
 import zipfile
+from datetime import timedelta
 from io import BytesIO
 from typing import Any
 
 from fastapi.testclient import TestClient
 
-from tests.children import create_child
+from tests.accounts import ADMIN_EMAIL, TEACHER_EMAIL
+from tests.children import LENA, create_child
 from tests.contacts import OMA, add_contact
 from tests.fakes import FixedClock, MemoryFileStore
 from tests.groups import create_group, put_in_group
@@ -108,8 +110,17 @@ def test_the_export_covers_every_kind_of_data_and_the_photo_files(
     assert [(a["startsOn"], a["endsOn"], a["reason"]) for a in child["absences"]] == [
         ("2027-01-11", "2027-01-11", "sick")
     ]
-    assert [i["description"] for i in child["incidents"]] == [FALL["description"]]
-    assert [f["note"] for f in child["incidents"][0]["followUps"]] == ["Parents called back."]
+    [incident_out] = child["incidents"]
+    assert (incident_out["description"], incident_out["reportedBy"]) == (
+        FALL["description"],
+        "teacher",
+    )
+    assert [(f["note"], f["author"]) for f in incident_out["followUps"]] == [
+        ("Parents called back.", "admin")
+    ]
+    # Staff members by Role only, here as everywhere in the export.
+    for staff_email in (ADMIN_EMAIL, TEACHER_EMAIL):
+        assert staff_email not in files["data.json"].decode()
     assert data["parent"]["photo"] == f"photos/parent-{anna}.jpg"
     # The photos as JPEG files, as large as the Kita keeps them.
     for name in (
@@ -190,3 +201,63 @@ def test_only_admins_export_and_delete_permanently(admin: TestClient, teacher: T
     assert teacher.delete(f"/api/parents/{anna}/data").status_code == 403
     assert admin.get("/api/parents/999/export").status_code == 404
     assert admin.get(f"/api/parents/{anna}").status_code == 200
+
+
+def test_the_export_says_who_viewed_or_changed_the_childs_data_and_when(
+    admin: TestClient, teacher: TestClient, clock: FixedClock
+) -> None:
+    anna = create_parent(admin)
+    lena = create_child(admin)
+    link(admin, lena, anna)
+    teacher.get(f"/api/children/{lena}")
+    clock.now_value += timedelta(minutes=10)
+    admin.put(f"/api/children/{lena}", json={**LENA, "interests": "Malen"})
+    admin.put(f"/api/parents/{anna}", json={**ANNA, "phone": "0171 555"})
+
+    data, files = export(admin, anna)
+
+    child = data["children"][0]
+    assert child["auditLog"] == [
+        {
+            "at": "2027-01-04T08:00:00Z",
+            "staff": "admin",
+            "action": "created",
+            "changedFields": [],
+        },
+        {
+            "at": "2027-01-04T08:00:00Z",
+            "staff": "admin",
+            "action": "changed",
+            "changedFields": ["parents", "pickUpPersons"],
+        },
+        {
+            "at": "2027-01-04T08:00:00Z",
+            "staff": "teacher",
+            "action": "viewed",
+            "changedFields": [],
+        },
+        {
+            "at": "2027-01-04T08:10:00Z",
+            "staff": "admin",
+            "action": "changed",
+            "changedFields": ["interests"],
+        },
+        {
+            "at": "2027-01-04T08:10:00Z",
+            "staff": "admin",
+            "action": "changed",
+            "changedFields": ["parentPhone"],
+        },
+    ]
+    # By Role only: the Staff members' email addresses are not the Parent's to have.
+    for staff_email in (ADMIN_EMAIL, TEACHER_EMAIL):
+        assert staff_email not in files["data.json"].decode()
+    assert (child["createdAt"], child["updatedAt"]) == (
+        "2027-01-04T08:00:00Z",
+        "2027-01-04T08:10:00Z",
+    )
+    parent = data["parent"]
+    assert (parent["createdAt"], parent["updatedAt"]) == (
+        "2027-01-04T08:00:00Z",
+        "2027-01-04T08:10:00Z",
+    )

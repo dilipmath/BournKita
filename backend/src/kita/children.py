@@ -78,6 +78,17 @@ class ChildSummary:
     last_name: str
 
 
+@dataclass(frozen=True)
+class HeldProfile:
+    """A profile as the Kita holds it, current or archived, with when it was recorded."""
+
+    profile: ChildProfile
+    created_at: datetime
+    updated_at: datetime
+    # None: current.
+    archived_at: datetime | None
+
+
 class ChildNotFound(Exception):
     """No current Child profile has this ID (an archived one is not current)."""
 
@@ -201,18 +212,19 @@ class Children:
             raise ChildNotFound
         return _to_profile(row)
 
-    def held_profile(self, child_id: int) -> tuple[ChildProfile, datetime | None]:
-        """The profile, current or archived, with when it was archived (None: current); for a
-        data-subject request. Raises ChildNotFound."""
+    def held_profile(self, child_id: int) -> HeldProfile:
+        """The profile, current or archived, with its dates; for a Data-access request. Raises
+        ChildNotFound."""
+        dates = (children.c.created_at, children.c.updated_at, children.c.archived_at)
         with transaction(self._engine) as connection:
             row = connection.execute(
-                select(*_PROFILE_COLUMNS, children.c.archived_at).where(children.c.id == child_id)
+                select(*_PROFILE_COLUMNS, *dates).where(children.c.id == child_id)
             ).one_or_none()
         if row is None:
             raise ChildNotFound
         values = row._asdict()
-        archived_at = values.pop("archived_at")
-        return ChildProfile(**values), archived_at
+        created_at, updated_at, archived_at = (values.pop(date.name) for date in dates)
+        return HeldProfile(ChildProfile(**values), created_at, updated_at, archived_at)
 
     def ensure_current(self, child_id: int) -> None:
         """Raises ChildNotFound unless the Child is current (not archived)."""

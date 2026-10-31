@@ -14,12 +14,14 @@ from sqlalchemy import Engine, select
 from kita.alerts import Alerts
 from kita.archive import delete_for_good
 from kita.attendance import Attendance
+from kita.audit import Audit
 from kita.children import Children
 from kita.clock import Clock
 from kita.consents import Consents
 from kita.contacts import Contacts
 from kita.db import transaction
 from kita.groups import Groups
+from kita.identity import Identity
 from kita.incidents import Incidents
 from kita.parents import ParentNotFound, Parents, child_parents, parents
 from kita.photos import LeftoverFiles, Photos
@@ -38,6 +40,8 @@ class HeldData:
     attendance: Attendance
     incidents: Incidents
     groups: Groups
+    audit: Audit
+    identity: Identity
 
 
 def _camel(value: Any) -> Any:
@@ -62,6 +66,8 @@ class _Export:
         self._held = held
         # Photo files by their name in the ZIP.
         self.files: dict[str, bytes] = {}
+        # The Role of each Staff member named, by email address.
+        self._roles: dict[str, str] = {}
 
     def photo(self, name: str, photo_id: int | None) -> str | None:
         """Adds the photo's file, if there is a photo; returns its name in the ZIP."""
@@ -73,13 +79,15 @@ class _Export:
 
     def child(self, child_id: int) -> dict[str, Any]:
         held = self._held
-        profile, archived_at = held.children.held_profile(child_id)
+        held_profile = held.children.held_profile(child_id)
         group = held.groups.of_child(child_id)
         contacts = held.contacts.of_child(child_id)
         contact_photos = held.photos.photos_of_contacts([contact.id for contact in contacts])
         return {
-            **asdict(profile),
-            "archived_at": archived_at,
+            **asdict(held_profile.profile),
+            "created_at": held_profile.created_at,
+            "updated_at": held_profile.updated_at,
+            "archived_at": held_profile.archived_at,
             "group": None if group is None else group.name,
             # By name only: another Parent's address, phone and email are theirs, not part of
             # this Parent's request (their own details are under "parent").
@@ -110,14 +118,46 @@ class _Export:
             "absences": held.attendance.held_absences(child_id),
             "incidents": [
                 {
-                    key: value
-                    for key, value in asdict(incident).items()
-                    # The Child is the one it is listed under.
-                    if key != "child"
+                    "id": incident.id,
+                    "happened_on": incident.happened_on,
+                    "happened_at": incident.happened_at,
+                    "description": incident.description,
+                    "informed": incident.informed,
+                    "reported_by": self.staff(incident.reported_by),
+                    "reported_at": incident.reported_at,
+                    "follow_ups": [
+                        {
+                            "id": follow_up.id,
+                            "note": follow_up.note,
+                            "author": self.staff(follow_up.author),
+                            "at": follow_up.at,
+                        }
+                        for follow_up in incident.follow_ups
+                    ],
                 }
                 for incident in held.incidents.held_of_child(child_id)
             ],
+            # Who viewed or changed the Child's data, and when (the fields' names, not values).
+            "audit_log": [
+                {
+                    "at": entry.at,
+                    "staff": self.staff(entry.staff_email),
+                    "action": entry.action,
+                    "changed_fields": entry.changed_fields,
+                }
+                for entry in held.audit.of_child(child_id)
+            ],
         }
+
+    def staff(self, email: str | None) -> str | None:
+        """A Staff member as the export names them: by Role only (e.g. "teacher"), since their
+        email address is not the Parent's to have. None: nobody recorded (e.g. account gone)."""
+        if email is None:
+            return None
+        if email not in self._roles:
+            # An address no account has any more: still a Staff member, of no known Role.
+            self._roles[email] = self._held.identity.roles_of([email]).get(email, "staffMember")
+        return self._roles[email]
 
 
 @dataclass(frozen=True)
@@ -144,14 +184,16 @@ class DataRequests:
         """A ZIP file: data.json with the Parent and each of their Children (current and
         archived) with all their data, and the photo files it names. Raises ParentNotFound, or
         ChildNotFound if a Child is deleted meanwhile."""
-        parent = self._held.parents.parent(parent_id).parent
+        held_parent = self._held.parents.held_parent(parent_id)
         child_ids = self._held.parents.all_child_ids(parent_id)
         export = _Export(self._held)
         parent_photo = self._held.photos.photos_of_parents([parent_id]).get(parent_id)
         data = {
             "exported_at": self._clock.now(),
             "parent": {
-                **asdict(parent),
+                **asdict(held_parent.parent),
+                "created_at": held_parent.created_at,
+                "updated_at": held_parent.updated_at,
                 "photo": export.photo(f"parent-{parent_id}", parent_photo),
             },
             "children": [export.child(child_id) for child_id in child_ids],
