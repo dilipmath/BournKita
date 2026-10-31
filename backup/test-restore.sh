@@ -2,7 +2,8 @@
 # Tests the backups end to end, as the Kita would use them: starts the production stack (with
 # test settings, as its own Compose project), records a Child with an Alert and a photo through
 # the HTTPS API, runs the nightly and the weekly backup, then restores each into a fresh database
-# and photo folder and checks through the API that everything is back. Removes it all afterwards.
+# and photo folder and checks through the API that everything is back, and that failed backups
+# are reported as crashes. Removes it all afterwards.
 #
 #   bash backup/test-restore.sh
 set -euo pipefail
@@ -123,5 +124,21 @@ status=$(curl --silent -k -o /dev/null -w '%{http_code}' -X POST \
   -H 'Content-Type: application/json' --data '{"backup":"nightly"}' \
   "https://localhost:$KITA_HTTPS_PORT/api/crash-reports/backups")
 [ "$status" = 404 ] || fail "backup failures can be reported from outside ($status)"
+
+step "Reporting a backup service that cannot start its schedule"
+# A second backup service, without a valid age public key: it must say so, not wait for Sunday.
+unready=kita-restore-test-unready
+compose run --detach --rm --no-deps --name "$unready" \
+  -e KITA_BACKUP_AGE_RECIPIENT=not-a-key backup > /dev/null
+reported=""
+for _ in $(seq 30); do
+  if compose logs api | grep -q "Crash in api backup service (BackupFailed"; then
+    reported=yes
+    break
+  fi
+  sleep 1
+done
+docker rm --force "$unready" > /dev/null
+[ -n "$reported" ] || fail "the backup service that could not start was not reported"
 
 echo "Restore test passed."

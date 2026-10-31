@@ -97,7 +97,7 @@ docker compose -f compose.prod.yaml run --rm --no-deps -v /root/age-identity.txt
   restore-offsite /offsite/kita-2027-01-04.tar.age /run/age-identity.txt
 ```
 
-`bash backup/test-restore.sh` tests all of this end to end (CI runs it on every push): it starts the production stack with test settings, records a Child with an Alert and a photo over HTTPS, runs both backups, restores each into a fresh database and photo folder, and checks through the API that everything is back.
+`bash backup/test-restore.sh` tests all of this end to end (CI runs it on every push): it starts the production stack with test settings, records a Child with an Alert and a photo over HTTPS, runs both backups, restores each into a fresh database and photo folder, and checks through the API that everything is back. It also checks that a failed backup, and a backup service that cannot start its schedule, are reported as crashes.
 
 ## Develop
 
