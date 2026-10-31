@@ -57,7 +57,7 @@ def data_requests_router(
         with refusals_as_http_errors(_REFUSALS):
             deleted = data_requests.delete_permanently(parent_id)
         note_children(request, deleted.child_ids)
-        note_deleted_permanently(request)
+        note_deleted_permanently(request, parent_id)
         # After the response, so only once the deletion and its audit entries are saved.
         background.add_task(photos.delete_files, deleted.photo_files)
 

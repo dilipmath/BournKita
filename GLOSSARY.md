@@ -173,5 +173,5 @@ A Parent's request to delete everything the Kita holds about them and their Chil
 _Avoid_: Hard delete (in docs), erasure, Löschantrag (in code and docs)
 
 **Audit log**:
-The record of who viewed, created, changed or deleted which Child's data, and when. For a change it names the fields, never their old or new values. Only Admins read it, and nobody edits it.
+The record of who viewed, created, changed or deleted which Child's data, and when; and of a Parent's data deleted for good (a Deletion request), which leaves only the Parent's number. For a change it names the fields, never their old or new values. Only Admins read it, and nobody edits it.
 _Avoid_: History, activity log, Protokoll (in code and docs)

@@ -35,12 +35,15 @@ audit_log = Table(
     # entry must say who it was even if the account changes later.
     Column("staff_email", String(320), nullable=False),
     Column("action", String(20), nullable=False),
-    # No foreign key: the entry outlives the Child profile it is about.
-    Column("child_id", Integer, nullable=False, index=True),
+    # What the entry is about: a Child, or (for a Parent's data deleted for good) a Parent. No
+    # foreign keys: the entry outlives what it is about.
+    Column("child_id", Integer, index=True),
+    Column("parent_id", Integer, index=True),
     # Only which fields changed, never their values: the log must not become a second copy of
     # the Children's data.
     Column("changed_fields", ARRAY(String(50)), nullable=False),
     CheckConstraint(f"action IN {get_args(AuditAction)}", name="action"),
+    CheckConstraint("num_nonnulls(child_id, parent_id) = 1", name="about_one"),
 )
 
 
@@ -50,7 +53,9 @@ class AuditEntry:
     at: datetime
     staff_email: str
     action: AuditAction
-    child_id: int
+    # Exactly one of these.
+    child_id: int | None
+    parent_id: int | None
     changed_fields: tuple[str, ...]
 
 
@@ -78,14 +83,30 @@ class Audit:
         child_id: int,
         changed_fields: Sequence[str] = (),
     ) -> None:
+        self._insert(staff_email, action, changed_fields, child_id=child_id)
+
+    def record_about_parent(
+        self, staff_email: str, action: AuditAction, parent_id: int, changed_fields: Sequence[str]
+    ) -> None:
+        """An entry about a Parent rather than a Child: their data deleted for good."""
+        self._insert(staff_email, action, changed_fields, parent_id=parent_id)
+
+    def _insert(
+        self,
+        staff_email: str,
+        action: AuditAction,
+        changed_fields: Sequence[str],
+        **about: int,
+    ) -> None:
+        """`about`: child_id or parent_id."""
         with transaction(self._engine) as connection:
             connection.execute(
                 insert(audit_log).values(
                     at=self._clock.now(),
                     staff_email=staff_email,
                     action=action,
-                    child_id=child_id,
                     changed_fields=list(changed_fields),
+                    **about,
                 )
             )
 

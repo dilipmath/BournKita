@@ -81,11 +81,13 @@ def note_changed_fields(request: Request, fields: Sequence[str]) -> None:
     request.state.audit_changed_fields = [to_camel(field) for field in fields]
 
 
-def note_deleted_permanently(request: Request) -> None:
-    """Called by an endpoint that deletes Children's data for good (a deletion request): each
-    entry is a deletion of the field "permanently", with no data of theirs."""
+def note_deleted_permanently(request: Request, parent_id: int) -> None:
+    """Called by the endpoint that deletes a Parent's and their Children's data for good (a
+    Deletion request): each entry, one about the Parent and one per Child, is a deletion of the
+    field "permanently", with no data of theirs."""
     note_changed_fields(request, ["permanently"])
     request.state.audit_action = "deleted"
+    request.state.audit_parent_id = parent_id
 
 
 def _noted_changed_fields(request: Request) -> list[str] | None:
@@ -167,6 +169,11 @@ def _record(audit: Audit, request: Request, response: Response, subject: _Subjec
     )
     for child_id in child_ids:
         audit.record(staff_member_of(request).email, action, int(child_id), changed_fields or ())
+    parent_id: int | None = getattr(request.state, "audit_parent_id", None)
+    if parent_id is not None:
+        audit.record_about_parent(
+            staff_member_of(request).email, action, parent_id, changed_fields or ()
+        )
 
 
 class AuditEntryOut(BaseModel):
@@ -176,8 +183,10 @@ class AuditEntryOut(BaseModel):
     at: datetime
     staff_email: str
     action: AuditAction
-    child_id: int
-    # None once the Child profile is deleted.
+    # Exactly one of these: what the entry is about.
+    child_id: int | None
+    parent_id: int | None
+    # None once the Child profile is deleted, and for entries about a Parent.
     child_name: str | None
     changed_fields: list[str]
 
@@ -203,7 +212,10 @@ def audit_router(identity: Identity, audit: Audit, children: Children) -> APIRou
     ) -> list[AuditEntryOut]:
         matching = AuditFilter(child_id, staff_email, action, since, until)
         entries = audit.entries(matching, before, limit)
-        names = children.names({entry.child_id for entry in entries})
-        return [AuditEntryOut.of(entry, names.get(entry.child_id)) for entry in entries]
+        names = children.names({entry.child_id for entry in entries if entry.child_id is not None})
+        return [
+            AuditEntryOut.of(entry, None if entry.child_id is None else names.get(entry.child_id))
+            for entry in entries
+        ]
 
     return router

@@ -158,7 +158,9 @@ export default function AuditLogPage() {
                 <td className="email">{entry.staffEmail}</td>
                 <td>{t(actionLabel[entry.action])}</td>
                 <td>
-                  {entry.childName ? (
+                  {entry.parentId ? (
+                    t('parentNumber', { id: entry.parentId })
+                  ) : entry.childName ? (
                     <Link to={`/children/${entry.childId}`}>{entry.childName}</Link>
                   ) : (
                     t('deletedChild', { id: entry.childId })

@@ -30,6 +30,7 @@ def test_viewing_a_child_profile_creates_an_audit_entry(
         "staffEmail": TEACHER_EMAIL,
         "action": "viewed",
         "childId": child_id,
+        "parentId": None,
         "childName": f"{LENA['firstName']} {LENA['lastName']}",
         "changedFields": [],
     }

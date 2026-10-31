@@ -261,3 +261,30 @@ def test_the_export_says_who_viewed_or_changed_the_childs_data_and_when(
         "2027-01-04T08:00:00Z",
         "2027-01-04T08:10:00Z",
     )
+
+
+def test_deleting_a_parent_permanently_is_recorded_about_the_parent_children_or_not(
+    admin: TestClient,
+) -> None:
+    anna = create_parent(admin)
+    jan = create_parent(admin, **JAN)
+    lena = create_child(admin)
+    link(admin, lena, jan)
+
+    delete_permanently(admin, anna)  # No Children.
+    delete_permanently(admin, jan)
+    assert delete_permanently(admin, 999) == 404  # No such Parent: nothing to record.
+
+    about_parents = [entry for entry in admin.get("/api/audit-log").json() if entry["parentId"]]
+    assert [
+        (entry["parentId"], entry["childId"], entry["action"], entry["changedFields"])
+        for entry in about_parents
+    ] == [(jan, None, "deleted", ["permanently"]), (anna, None, "deleted", ["permanently"])]
+    assert {entry["childName"] for entry in about_parents} == {None}
+    # Lena's own entry is still there, next to her other ones.
+    lenas = admin.get("/api/audit-log", params={"childId": str(lena)}).json()
+    assert (lenas[0]["action"], lenas[0]["changedFields"], lenas[0]["parentId"]) == (
+        "deleted",
+        ["permanently"],
+        None,
+    )

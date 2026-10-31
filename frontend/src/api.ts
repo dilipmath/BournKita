@@ -260,7 +260,9 @@ export type AuditEntry = {
   at: string
   staffEmail: string
   action: AuditAction
-  childId: number
+  // What the entry is about: a Child, or (for a Parent's data deleted for good) a Parent.
+  childId: number | null
+  parentId: number | null
   childName: string | null
   changedFields: string[]
 }

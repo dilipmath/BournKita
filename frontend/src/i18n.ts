@@ -128,6 +128,9 @@ export const resources = {
       whatChanged: 'What changed',
       deletedChild: 'Deleted Child (no. {{id}})',
       childNumber: 'Child no. {{id}}',
+      // An audit entry about a Parent: their data deleted for good, so only their number is left.
+      parentNumber: 'Parent no. {{id}}',
+      permanently: 'For good',
       onlyChild: 'Showing only entries about {{name}}.',
       showAllChildren: 'Show all Children',
       showOlderEntries: 'Show older entries',
@@ -551,6 +554,8 @@ export const resources = {
       whatChanged: 'Was geändert wurde',
       deletedChild: 'Gelöschtes Kind (Nr. {{id}})',
       childNumber: 'Kind Nr. {{id}}',
+      parentNumber: 'Elternteil Nr. {{id}}',
+      permanently: 'Endgültig',
       onlyChild: 'Es werden nur Einträge zu {{name}} gezeigt.',
       showAllChildren: 'Alle Kinder zeigen',
       showOlderEntries: 'Ältere Einträge zeigen',

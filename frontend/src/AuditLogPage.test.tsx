@@ -11,6 +11,7 @@ const changed = {
   staffEmail: 'leitung@kita.example',
   action: 'changed',
   childId: 7,
+  parentId: null,
   childName: 'Lena Müller',
   changedFields: ['foodPreferences', 'languages', 'pickUpPersons', 'photoConsent'],
 }
@@ -20,6 +21,7 @@ const deleted = {
   staffEmail: 'leitung@kita.example',
   action: 'deleted',
   childId: 5,
+  parentId: null,
   childName: null,
   changedFields: [],
 }
@@ -40,6 +42,21 @@ describe('audit log', () => {
     expect(within(changeRow).getByRole('link', { name: 'Lena Müller' })).toHaveAttribute('href', '/children/7')
     expect(changeRow).toHaveTextContent('Food preferences, Languages spoken, Pick-up persons, Photo consent')
     expect(screen.getByRole('row', { name: /Deleted/ })).toHaveTextContent('Deleted Child (no. 5)')
+  })
+
+  it('shows entries about a Parent whose data was deleted for good', async () => {
+    const aboutParent = { ...deleted, id: 4, childId: null, parentId: 3, changedFields: ['permanently'] }
+    fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': sessionAs('admin'),
+      'GET /api/audit-log?limit=50': { status: 200, body: [aboutParent] },
+    })
+    renderAt('/audit-log', <App />)
+
+    const row = await screen.findByRole('row', { name: /Deleted/ })
+    expect(row).toHaveTextContent('Parent no. 3')
+    expect(row).toHaveTextContent('For good')
+    expect(within(row).queryByRole('link')).not.toBeInTheDocument()
   })
 
   it('filters by Staff member, action and days', async () => {
