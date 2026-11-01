@@ -12,7 +12,7 @@ Was eine Durchsicht der Bildschirme und der Gestaltungsregeln ergeben hat. Die T
 | E4 | Das Kinderprofil ist für Admins sehr lang, mit Ändern- und Entfernen-Knöpfen an jedem Eintrag | Kinderprofil | Abschnitte zuklappbar, oder ein eigener Bearbeitungsmodus | mittel |
 | E5 | Daten bei den Einwilligungen stehen als „01.11.2026“ (englisch: „Nov 1, 2026“), sonst als „14. März 2022“ | Kinderprofil, Einwilligungen | Ein einheitliches Datumsformat | gering |
 | E6 | Das Kästchen „darf abholen“ eines Elternteils steht getrennt von seiner Beschriftung, mitten in der Karte | Kinderprofil, Eltern | Kästchen neben seine Beschriftung | gering |
-| E7 | Die App startet bei jedem Laden der Seite auf Englisch; Deutsch muss nach jedem Neuladen oder Aufwecken des Tablets neu gewählt werden | jede Seite | Die gewählte Sprache auf dem Gerät merken | hoch (für deutschsprachige Mitarbeiter:innen) |
+| E7 | Die App startet bei jedem Laden der Seite auf Englisch; Deutsch muss nach jedem Neuladen oder Aufwecken des Tablets neu gewählt werden | jede Seite | Die gewählte Sprache auf dem Gerät merken (**behoben** am 1. November 2026) | hoch (für deutschsprachige Mitarbeiter:innen) |
 
 ## B. Tests
 

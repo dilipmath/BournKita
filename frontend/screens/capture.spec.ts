@@ -79,7 +79,7 @@ test('screenshots of the main screens', async ({ page }) => {
   await logInAsAdmin(page)
   const { group, lena } = await seed(page.request)
 
-  // The app starts in English on every page load; German is one tap away.
+  // Each page in the language of this round (the app remembers the last choice; tapping it again is harmless).
   async function open(path: string, language: 'en' | 'de'): Promise<void> {
     await page.goto(path)
     if (language === 'de') await page.getByRole('button', { name: 'Deutsch' }).tap()

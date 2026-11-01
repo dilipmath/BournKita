@@ -850,15 +850,33 @@ export const resources = {
   },
 } as const
 
+// The language chosen on this device, kept so a reload (or a tablet waking up) does not fall back
+// to English.
+const LANGUAGE_KEY = 'kita.language'
+
+function chosenLanguage(): string {
+  try {
+    const chosen = localStorage.getItem(LANGUAGE_KEY)
+    return chosen && Object.hasOwn(resources, chosen) ? chosen : 'en'
+  } catch {
+    return 'en' // Storage blocked (e.g. a private window): English, as before.
+  }
+}
+
+i18n.on('languageChanged', (lng) => {
+  document.documentElement.lang = lng
+  try {
+    localStorage.setItem(LANGUAGE_KEY, lng)
+  } catch {
+    // Not kept, then; the app still works.
+  }
+})
+
 void i18n.use(initReactI18next).init({
   resources,
-  lng: 'en',
+  lng: chosenLanguage(),
   fallbackLng: 'en',
   interpolation: { escapeValue: false },
 })
 
 export default i18n
-
-i18n.on('languageChanged', (lng) => {
-  document.documentElement.lang = lng
-})

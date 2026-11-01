@@ -12,7 +12,7 @@ What a review of the screens and the style guide found. The sessions show which 
 | E4 | The Child profile is very long for Admins, with change and remove buttons on every item | Child profile | Collapse sections, or a separate edit mode | medium |
 | E5 | Dates in the Consents read "Nov 1, 2026" (German: "01.11.2026") while the rest reads "14 March 2022" | Child profile, Consents | One date format | low |
 | E6 | The "may pick up" checkbox of a Parent sits apart from its label, in the middle of the card | Child profile, Parents | Checkbox next to its label | low |
-| E7 | The app starts in English on every page load; German has to be chosen again after each reload or when the tablet wakes up | every page | Remember the chosen language on the device | high (for German-speaking staff) |
+| E7 | The app starts in English on every page load; German has to be chosen again after each reload or when the tablet wakes up | every page | Remember the chosen language on the device (**fixed** on 1 November 2026) | high (for German-speaking staff) |
 
 ## B. Sessions
 
