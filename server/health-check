@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# Daily health check of the Kita server (see docs/server): the disks have room, every service of
+# the production stack runs and is healthy, the backup drive, the off-site drive and (if used)
+# the photo share are mounted, the newest nightly backup is recent, the UPS is on mains power,
+# and whether a restart is waiting. Emails a warning to KITA_WARNING_EMAIL (via the server's
+# sendmail, i.e. msmtp) when something needs attention; prints it either way. Run by the
+# kita-health-check systemd timer.
+#
+#   KITA_DIR=/opt/kita KITA_WARNING_EMAIL=manager@example.org server/health-check
+set -uo pipefail
+
+kita_dir=${KITA_DIR:-/opt/kita}
+warning_email=${KITA_WARNING_EMAIL:-}
+# Percent used above which a disk counts as full.
+full_at=${KITA_DISK_FULL_AT:-85}
+# The nightly backup runs at 01:30: the newest may be up to a day old, plus some slack.
+backup_max_age_hours=26
+problems=()
+notes=()
+
+# A setting of the stack, from its .env file (without quotes around the value).
+setting() {
+  grep -E "^$1=" "$kita_dir/.env" 2> /dev/null | tail -n 1 | cut -d= -f2- | tr -d "\"'"
+}
+
+[ -f "$kita_dir/.env" ] || problems+=("No settings file at $kita_dir/.env")
+backup_dir=$(setting KITA_BACKUP_DIR)
+backup_dir=${backup_dir:-/mnt/backup/kita}
+offsite_dir=$(setting KITA_OFFSITE_DIR)
+offsite_dir=${offsite_dir:-/mnt/offsite}
+photo_dir=$(setting KITA_PHOTO_DIR)
+
+# Whether the folder lies on a drive of its own, not on the system disk.
+on_own_drive() {
+  local target
+  target=$(df --output=target "$1" 2> /dev/null | tail -n 1)
+  [ -n "$target" ] && [ "$target" != / ]
+}
+
+for mount in / "$backup_dir"; do
+  used=$(df --output=pcent "$mount" 2> /dev/null | tail -n 1 | tr -dc '0-9')
+  if [ -z "$used" ]; then
+    problems+=("Cannot read the disk of $mount")
+  elif [ "$used" -ge "$full_at" ]; then
+    problems+=("The disk of $mount is ${used}% full")
+  fi
+done
+
+on_own_drive "$backup_dir" || problems+=("The backup drive is not mounted ($backup_dir)")
+on_own_drive "$offsite_dir" || problems+=("No off-site drive is plugged in and mounted ($offsite_dir)")
+if [ -n "$photo_dir" ] && ! on_own_drive "$photo_dir"; then
+  problems+=("The photo share is not mounted ($photo_dir)")
+fi
+
+services=$(cd "$kita_dir" && docker compose -f compose.prod.yaml ps --all \
+  --format '{{.Service}} {{.State}} {{.Health}}' 2> /dev/null)
+if [ -z "$services" ]; then
+  problems+=("The production stack is not running")
+else
+  for service in db api web backup; do
+    line=$(grep -E "^$service " <<< "$services")
+    case "$line" in
+      "$service running healthy" | "$service running ") ;;
+      "") problems+=("The $service service is missing") ;;
+      *) problems+=("The $service service is not well: ${line#"$service "}") ;;
+    esac
+  done
+fi
+
+newest=$(find "$backup_dir/db" -name 'kita-*.dump' -mmin "-$((backup_max_age_hours * 60))" \
+  2> /dev/null | head -n 1)
+if [ -z "$newest" ]; then
+  problems+=("No nightly backup in the last $backup_max_age_hours hours in $backup_dir/db")
+fi
+
+if command -v upsc > /dev/null; then
+  ups_status=$(upsc kita-ups ups.status 2> /dev/null)
+  case "$ups_status" in
+    OL*) ;;
+    "") problems+=("The UPS does not answer (upsc kita-ups)") ;;
+    *) problems+=("The UPS is not on mains power: $ups_status") ;;
+  esac
+fi
+
+[ -f /var/run/reboot-required ] && notes+=("Updates are waiting for a restart (see the runbook)")
+
+host=$(hostname)
+if [ ${#problems[@]} -eq 0 ] && [ ${#notes[@]} -eq 0 ]; then
+  echo "Kita server $host: all well."
+  exit 0
+fi
+
+report=$(printf '%s\n' "Kita server $host needs attention:" "" \
+  "${problems[@]/#/- }" "${notes[@]/#/- }" "" "See the admin runbook (docs/server) for what to do.")
+echo "$report"
+if [ -n "$warning_email" ]; then
+  printf 'To: %s\nSubject: Kita server %s: needs attention\n\n%s\n' "$warning_email" "$host" "$report" |
+    sendmail -t || echo "The warning could not be emailed." >&2
+fi
+[ ${#problems[@]} -eq 0 ]

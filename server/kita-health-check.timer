@@ -1,0 +1,11 @@
+# Every morning at 07:15, after the night's backup, and once shortly after each start.
+[Unit]
+Description=Daily Kita server health check
+
+[Timer]
+OnCalendar=*-*-* 07:15
+OnBootSec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

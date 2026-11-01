@@ -1,0 +1,12 @@
+# Runs server/health-check (see docs/server); emails KITA_WARNING_EMAIL when something is wrong.
+# Install: copy both kita-health-check files to /etc/systemd/system/, set the address below,
+# then `systemctl enable --now kita-health-check.timer`.
+[Unit]
+Description=Kita server health check
+After=docker.service
+
+[Service]
+Type=oneshot
+Environment=KITA_DIR=/opt/kita
+Environment=KITA_WARNING_EMAIL=change-me@example.org
+ExecStart=/opt/kita/server/health-check

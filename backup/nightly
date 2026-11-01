@@ -25,6 +25,12 @@ for snapshot in /backups/photos/*/; do
     *) [ -d "$snapshot" ] && previous=$snapshot ;;
   esac
 done
+# An empty photo folder where the last snapshot had photos means the photo drive or share is
+# missing: never mirror that over the backups (it would push every real snapshot out in two weeks).
+if [ -n "$previous" ] && [ -z "$(ls -A /photos)" ] && [ -n "$(ls -A "$previous")" ]; then
+  echo "The photo folder is empty, but the last backup had photos: is the photo share mounted?" >&2
+  exit 1
+fi
 # The photos are encrypted already (with the app's key), so they are copied as they are.
 rsync --archive --delete ${previous:+--link-dest="$previous"} /photos/ "/backups/photos/$day.partial/"
 rm -rf "/backups/photos/$day"

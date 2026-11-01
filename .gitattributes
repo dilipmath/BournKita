@@ -1,3 +1,4 @@
-# Shell scripts and the backup image's files run in Linux containers: always LF.
+# Shell scripts, the backup image's files and the server's scripts run on Linux: always LF.
 *.sh text eol=lf
 backup/* text eol=lf
+server/* text eol=lf
