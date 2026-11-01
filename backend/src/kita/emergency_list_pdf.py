@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from html import escape
-from typing import Literal
+from typing import Literal, NoReturn
 
 from weasyprint import HTML
 
@@ -164,6 +164,13 @@ def _html(emergency_list: EmergencyList, language: Language) -> str:
     )
 
 
+def _fetch_nothing(url: str) -> NoReturn:
+    """The list needs nothing from elsewhere (its fonts are the server's own): whatever URL or
+    file a page might name is never fetched, so no text in it could make the server do so."""
+    raise ValueError(f"Not fetched: {url[:50]}")
+
+
 def emergency_list_pdf(emergency_list: EmergencyList, language: Language) -> bytes:
-    pdf: bytes = HTML(string=_html(emergency_list, language)).write_pdf()
+    page = HTML(string=_html(emergency_list, language), url_fetcher=_fetch_nothing)
+    pdf: bytes = page.write_pdf()
     return pdf
