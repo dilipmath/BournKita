@@ -11,7 +11,9 @@
     "test": "vitest run",
     "preview": "vite preview",
     "test:e2e": "node e2e/run.ts",
-    "test:e2e:dev": "playwright test"
+    "test:e2e:dev": "playwright test",
+    "screens": "node e2e/run.ts --config playwright.screens.config.ts --grep screenshots",
+    "usability-stack": "node e2e/run.ts --config playwright.screens.config.ts --grep session --keep"
   },
   "dependencies": {
     "i18next": "^26.5.4",
