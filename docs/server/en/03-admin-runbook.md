@@ -57,7 +57,7 @@ Forgotten to start it again, or no drive plugged in? The next morning's health c
 ## Updates
 
 - Ubuntu updates itself. When `ls /var/run/reboot-required` shows the file: restart at a quiet time (`sudo reboot`) and type the disk passphrase.
-- New version of the app: `cd /opt/kita && git pull && dc up -d --build --wait`.
+- New version of the app: only as agreed with the developer, with the steps in `docs/go-live` (05, "Releases"): a backup first, then `git fetch --tags && git checkout <tag> && dc up -d --build --wait`.
 
 ## Staff
 

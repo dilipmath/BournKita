@@ -57,7 +57,7 @@ Vergessen, sie wieder zu starten, oder keine Platte eingesteckt? Die Prüfung am
 ## Updates
 
 - Ubuntu aktualisiert sich selbst. Zeigt `ls /var/run/reboot-required` die Datei: zu einer ruhigen Zeit neu starten (`sudo reboot`) und die Festplatten-Passphrase eingeben.
-- Neue Version der App: `cd /opt/kita && git pull && dc up -d --build --wait`.
+- Neue Version der App: nur nach Absprache mit dem Entwickler, mit den Schritten aus `docs/go-live` (05, „Releases“): erst eine Sicherung, dann `git fetch --tags && git checkout <Tag> && dc up -d --build --wait`.
 
 ## Mitarbeiter:innen
 
