@@ -1,6 +1,7 @@
 import asyncio
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, suppress
+from datetime import timedelta
 from importlib.metadata import version
 from typing import Literal
 
@@ -11,8 +12,10 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 
 from kita.alerts import Alerts
+from kita.api_support import client_address, too_many
 from kita.archive import Archive
 from kita.archive_api import archive_router
+from kita.attempt_limits import AttemptLimit
 from kita.attendance import Attendance
 from kita.audit import Audit
 from kita.audit_api import audit_router, audited_route
@@ -31,6 +34,7 @@ from kita.crash import (
     api_crash_report,
     default_crash_sink,
     job_crash_report,
+    lockout_crash_report,
     send_safely,
 )
 from kita.data_requests import DataRequests, HeldData
@@ -65,6 +69,10 @@ from kita.staff_api import staff_router
 from kita.tasks import Tasks
 from kita.tasks_api import tasks_router
 
+# Crash reports one network address may send in any WEB_CRASH_REPORT_PERIOD; then 429.
+MAX_WEB_CRASH_REPORTS_PER_ADDRESS = 30
+WEB_CRASH_REPORT_PERIOD = timedelta(minutes=10)
+
 
 class Health(BaseModel):
     status: Literal["ok", "degraded"]
@@ -83,7 +91,7 @@ def create_app(
     cipher = FieldCipher.from_settings(settings)
     clock = clock or SystemClock()
     mailer = mailer or mailer_from_settings(settings)
-    crash_sink = crash_sink or default_crash_sink(settings, mailer)
+    crash_sink = crash_sink or default_crash_sink(settings, mailer, clock)
     app_version = version("kita")
     reporting_mailer = CrashReportingMailer(mailer, crash_sink, clock, app_version)
     engine = create_engine(
@@ -119,8 +127,16 @@ def create_app(
 
     app = FastAPI(title="Kita Kids Database", lifespan=lifespan)
     app.state.mailer = mailer
-    identity = Identity.from_settings(engine, clock, reporting_mailer, settings)
-    app.include_router(identity_router(identity, settings))
+    identity = Identity.from_settings(
+        engine,
+        clock,
+        reporting_mailer,
+        settings,
+        on_lockout=lambda account_id: send_safely(
+            crash_sink, lockout_crash_report(account_id, app_version, clock.now())
+        ),
+    )
+    app.include_router(identity_router(identity, settings, clock))
     app.include_router(email_verification_router(identity))
     app.include_router(password_reset_router(identity))
     children = Children(engine, clock)
@@ -196,8 +212,17 @@ def create_app(
         send_safely(crash_sink, api_crash_report(request, error, app_version, clock.now()))
         return JSONResponse({"detail": "Internal Server Error"}, status_code=500)
 
+    # Anyone may report (the browser reports crashes when logged out too), so per address only so
+    # many: every report is logged, and the log must not fill the disk.
+    web_reports = AttemptLimit(clock, MAX_WEB_CRASH_REPORTS_PER_ADDRESS, WEB_CRASH_REPORT_PERIOD)
+
     @app.post("/api/crash-reports", status_code=status.HTTP_202_ACCEPTED)
-    def receive_web_crash_report(report: WebCrashReport) -> None:
+    def receive_web_crash_report(report: WebCrashReport, request: Request) -> None:
+        address = client_address(request)
+        retry_after = web_reports.retry_after(address)
+        if retry_after is not None:
+            raise too_many("too_many_reports", retry_after)
+        web_reports.record(address)
         send_safely(crash_sink, report.to_crash_report(clock.now()))
 
     # From the backup service inside the stack; the web server does not pass it on from outside.

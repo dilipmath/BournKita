@@ -1,4 +1,5 @@
-from datetime import UTC, datetime
+import itertools
+from datetime import UTC, datetime, timedelta
 from urllib.parse import quote
 
 import pytest
@@ -37,7 +38,9 @@ def test_unhandled_api_error_produces_a_report(
 # Text shaped like names, addresses, email addresses and health notes. Each value holds a character
 # no report can contain (umlaut, comma, @), so a match in a report is always a real leak.
 personal_data = st.text(
-    alphabet=st.sampled_from("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZäöüßÄÖÜé0123456789 ,.-@"),
+    alphabet=st.sampled_from(
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZäöüßÄÖÜé0123456789 ,.-@"
+    ),
     min_size=8,
     max_size=40,
 ).filter(lambda text: any(char in text for char in ",@äöüßÄÖÜé"))
@@ -95,6 +98,9 @@ def test_frontend_error_report_reaches_the_sink(
     assert report.occurred_at == clock.now_value
 
 
+addresses = itertools.count()
+
+
 @settings(suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 @given(
     field=st.sampled_from(["errorType", "page", "version", "frames"]),
@@ -111,8 +117,11 @@ def test_frontend_reports_never_forward_free_text(
         "frames": [f"/assets/index.js:1:2 {secret}"],
     }[field]
 
-    client.post("/api/crash-reports", json=web_report(**{field: value}))
+    # A new address each time, so the limit per address never turns a report away unchecked.
+    address = {"X-Kita-Client-Address": f"10.0.0.{next(addresses)}"}
+    response = client.post("/api/crash-reports", json=web_report(**{field: value}), headers=address)
 
+    assert response.status_code in (202, 422)
     assert all(secret not in str(report) for report in crash_sink.reports)
 
 
@@ -177,7 +186,11 @@ def test_reports_are_still_logged_in_full_when_emailed(
     ],
 )
 def test_a_failed_backup_is_filed_as_a_crash_report(
-    client: TestClient, crash_sink: RecordingCrashSink, clock: FixedClock, backup: str, location: str
+    client: TestClient,
+    crash_sink: RecordingCrashSink,
+    clock: FixedClock,
+    backup: str,
+    location: str,
 ) -> None:
     response = client.post("/api/crash-reports/backups", json={"backup": backup})
 
@@ -196,3 +209,54 @@ def test_only_the_backups_can_report_a_failure(
 
     assert response.status_code == 422
     assert crash_sink.reports == []
+
+
+def test_at_most_five_browser_crash_emails_an_hour_and_the_next_counts_the_rest(
+    settings: Settings,
+    clock: FixedClock,
+    mailer: CapturingMailer,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    app_settings = settings.model_copy(update={"crash_report_email": "developer@example.org"})
+    with TestClient(create_app(app_settings, clock=clock, mailer=mailer)) as client:
+        for _ in range(8):
+            client.post("/api/crash-reports", json=web_report())
+        emailed_at_once = len(mailer.outbox)
+        # The API's own reports (here a failed backup) are never held back.
+        client.post("/api/crash-reports/backups", json={"backup": "nightly"})
+        backup_email = mailer.outbox[-1]
+        clock.now_value += timedelta(hours=1)
+        client.post("/api/crash-reports", json=web_report(errorType="RangeError"))
+
+    assert emailed_at_once == 5
+    # It also says how many browser reports were left out.
+    assert backup_email.subject == "Kita crash: BackupFailed in nightly backup"
+    assert "3 more crash reports were not emailed" in backup_email.body
+    # A new hour, a new allowance.
+    assert len(mailer.outbox) == 7
+    assert "RangeError" in mailer.outbox[-1].subject
+    # Every report is still logged.
+    assert caplog.text.count("Crash in web") == 9
+
+
+def test_too_many_crash_reports_from_one_address_are_refused_for_a_while(
+    client: TestClient, crash_sink: RecordingCrashSink, clock: FixedClock
+) -> None:
+    tablet = {"X-Kita-Client-Address": "192.168.1.23"}
+    accepted = [
+        client.post("/api/crash-reports", json=web_report(), headers=tablet).status_code
+        for _ in range(30)
+    ]
+
+    refused = client.post("/api/crash-reports", json=web_report(), headers=tablet)
+    elsewhere = client.post(
+        "/api/crash-reports", json=web_report(), headers={"X-Kita-Client-Address": "192.168.1.24"}
+    )
+    clock.now_value += timedelta(minutes=10)
+    later = client.post("/api/crash-reports", json=web_report(), headers=tablet)
+
+    assert accepted == [202] * 30
+    assert refused.status_code == 429
+    assert refused.json() == {"detail": "too_many_reports"}
+    assert (elsewhere.status_code, later.status_code) == (202, 202)
+    assert len(crash_sink.reports) == 32

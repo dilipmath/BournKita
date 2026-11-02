@@ -26,6 +26,7 @@ function sendJson(url: string, method: 'POST' | 'PUT', body: object): Promise<Re
 // The API's error codes for refusals the UI explains, mapped to their translation keys.
 const refusals = {
   invalid_credentials: 'invalidCredentials',
+  too_many_attempts: 'tooManyAttempts',
   admins_only: 'adminsOnly',
   email_taken: 'emailTaken',
   invalid_email: 'invalidEmail',
@@ -98,6 +99,8 @@ export type StaffAccount = {
   email: string
   role: Role
   status: 'invited' | 'active' | 'deactivated'
+  // Locked by failed logins, for now.
+  locked: boolean
   groupIds: number[]
 }
 
@@ -130,6 +133,13 @@ export function changeRole(id: number, role: Role): Promise<StaffAccount | Refus
 
 export function setActive(id: number, active: boolean): Promise<StaffAccount | Refusal> {
   return changeStaffAccount(id, 'active', { active })
+}
+
+/** Ends a lock by failed logins at once. */
+export async function unlockAccount(id: number): Promise<StaffAccount | Refusal> {
+  const response = await fetch(`/api/staff/${id}/lock`, { method: 'DELETE' })
+  if (!response.ok) return refusalOf(response, 'Unlocking the account')
+  return (await response.json()) as StaffAccount
 }
 
 /** Emails an invited Staff member a fresh verification link; earlier links stop working.
@@ -191,9 +201,11 @@ export const childFieldLabel: Record<keyof ChildDetails, string> = {
   dateOfBirth: 'dateOfBirth',
 }
 
-/** The Children, by first name; `search` keeps those whose name contains it. */
-export async function fetchChildren(search: string): Promise<ChildSummary[]> {
-  const response = await fetch(`/api/children?search=${encodeURIComponent(search)}`)
+/** The Children, by first name; `search` keeps those whose name contains it, `groupId` those of
+ * that Group. */
+export async function fetchChildren(search: string, groupId: number | null = null): Promise<ChildSummary[]> {
+  const inGroup = groupId === null ? '' : `&groupId=${groupId}`
+  const response = await fetch(`/api/children?search=${encodeURIComponent(search)}${inGroup}`)
   if (!response.ok) throw new Error(`Loading the Children failed: ${response.status}`)
   return (await response.json()) as ChildSummary[]
 }

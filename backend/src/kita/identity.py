@@ -1,11 +1,12 @@
 """Identity & access: Staff member accounts, passwords and sessions."""
 
 import hashlib
+import logging
 import re
 import secrets
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Literal, get_args
 
 from argon2 import PasswordHasher
@@ -36,6 +37,8 @@ from kita.db import metadata, transaction
 from kita.identity_emails import password_reset_email, verification_email
 from kita.mail import Mailer, MailNotSent
 from kita.settings import Settings
+
+logger = logging.getLogger(__name__)
 
 # guest: read-only, sees the Kita-wide Calendar and no personal data.
 Role = Literal["admin", "teacher", "guest"]
@@ -100,6 +103,7 @@ _ACCOUNT_COLUMNS = (
     users.c.role,
     users.c.email_verified_at,
     users.c.deactivated_at,
+    users.c.locked_until,
 )
 
 
@@ -115,6 +119,8 @@ class StaffAccount:
     email: str
     role: Role
     status: AccountStatus
+    # Locked by failed logins, for now (see MAX_FAILED_LOGINS).
+    locked: bool
 
 
 @dataclass(frozen=True)
@@ -180,12 +186,13 @@ def _token_hash(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-def _to_account(row: Row[*tuple[Any, ...]]) -> StaffAccount:
+def _to_account(row: Row[*tuple[Any, ...]], now: datetime) -> StaffAccount:
     if row.deactivated_at is not None:
         status: AccountStatus = "deactivated"
     else:
         status = "active" if row.email_verified_at is not None else "invited"
-    return StaffAccount(row.id, row.email, row.role, status)
+    locked = row.locked_until is not None and row.locked_until > now
+    return StaffAccount(row.id, row.email, row.role, status, locked)
 
 
 class Identity:
@@ -196,8 +203,11 @@ class Identity:
         mailer: Mailer,
         inactivity_timeout: timedelta,
         public_url: str,
+        on_lockout: Callable[[int], None] = lambda account_id: None,
     ) -> None:
+        """`on_lockout` hears of each account locked by failed logins, by its ID."""
         self._engine = engine
+        self._on_lockout = on_lockout
         self._clock = clock
         self._mailer = mailer
         self._inactivity_timeout = inactivity_timeout
@@ -205,7 +215,12 @@ class Identity:
 
     @classmethod
     def from_settings(
-        cls, engine: Engine, clock: Clock, mailer: Mailer, settings: Settings
+        cls,
+        engine: Engine,
+        clock: Clock,
+        mailer: Mailer,
+        settings: Settings,
+        on_lockout: Callable[[int], None] = lambda account_id: None,
     ) -> "Identity":
         return cls(
             engine,
@@ -213,6 +228,7 @@ class Identity:
             mailer,
             timedelta(minutes=settings.session_inactivity_minutes),
             settings.public_url,
+            on_lockout,
         )
 
     @property
@@ -239,11 +255,24 @@ class Identity:
                 )
             )
 
-    def log_in(self, email: str, password: str) -> tuple[str, StaffMember] | None:
+    def log_in(
+        self, email: str, password: str, address: str = "unknown"
+    ) -> tuple[str, StaffMember] | None:
         """Returns a new session token and the Staff member, or None for wrong credentials.
         Invited and deactivated accounts cannot log in. After MAX_FAILED_LOGINS failed logins
         in a row the account is locked: even the right password gives None until
-        LOCKOUT_PERIOD has passed."""
+        LOCKOUT_PERIOD has passed. Every refusal is logged with the account's number and the
+        network `address` the login came from, never with the email address or password typed in."""
+        result, lockout = self._log_in(email, password, address)
+        if lockout is not None:
+            # Once the transaction is over: reporting may email, and must not hold the row lock.
+            self._on_lockout(lockout)
+        return result
+
+    def _log_in(
+        self, email: str, password: str, address: str
+    ) -> tuple[tuple[str, StaffMember] | None, int | None]:
+        """log_in's work in one transaction; also returns the ID of the account it locked, if any."""
         now = self._clock.now()
         with self._engine.begin() as connection:
             user = connection.execute(
@@ -262,11 +291,31 @@ class Identity:
             password_hash = user.password_hash if user and user.password_hash else _DUMMY_HASH
             # Checked even when locked or unknown: every refusal takes as long as any other.
             matches = _password_matches(password_hash, password)
-            if user is None or (user.locked_until is not None and user.locked_until > now):
-                return None
+            if user is None:
+                logger.info("Failed login for no active Staff account from %s", address)
+                return None, None
+            if user.locked_until is not None and user.locked_until > now:
+                logger.info("Login refused for locked Staff account %d from %s", user.id, address)
+                return None, None
             if not matches:
-                self._count_failed_login(connection, user.id, now)
-                return None
+                in_a_row = self._count_failed_login(connection, user.id, now)
+                if in_a_row < MAX_FAILED_LOGINS:
+                    logger.info(
+                        "Failed login for Staff account %d (%d in a row) from %s",
+                        user.id,
+                        in_a_row,
+                        address,
+                    )
+                else:
+                    locked_until = now + LOCKOUT_PERIOD
+                    logger.warning(
+                        "Staff account %d locked until %s UTC after %d failed logins",
+                        user.id,
+                        f"{locked_until.astimezone(UTC):%Y-%m-%d %H:%M}",
+                        MAX_FAILED_LOGINS,
+                    )
+                    return None, user.id
+                return None, None
             values: dict[str, Any] = {"failed_logins": 0, "locked_until": None}
             if _hasher.check_needs_rehash(password_hash):
                 # Hashing parameters got stronger since this password was set.
@@ -285,7 +334,7 @@ class Identity:
                     last_active_at=now,
                 )
             )
-            return token, StaffMember(email=user.email, role=user.role)
+            return (token, StaffMember(email=user.email, role=user.role)), None
 
     def roles_of(self, emails: Collection[str]) -> dict[str, Role]:
         """The Role each of these Staff accounts has now, by email address; for a Data-access
@@ -328,7 +377,8 @@ class Identity:
     def staff_accounts(self) -> list[StaffAccount]:
         with self._engine.connect() as connection:
             rows = connection.execute(select(*_ACCOUNT_COLUMNS).order_by(users.c.email)).all()
-        return [_to_account(row) for row in rows]
+        now = self._clock.now()
+        return [_to_account(row, now) for row in rows]
 
     def staff_account(self, account_id: int) -> StaffAccount:
         with self._engine.connect() as connection:
@@ -357,7 +407,7 @@ class Identity:
             email_sent = True
         except MailNotSent:
             email_sent = False
-        return CreatedStaffAccount(user_id, email, role, "invited", email_sent)
+        return CreatedStaffAccount(user_id, email, role, "invited", False, email_sent)
 
     def send_new_link(self, account_id: int) -> None:
         """Replaces an invited account's verification link, e.g. after it expired.
@@ -449,6 +499,18 @@ class Identity:
             connection.execute(update(users).where(users.c.id == account_id).values(role=role))
             return self._account(connection, account_id)
 
+    def unlock(self, account_id: int) -> StaffAccount:
+        """Ends a lock by failed logins at once, and starts their count again."""
+        with self._engine.begin() as connection:
+            account = self._account(connection, account_id)
+            connection.execute(
+                update(users)
+                .where(users.c.id == account.id)
+                .values(failed_logins=0, locked_until=None)
+            )
+            logger.info("Staff account %d unlocked by an Admin", account.id)
+            return self._account(connection, account_id)
+
     def set_active(self, account_id: int, active: bool, by: StaffMember) -> StaffAccount:
         """Deactivating ends the account's sessions and voids its verification and password
         reset links at once; its history stays. `by` is the Admin making the change."""
@@ -478,9 +540,11 @@ class Identity:
             return self._account(connection, account_id)
 
     @staticmethod
-    def _count_failed_login(connection: Connection, user_id: int, now: datetime) -> None:
+    def _count_failed_login(connection: Connection, user_id: int, now: datetime) -> int:
+        """Counts a failed login; returns how many failed in a row, MAX_FAILED_LOGINS when this one
+        locks the account."""
         reaches_limit = users.c.failed_logins + 1 >= MAX_FAILED_LOGINS
-        connection.execute(
+        counted: int = connection.scalar(
             update(users)
             .where(users.c.id == user_id)
             .values(
@@ -490,7 +554,10 @@ class Identity:
                     (reaches_limit, now + LOCKOUT_PERIOD), else_=users.c.locked_until
                 ),
             )
+            .returning(users.c.failed_logins)
         )
+        # Locking sets the count back to 0.
+        return counted or MAX_FAILED_LOGINS
 
     def _store_link(
         self, connection: Connection, links: Table, user_id: int, validity: timedelta
@@ -526,14 +593,13 @@ class Identity:
         # Two Admins demoting each other at the same moment must not both succeed.
         connection.exec_driver_sql("LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE")
 
-    @staticmethod
-    def _account(connection: Connection, account_id: int) -> StaffAccount:
+    def _account(self, connection: Connection, account_id: int) -> StaffAccount:
         row = connection.execute(
             select(*_ACCOUNT_COLUMNS).where(users.c.id == account_id)
         ).one_or_none()
         if row is None:
             raise AccountNotFound
-        return _to_account(row)
+        return _to_account(row, self._clock.now())
 
     @staticmethod
     def _ensure_another_active_admin(connection: Connection, account: StaffAccount) -> None:

@@ -2,7 +2,8 @@ import logging
 import os
 import traceback
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
+from threading import Lock
 from typing import Annotated, Literal, Protocol
 
 from fastapi import Request
@@ -14,6 +15,10 @@ from kita.mail import Email, Mailer, MailNotSent
 from kita.settings import Settings
 
 logger = logging.getLogger(__name__)
+
+# Crash emails from browsers at most this often an hour; the rest are only logged, and counted in
+# the next.
+MAX_CRASH_EMAILS_PER_HOUR = 5
 
 
 @dataclass(frozen=True)
@@ -49,13 +54,44 @@ class LogCrashReportSink:
 
 
 class MailCrashReportSink:
-    """Emails each crash report to the developer."""
+    """Emails crash reports to the developer. Those from browsers, which anyone in the network can
+    send, at most MAX_CRASH_EMAILS_PER_HOUR, so a flood cannot fill the mailbox or drown out the
+    API's own reports (crashes, failed backups, lockouts), which always go. The next email of any
+    kind says how many were left out (the log has them all)."""
 
-    def __init__(self, mailer: Mailer, to: str) -> None:
+    def __init__(self, mailer: Mailer, to: str, clock: Clock) -> None:
         self._mailer = mailer
         self._to = to
+        self._clock = clock
+        self._hour_started: datetime | None = None
+        self._emailed_this_hour = 0
+        self._left_out = 0
+        # Reports come from the thread pool too.
+        self._lock = Lock()
 
     def send(self, report: CrashReport) -> None:
+        now = self._clock.now()
+        with self._lock:
+            if self._hour_started is None or now - self._hour_started >= timedelta(hours=1):
+                self._hour_started = now
+                self._emailed_this_hour = 0
+            if report.source == "web":
+                if self._emailed_this_hour >= MAX_CRASH_EMAILS_PER_HOUR:
+                    self._left_out += 1
+                    return
+                self._emailed_this_hour += 1
+            left_out, self._left_out = self._left_out, 0
+        note = (
+            [
+                "",
+                (
+                    f"{left_out} more crash reports were not emailed (more than"
+                    f" {MAX_CRASH_EMAILS_PER_HOUR} an hour); the api service's log has them all."
+                ),
+            ]
+            if left_out
+            else []
+        )
         body = "\n".join(
             [
                 f"Source: {report.source}",
@@ -65,6 +101,7 @@ class MailCrashReportSink:
                 f"Time: {report.occurred_at.isoformat()}",
                 "",
                 *report.frames,
+                *note,
             ]
         )
         subject = f"Kita crash: {report.error_type} in {report.location}"
@@ -82,11 +119,11 @@ class FanOutCrashReportSink:
             send_safely(sink, report)
 
 
-def default_crash_sink(settings: Settings, mailer: Mailer) -> CrashReportSink:
+def default_crash_sink(settings: Settings, mailer: Mailer, clock: Clock) -> CrashReportSink:
     """Always logs; also emails the developer when an address is configured."""
     if settings.crash_report_email:
         return FanOutCrashReportSink(
-            LogCrashReportSink(), MailCrashReportSink(mailer, settings.crash_report_email)
+            LogCrashReportSink(), MailCrashReportSink(mailer, settings.crash_report_email, clock)
         )
     return LogCrashReportSink()
 
@@ -234,3 +271,16 @@ class BackupFailureReport(BaseModel):
             frames=(),
             occurred_at=occurred_at,
         )
+
+
+def lockout_crash_report(account_id: int, version: str, occurred_at: datetime) -> CrashReport:
+    """A Staff account locked by failed logins, perhaps someone guessing its password: which
+    account, by number, and when. Never the email address typed in."""
+    return CrashReport(
+        source="api",
+        error_type="AccountLocked",
+        location=f"Staff account {account_id}",
+        version=version,
+        frames=(),
+        occurred_at=occurred_at,
+    )

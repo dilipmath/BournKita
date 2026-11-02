@@ -72,4 +72,17 @@ describe('forgotten password', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Forgot your password?' })).toBeInTheDocument()
   })
+
+  it('says to wait when too many logins failed from this device', async () => {
+    fakeApi({ ...loggedOut, 'POST /api/session': { status: 429, body: { detail: 'too_many_attempts' } } })
+    renderAt('/', <App />)
+
+    await userEvent.type(await screen.findByLabelText('Email address'), 'leitung@kita.example')
+    await userEvent.type(screen.getByLabelText('Password'), 'correct horse battery')
+    await userEvent.click(screen.getByRole('button', { name: 'Log in' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Too many failed logins from this tablet. Please wait up to 10 minutes, then try again.',
+    )
+  })
 })

@@ -8,6 +8,7 @@ import {
   sendNewLink,
   setActive,
   setStaffGroups,
+  unlockAccount,
   type ListedGroup,
   type Refusal,
   type Role,
@@ -149,7 +150,10 @@ export default function StaffPage() {
                     <RoleOptions />
                   </select>
                 </td>
-                <td>{t(statusLabel[account.status])}</td>
+                <td>
+                  {t(statusLabel[account.status])}
+                  {account.locked && <> · {t('lockedAfterFailedLogins')}</>}
+                </td>
                 {groups.length > 0 && (
                   <td>
                     <fieldset
@@ -177,6 +181,11 @@ export default function StaffPage() {
                   </td>
                 )}
                 <td className="actions">
+                  {account.locked && (
+                    <button type="button" onClick={() => void applyAccountChange(() => unlockAccount(account.id))}>
+                      {t('unlock')}
+                    </button>
+                  )}
                   {account.status === 'invited' && (
                     <button type="button" onClick={() => void resendLink(account)}>
                       {t('sendNewLink')}

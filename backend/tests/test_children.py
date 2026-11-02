@@ -4,6 +4,7 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 from tests.children import LENA, create_child, own_fields
+from tests.groups import create_group, put_in_group
 
 
 def test_an_admin_creates_a_child_profile_and_reads_it_back(admin: TestClient) -> None:
@@ -139,3 +140,20 @@ def test_overlong_entries_are_refused(admin: TestClient) -> None:
 
     assert response.status_code == 422
     assert response.json() == {"detail": "too_long"}
+
+
+def test_the_list_is_filtered_by_group_and_searched_within_it(admin: TestClient) -> None:
+    monkeys = create_group(admin, "Monkeys")
+    bees = create_group(admin, "Bees", "bee")
+    put_in_group(admin, create_child(admin, firstName="Lena", lastName="Müller"), monkeys)
+    put_in_group(admin, create_child(admin, firstName="Leon", lastName="Weber"), monkeys)
+    put_in_group(admin, create_child(admin, firstName="Mia", lastName="Lenz"), bees)
+    create_child(admin, firstName="Jonas", lastName="Weber")
+
+    def listed(**params: Any) -> list[str]:
+        return names(admin.get("/api/children", params=params))
+
+    assert listed(groupId=monkeys) == ["Lena Müller", "Leon Weber"]
+    assert listed(groupId=monkeys, search="weber") == ["Leon Weber"]
+    assert listed(groupId=bees) == ["Mia Lenz"]
+    assert admin.get("/api/children", params={"groupId": 999}).status_code == 404

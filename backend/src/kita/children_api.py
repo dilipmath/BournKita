@@ -2,8 +2,18 @@
 
 from dataclasses import asdict
 from datetime import date, datetime
+from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, UploadFile, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Query,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 from fastapi.concurrency import run_in_threadpool
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
@@ -282,8 +292,16 @@ def children_router(
 
     @router.get("")
     @not_about_one_child
-    def list_children(search: str = "") -> list[ChildSummaryOut]:
-        return [ChildSummaryOut.of(summary) for summary in children.summaries(search)]
+    def list_children(
+        search: str = "", group_id: Annotated[int | None, Query(alias="groupId")] = None
+    ) -> list[ChildSummaryOut]:
+        """All current Children, or a Group's (`groupId`), searched by name."""
+        summaries = children.summaries(search)
+        if group_id is not None:
+            with refusals_as_http_errors(_REFUSALS):
+                in_group = {child.id for child in groups.children_of(group_id)}
+            summaries = [summary for summary in summaries if summary.id in in_group]
+        return [ChildSummaryOut.of(summary) for summary in summaries]
 
     @router.post("", status_code=status.HTTP_201_CREATED, dependencies=admin_only)
     @creates_child

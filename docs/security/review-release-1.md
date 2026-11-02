@@ -39,9 +39,9 @@ No critical or high findings. Fixed in this review: missing browser security hea
 | F1 | No Content-Security-Policy, `nosniff` or framing protection | medium | **Fixed** (web server headers, e2e test) |
 | F2 | `serialize-javascript` 7.1.2 (build tool) has a known XSS | low (build only) | **Fixed** (7.1.4) |
 | F3 | PDF generator could fetch URLs or files named in its HTML | low (values are escaped) | **Fixed** (fetches nothing) |
-| S1 | Failed logins and lockouts are not logged | medium | **Open**: log a lockout (account ID, time), and many failed logins in a short time, without passwords or the typed email |
-| S2 | No login limit per network address (only per account): anyone in the network can guess passwords across accounts, or keep any account locked, an Admin's too | medium (Kita network only) | **Open**: limit login attempts per address, e.g. 20 per 10 minutes, and let an Admin unlock an account |
-| S5 | `POST /api/crash-reports` needs no login and has no limit; each report emails the developer, so it can flood that mailbox | low (Kita network only) | **Open**: limit reports per address, and email at most a few per hour (the log keeps all). The backup-failure route is refused by the web server from outside (checked by `backup/test-restore.sh`) |
+| S1 | Failed logins and lockouts are not logged | medium | **Fixed** (#37): every refused login is logged with the account's number and the network address, never the typed email or password; a lockout is also reported like a crash |
+| S2 | No login limit per network address (only per account): anyone in the network can guess passwords across accounts, or keep any account locked, an Admin's too | medium (Kita network only) | **Fixed** (#38): 20 failed logins from one address in 10 minutes refuse its logins (429) until the oldest is 10 minutes old; the address comes from the web server, which overwrites any such header a client sends; an Admin can unlock an account on the Staff accounts page |
+| S5 | `POST /api/crash-reports` needs no login and has no limit; each report emails the developer, so it can flood that mailbox | low (Kita network only) | **Fixed** (#39): at most 30 reports per address in 10 minutes (429), and at most 5 crash emails an hour from browsers (the API's own reports always go), the next one counting those left out; the log keeps all. The backup-failure route is refused by the web server from outside (checked by `backup/test-restore.sh`) |
 | S3 | 10 moderate/low findings in build tools (`workbox-build` chain) | low (build only) | **Accepted**; update `vite-plugin-pwa` when a fixed `workbox-build` is released |
 | S4 | 15 asserts (bandit B101) | info | **Accepted** |
 
@@ -59,7 +59,7 @@ Done as tests rather than by hand, so it is repeated on every change:
 ## 5. Before go-live
 
 - An independent reviewer (e.g. the carrier's IT or a security consultant) looks at this report and the production server once installed (H4): firewall, disk encryption, updates, that no port is forwarded.
-- Settle S1, S2 and S5 (tickets).
+- S1, S2 and S5 settled (#37, #38, #39).
 - Repeat the scans before each release: `pip-audit`, `npm audit`, `bandit`.
 
 Reviewer sign-off: ______________________  Date: ____________

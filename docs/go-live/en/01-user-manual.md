@@ -12,7 +12,7 @@ Open the app from the tablet's home screen (or `https://kita.home.arpa` in the b
 
 - **Your account.** An Admin creates it; you get an email with a link (valid for 7 days). Follow it and choose a password of at least 12 characters.
 - **Forgotten your password?** "Forgot your password?" on the login page sends you a link (valid for 1 hour).
-- **Locked out?** After 5 wrong passwords in a row the account is locked for 15 minutes. Choosing a new password unlocks it at once.
+- **Locked out?** After 5 wrong passwords in a row the account is locked for 15 minutes. Choosing a new password, or an Admin ("Unlock" on the Staff accounts page), unlocks it at once. After 20 failed logins from one tablet within 10 minutes, that tablet must wait up to 10 minutes.
 - **Logged out by itself?** After 30 minutes without a tap the app logs you out, so a tablet left lying around shows nothing. Just log in again.
 - Always "Log out" when you hand a tablet to someone else.
 

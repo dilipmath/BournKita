@@ -143,7 +143,7 @@ The link an active Staff member asks for when they forgot their password; it let
 _Avoid_: Recovery link, reset code
 
 **Lockout**:
-A temporary block on logging in to a Staff account after too many failed logins in a row. It ends by itself after the lockout period, or when the Staff member chooses a new password with a Password reset link. Not an account status.
+A temporary block on logging in to a Staff account after too many failed logins in a row. It ends by itself after the lockout period, when the Staff member chooses a new password with a Password reset link, or when an Admin unlocks the account. Not an account status. (Separately, too many failed logins from one network address refuse that address's logins for a while.)
 _Avoid_: Ban, suspension, deactivation
 
 ## Data protection

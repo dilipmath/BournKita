@@ -36,6 +36,23 @@ describe('child profiles', () => {
     expect(screen.queryByRole('link', { name: 'Mia Schmidt' })).toBeNull()
   })
 
+  it('filters the Children by Group', async () => {
+    fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': sessionAs('teacher'),
+      'GET /api/groups': { status: 200, body: [{ id: 2, name: 'Monkeys', icon: 'monkey', mine: true }] },
+      'GET /api/children?search=': { status: 200, body: [lenaSummary, mia] },
+      'GET /api/children?search=&groupId=2': { status: 200, body: [lenaSummary] },
+    })
+    renderAt('/children', <App />)
+    expect(await screen.findByRole('link', { name: 'Mia Schmidt' })).toBeInTheDocument()
+
+    await userEvent.selectOptions(await screen.findByRole('combobox', { name: 'Group' }), 'Monkeys')
+
+    await expect.poll(() => screen.queryByRole('link', { name: 'Mia Schmidt' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Lena Müller' })).toBeInTheDocument()
+  })
+
   it('lets an Admin create a Child profile and then shows it', async () => {
     const calls = fakeApi({
       'GET /api/health': health,

@@ -1,6 +1,8 @@
 """HTTP API for logging in and out, and the access check other endpoints depend on."""
 
+import logging
 from collections.abc import Callable
+from datetime import timedelta
 from typing import Annotated, Any, Literal
 
 from fastapi import (
@@ -16,11 +18,20 @@ from fastapi import (
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
+from kita.api_support import client_address, too_many
+from kita.attempt_limits import AttemptLimit
+from kita.clock import Clock
 from kita.identity import Identity, PasswordTooShort, Role, StaffMember
 from kita.mail import MailNotSent
 from kita.settings import Settings
 
+logger = logging.getLogger(__name__)
+
 SESSION_COOKIE = "kita_session"
+# Failed logins one network address may make in any LOGIN_PERIOD, whichever accounts they are
+# for; then its logins are refused (429) until the oldest of them is LOGIN_PERIOD old.
+MAX_FAILED_LOGINS_PER_ADDRESS = 20
+LOGIN_PERIOD = timedelta(minutes=10)
 
 SessionToken = Annotated[str | None, Cookie(alias=SESSION_COOKIE)]
 
@@ -145,8 +156,9 @@ def password_reset_router(identity: Identity) -> APIRouter:
     return router
 
 
-def identity_router(identity: Identity, settings: Settings) -> APIRouter:
+def identity_router(identity: Identity, settings: Settings, clock: Clock) -> APIRouter:
     router = APIRouter(prefix="/api/session")
+    failed_logins_by_address = AttemptLimit(clock, MAX_FAILED_LOGINS_PER_ADDRESS, LOGIN_PERIOD)
     cookie_options: dict[str, Any] = {
         "httponly": True,
         "secure": settings.session_cookie_secure,
@@ -168,10 +180,24 @@ def identity_router(identity: Identity, settings: Settings) -> APIRouter:
 
     @router.post("")
     def log_in(
-        credentials: Credentials, response: Response, previous_token: SessionToken = None
+        credentials: Credentials,
+        request: Request,
+        response: Response,
+        previous_token: SessionToken = None,
     ) -> Session:
-        result = identity.log_in(credentials.email, credentials.password)
+        address = client_address(request)
+        retry_after = failed_logins_by_address.retry_after(address)
+        if retry_after is not None:
+            logger.warning(
+                "Login refused from %s: too many failed logins (%d in %d minutes)",
+                address,
+                failed_logins_by_address.max_attempts,
+                failed_logins_by_address.period.total_seconds() // 60,
+            )
+            raise too_many("too_many_attempts", retry_after)
+        result = identity.log_in(credentials.email, credentials.password, address)
         if result is None:
+            failed_logins_by_address.record(address)
             # One answer for unknown email, wrong password and locked account, so accounts
             # cannot be probed.
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="invalid_credentials")

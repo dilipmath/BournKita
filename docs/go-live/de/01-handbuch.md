@@ -12,7 +12,7 @@ Die App vom Startbildschirm des Tablets öffnen (oder `https://kita.home.arpa` i
 
 - **Ihr Konto.** Eine Admin legt es an; Sie bekommen eine E-Mail mit einem Link (7 Tage gültig). Folgen Sie ihm und wählen Sie ein Passwort mit mindestens 12 Zeichen.
 - **Passwort vergessen?** „Passwort vergessen?“ auf der Anmeldeseite schickt Ihnen einen Link (1 Stunde gültig).
-- **Gesperrt?** Nach 5 falschen Passwörtern hintereinander ist das Konto 15 Minuten gesperrt. Ein neues Passwort hebt die Sperre sofort auf.
+- **Gesperrt?** Nach 5 falschen Passwörtern hintereinander ist das Konto 15 Minuten gesperrt. Ein neues Passwort, oder eine Admin („Entsperren“ unter Mitarbeiterkonten), hebt die Sperre sofort auf. Nach 20 fehlgeschlagenen Anmeldungen von einem Tablet in 10 Minuten muss dieses Tablet bis zu 10 Minuten warten.
 - **Von selbst abgemeldet?** Nach 30 Minuten ohne Tippen meldet die App Sie ab, damit ein liegen gelassenes Tablet nichts zeigt. Einfach wieder anmelden.
 - Immer „Abmelden“, bevor Sie ein Tablet weitergeben.
 

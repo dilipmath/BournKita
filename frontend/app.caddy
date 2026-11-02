@@ -15,7 +15,11 @@ handle /api/* {
 	request_body {
 		max_size 25MB
 	}
-	reverse_proxy api:8000
+	# Where the request came from, for the API's limits per address (e.g. failed logins).
+	# Overwrites any such header a client sends, so nobody can pretend to be another tablet.
+	reverse_proxy api:8000 {
+		header_up X-Kita-Client-Address {remote_host}
+	}
 }
 handle {
 	# The app runs only its own files (no inline scripts or styles, nothing from elsewhere), so

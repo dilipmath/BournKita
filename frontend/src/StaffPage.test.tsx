@@ -180,4 +180,22 @@ describe('staff accounts page', () => {
     expect(await screen.findByText('Only Admins can manage staff accounts.')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
+
+  it('shows a locked account and unlocks it', async () => {
+    const locked = { ...erzieherin, status: 'active', locked: true }
+    const calls = fakeApi({
+      'GET /api/staff': { status: 200, body: [leitung, locked] },
+      'DELETE /api/staff/2/lock': { status: 200, body: { ...locked, locked: false } },
+    })
+    renderAt('/staff', <StaffPage />)
+
+    expect(await screen.findByRole('row', { name: /erzieherin@kita.example/ })).toHaveTextContent(
+      /Locked after failed logins/,
+    )
+    await userEvent.click(within(row('erzieherin@kita.example')).getByRole('button', { name: 'Unlock' }))
+
+    await expect.poll(() => row('erzieherin@kita.example').textContent).not.toMatch(/Locked/)
+    expect(within(row('erzieherin@kita.example')).queryByRole('button', { name: 'Unlock' })).toBeNull()
+    expect(calls.map((call) => call.route)).toContain('DELETE /api/staff/2/lock')
+  })
 })

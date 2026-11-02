@@ -51,6 +51,7 @@ class StaffAccountOut(BaseModel):
     email: str
     role: Role
     status: AccountStatus
+    locked: bool
     # The Groups they work in.
     group_ids: list[int]
 
@@ -106,6 +107,12 @@ def staff_router(identity: Identity, groups: Groups) -> APIRouter:
     def change_active(account_id: int, change: ActiveChange, admin: Admin) -> StaffAccountOut:
         with refusals_as_http_errors(_REFUSALS):
             return out(identity.set_active(account_id, change.active, by=admin))
+
+    @router.delete("/{account_id}/lock")
+    def unlock(account_id: int) -> StaffAccountOut:
+        """Unlocks an account locked by failed logins."""
+        with refusals_as_http_errors(_REFUSALS):
+            return out(identity.unlock(account_id))
 
     @router.put("/{account_id}/groups")
     def choose_groups(account_id: int, choice: GroupsChoice) -> StaffAccountOut:
