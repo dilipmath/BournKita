@@ -51,3 +51,17 @@ describe('app navigation', () => {
     expect(screen.queryByRole('button', { name: 'Log in' })).toBeNull()
   })
 })
+
+describe('greeting', () => {
+  it('greets the Staff member by their display name', async () => {
+    const session = sessionAs('teacher')
+    fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': { ...session, body: { ...session.body, displayName: 'Aylin' } },
+      'GET /api/groups': { status: 200, body: [] },
+    })
+    renderAt('/', <App />)
+
+    expect(await screen.findByText('Logged in as Aylin')).toBeInTheDocument()
+  })
+})

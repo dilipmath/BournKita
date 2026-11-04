@@ -7,6 +7,7 @@ import {
   fetchStaffAccounts,
   sendNewLink,
   setActive,
+  setDisplayName,
   setStaffGroups,
   unlockAccount,
   type ListedGroup,
@@ -22,6 +23,26 @@ type Problem = { key: Refusal | 'somethingWentWrong' | 'accountCreatedEmailNotSe
 const roles: Role[] = ['admin', 'teacher', 'guest']
 const roleLabel = { admin: 'roleAdmin', teacher: 'roleTeacher', guest: 'roleGuest' } as const
 const statusLabel = { invited: 'statusInvited', active: 'statusActive', deactivated: 'statusDeactivated' } as const
+
+/** The field for changing one account's display name, saved with its own button. */
+function DisplayNameField({ account, onSave }: { account: StaffAccount; onSave: (name: string) => Promise<unknown> }) {
+  const { t } = useTranslation()
+  const [name, setName] = useState(account.displayName ?? '')
+  return (
+    <form
+      className="display-name"
+      onSubmit={(event) => {
+        event.preventDefault()
+        void onSave(name)
+      }}
+    >
+      <input maxLength={50} aria-label={t('displayNameOf', { email: account.email })} value={name} onChange={(event) => setName(event.target.value)} />
+      <button type="submit" disabled={name.trim() === (account.displayName ?? '')}>
+        {t('saveName')}
+      </button>
+    </form>
+  )
+}
 
 function RoleOptions() {
   const { t } = useTranslation()
@@ -40,6 +61,7 @@ export default function StaffPage() {
   const [notice, setNotice] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<Role>('teacher')
+  const [displayName, setNewDisplayName] = useState('')
   const [groups, setGroups] = useState<ListedGroup[]>([])
   // The account whose Groups are being saved: one change at a time, as each sends all of them.
   const [savingGroupsOf, setSavingGroupsOf] = useState<number | null>(null)
@@ -85,11 +107,18 @@ export default function StaffPage() {
 
   async function create(event: FormEvent) {
     event.preventDefault()
-    const created = await applyAccountChange(() => createStaffMember(email, role))
+    const created = await applyAccountChange(() => createStaffMember(email, role, displayName.trim() || null))
     if (created) {
       if (created.emailSent) setNotice(t('verificationSent', { email: created.email }))
       else setProblem({ key: 'accountCreatedEmailNotSent', email: created.email })
       setEmail('')
+      setNewDisplayName('')
+    }
+  }
+
+  async function saveDisplayName(account: StaffAccount, name: string) {
+    if (await applyAccountChange(() => setDisplayName(account.id, name))) {
+      setNotice(t('nameSaved', { email: account.email }))
     }
   }
 
@@ -127,6 +156,7 @@ export default function StaffPage() {
           <thead>
             <tr>
               <th scope="col">{t('emailAddress')}</th>
+              <th scope="col">{t('displayName')}</th>
               <th scope="col">{t('role')}</th>
               <th scope="col">{t('status')}</th>
               {groups.length > 0 && <th scope="col">{t('groups')}</th>}
@@ -138,7 +168,18 @@ export default function StaffPage() {
           <tbody>
             {accounts.map((account) => (
               <tr key={account.id}>
-                <th scope="row">{account.email}</th>
+                <th scope="row">
+                  {account.displayName && <span className="staff-name">{account.displayName}</span>}
+                  {account.email}
+                </th>
+                <td>
+                  {/* Keyed by the saved name, so the field starts afresh after a save. */}
+                  <DisplayNameField
+                    key={account.displayName ?? ''}
+                    account={account}
+                    onSave={(name) => saveDisplayName(account, name)}
+                  />
+                </td>
                 <td>
                   <select
                     aria-label={t('role')}
@@ -210,6 +251,10 @@ export default function StaffPage() {
         <label>
           {t('emailAddress')}
           <input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
+        </label>
+        <label>
+          {t('displayNameOptional')}
+          <input maxLength={50} value={displayName} onChange={(event) => setNewDisplayName(event.target.value)} />
         </label>
         <label>
           {t('newStaffMemberRole')}

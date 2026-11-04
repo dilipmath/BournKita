@@ -11,6 +11,7 @@ from kita.groups import GroupNotFound, Groups
 from kita.identity import (
     AccountNotFound,
     AccountStatus,
+    DisplayNameTooLong,
     EmailTaken,
     Identity,
     InvalidEmail,
@@ -26,8 +27,18 @@ from kita.mail import MailNotSent
 
 
 class NewStaffMember(BaseModel):
+    model_config = CAMEL_CASE
+
     email: str
     role: Role
+    display_name: str | None = None
+
+
+class DisplayNameChange(BaseModel):
+    model_config = CAMEL_CASE
+
+    # None or blank removes it.
+    display_name: str | None
 
 
 class RoleChange(BaseModel):
@@ -52,6 +63,7 @@ class StaffAccountOut(BaseModel):
     role: Role
     status: AccountStatus
     locked: bool
+    display_name: str | None
     # The Groups they work in.
     group_ids: list[int]
 
@@ -66,6 +78,7 @@ class CreatedStaffAccountOut(StaffAccountOut):
 
 _REFUSALS: Refusals = {
     AccountNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
+    DisplayNameTooLong: (status.HTTP_422_UNPROCESSABLE_CONTENT, "display_name_too_long"),
     EmailTaken: (status.HTTP_409_CONFLICT, "email_taken"),
     InvalidEmail: (status.HTTP_422_UNPROCESSABLE_CONTENT, "invalid_email"),
     LastAdmin: (status.HTTP_409_CONFLICT, "last_admin"),
@@ -95,7 +108,7 @@ def staff_router(identity: Identity, groups: Groups) -> APIRouter:
     @router.post("", status_code=status.HTTP_201_CREATED)
     def create_staff_member(new: NewStaffMember) -> CreatedStaffAccountOut:
         with refusals_as_http_errors(_REFUSALS):
-            created = identity.create_staff_member(new.email, new.role)
+            created = identity.create_staff_member(new.email, new.role, new.display_name)
         return CreatedStaffAccountOut(**asdict(created), group_ids=[])
 
     @router.put("/{account_id}/role")
@@ -107,6 +120,11 @@ def staff_router(identity: Identity, groups: Groups) -> APIRouter:
     def change_active(account_id: int, change: ActiveChange, admin: Admin) -> StaffAccountOut:
         with refusals_as_http_errors(_REFUSALS):
             return out(identity.set_active(account_id, change.active, by=admin))
+
+    @router.put("/{account_id}/display-name")
+    def change_display_name(account_id: int, change: DisplayNameChange) -> StaffAccountOut:
+        with refusals_as_http_errors(_REFUSALS):
+            return out(identity.set_display_name(account_id, change.display_name))
 
     @router.delete("/{account_id}/lock")
     def unlock(account_id: int) -> StaffAccountOut:

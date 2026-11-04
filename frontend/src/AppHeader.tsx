@@ -34,7 +34,7 @@ export default function AppHeader({ session, onLoggedOut }: { session: Session |
       </header>
       {session && (
         <section className="session">
-          <p>{t('loggedInAs', { email: session.email })}</p>
+          <p>{t('loggedInAs', { name: session.displayName ?? session.email })}</p>
           <nav aria-label={t('mainNavigation')}>
             {!isGuest && (
               <NavLink to="/" end>

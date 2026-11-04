@@ -61,6 +61,7 @@ class Session(BaseModel):
 
     email: str
     role: Role
+    display_name: str | None
     inactivity_timeout_minutes: int
 
 
@@ -175,6 +176,7 @@ def identity_router(identity: Identity, settings: Settings, clock: Clock) -> API
         return Session(
             email=staff_member.email,
             role=staff_member.role,
+            display_name=staff_member.display_name,
             inactivity_timeout_minutes=timeout_minutes,
         )
 

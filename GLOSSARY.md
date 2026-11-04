@@ -127,7 +127,7 @@ A read-only Role that never sees personal data: it sees the Kita-wide Calendar o
 _Avoid_: Visitor, anonymous user
 
 **Staff account**:
-A Staff member's login, identified by their email address, with a Role and an account status.
+A Staff member's login, identified by their email address, with a Role and an account status. It may have a display name (e.g. "Aylin"), given by an Admin, by which the app greets the Staff member; without one, the app uses the email address.
 _Avoid_: User, login (as a noun for the record)
 
 **Account status**:

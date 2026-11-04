@@ -199,3 +199,57 @@ describe('staff accounts page', () => {
     expect(calls.map((call) => call.route)).toContain('DELETE /api/staff/2/lock')
   })
 })
+
+describe('display names', () => {
+  it('gives the new Staff member a display name, shown with their email address', async () => {
+    const calls = fakeApi({
+      'GET /api/staff': { status: 200, body: [leitung] },
+      'POST /api/staff': { status: 201, body: { ...erzieherin, displayName: 'Aylin', emailSent: true } },
+    })
+    renderAt('/staff', <StaffPage />)
+    await screen.findByRole('row', { name: /leitung@kita.example/ })
+
+    await userEvent.type(screen.getByLabelText('Email address'), 'erzieherin@kita.example')
+    await userEvent.type(screen.getByLabelText('Display name (optional)'), 'Aylin')
+    await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
+
+    expect(await screen.findByRole('row', { name: /erzieherin@kita.example/ })).toHaveTextContent(/Aylin/)
+    expect(calls).toContainEqual({
+      route: 'POST /api/staff',
+      body: { email: 'erzieherin@kita.example', role: 'teacher', displayName: 'Aylin' },
+    })
+  })
+
+  it('changes a display name', async () => {
+    const calls = fakeApi({
+      'GET /api/staff': { status: 200, body: [leitung, erzieherin] },
+      'PUT /api/staff/2/display-name': { status: 200, body: { ...erzieherin, displayName: 'Aylin' } },
+    })
+    renderAt('/staff', <StaffPage />)
+    await screen.findByRole('row', { name: /erzieherin@kita.example/ })
+
+    const name = within(row('erzieherin@kita.example')).getByRole('textbox', { name: 'Display name of erzieherin@kita.example' })
+    await userEvent.type(name, 'Aylin')
+    await userEvent.click(within(row('erzieherin@kita.example')).getByRole('button', { name: 'Save name' }))
+
+    expect(calls).toContainEqual({ route: 'PUT /api/staff/2/display-name', body: { displayName: 'Aylin' } })
+    expect(await screen.findByRole('status')).toHaveTextContent('Name saved for erzieherin@kita.example.')
+  })
+
+  it('says when a display name is too long', async () => {
+    fakeApi({
+      'GET /api/staff': { status: 200, body: [leitung, erzieherin] },
+      'PUT /api/staff/2/display-name': { status: 422, body: { detail: 'display_name_too_long' } },
+    })
+    renderAt('/staff', <StaffPage />)
+    await screen.findByRole('row', { name: /erzieherin@kita.example/ })
+
+    await userEvent.type(
+      within(row('erzieherin@kita.example')).getByRole('textbox', { name: 'Display name of erzieherin@kita.example' }),
+      'A very long name',
+    )
+    await userEvent.click(within(row('erzieherin@kita.example')).getByRole('button', { name: 'Save name' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('A display name can have at most 50 characters.')
+  })
+})

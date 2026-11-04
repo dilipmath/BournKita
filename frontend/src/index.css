@@ -188,10 +188,17 @@ a.button.primary {
   overflow-wrap: anywhere;
 }
 
-.staff .actions {
+.staff .actions,
+.staff .display-name {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* The display name above the email address it belongs to. */
+.staff .staff-name {
+  display: block;
+  font-weight: 600;
 }
 
 select {

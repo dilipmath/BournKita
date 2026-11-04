@@ -46,6 +46,7 @@ Role = Literal["admin", "teacher", "guest"]
 AccountStatus = Literal["invited", "active", "deactivated"]
 
 MIN_PASSWORD_LENGTH = 12
+MAX_DISPLAY_NAME_LENGTH = 50
 VERIFICATION_LINK_VALIDITY = timedelta(days=7)
 PASSWORD_RESET_LINK_VALIDITY = timedelta(hours=1)
 # This many failed logins in a row lock an account for LOCKOUT_PERIOD.
@@ -66,6 +67,8 @@ users = Table(
     Column("deactivated_at", DateTime(timezone=True)),
     Column("failed_logins", Integer, nullable=False, server_default="0"),
     Column("locked_until", DateTime(timezone=True)),
+    # What the app calls them (e.g. "Aylin"); None until an Admin gives one.
+    Column("display_name", String(MAX_DISPLAY_NAME_LENGTH)),
     CheckConstraint(f"role IN {get_args(Role)}", name="role"),
     UniqueConstraint("email"),
 )
@@ -104,6 +107,7 @@ _ACCOUNT_COLUMNS = (
     users.c.email_verified_at,
     users.c.deactivated_at,
     users.c.locked_until,
+    users.c.display_name,
 )
 
 
@@ -111,6 +115,7 @@ _ACCOUNT_COLUMNS = (
 class StaffMember:
     email: str
     role: Role
+    display_name: str | None
 
 
 @dataclass(frozen=True)
@@ -121,6 +126,7 @@ class StaffAccount:
     status: AccountStatus
     # Locked by failed logins, for now (see MAX_FAILED_LOGINS).
     locked: bool
+    display_name: str | None
 
 
 @dataclass(frozen=True)
@@ -161,6 +167,10 @@ class NotInvited(Exception):
     """Only accounts that have not verified their email address yet get a new link."""
 
 
+class DisplayNameTooLong(Exception):
+    """Display names have at most MAX_DISPLAY_NAME_LENGTH characters."""
+
+
 _hasher = PasswordHasher()
 # Verified against when the email is unknown, so a wrong email takes as long as a wrong password.
 _DUMMY_HASH = _hasher.hash("not a real password")
@@ -181,6 +191,14 @@ def _valid_email(email: str) -> str:
     return normalise_email(email)
 
 
+def _display_name(name: str | None) -> str | None:
+    """The name as stored: without surrounding spaces, None when blank."""
+    name = (name or "").strip()
+    if len(name) > MAX_DISPLAY_NAME_LENGTH:
+        raise DisplayNameTooLong
+    return name or None
+
+
 def _token_hash(token: str) -> str:
     # Only the hash is stored, so a database dump cannot be used to take over sessions or accounts.
     return hashlib.sha256(token.encode()).hexdigest()
@@ -192,7 +210,7 @@ def _to_account(row: Row[*tuple[Any, ...]], now: datetime) -> StaffAccount:
     else:
         status = "active" if row.email_verified_at is not None else "invited"
     locked = row.locked_until is not None and row.locked_until > now
-    return StaffAccount(row.id, row.email, row.role, status, locked)
+    return StaffAccount(row.id, row.email, row.role, status, locked, row.display_name)
 
 
 class Identity:
@@ -280,6 +298,7 @@ class Identity:
                     users.c.id,
                     users.c.email,
                     users.c.role,
+                    users.c.display_name,
                     users.c.password_hash,
                     users.c.locked_until,
                 )
@@ -334,7 +353,7 @@ class Identity:
                     last_active_at=now,
                 )
             )
-            return (token, StaffMember(email=user.email, role=user.role)), None
+            return (token, StaffMember(user.email, user.role, user.display_name)), None
 
     def roles_of(self, emails: Collection[str]) -> dict[str, Role]:
         """The Role each of these Staff accounts has now, by email address; for a Data-access
@@ -353,7 +372,7 @@ class Identity:
         now = self._clock.now()
         with self._engine.begin() as connection:
             row = connection.execute(
-                select(users.c.email, users.c.role)
+                select(users.c.email, users.c.role, users.c.display_name)
                 .join(sessions, sessions.c.user_id == users.c.id)
                 .where(
                     sessions.c.token_hash == _token_hash(token),
@@ -368,7 +387,7 @@ class Identity:
                 .where(sessions.c.token_hash == _token_hash(token))
                 .values(last_active_at=now)
             )
-            return StaffMember(email=row.email, role=row.role)
+            return StaffMember(row.email, row.role, row.display_name)
 
     def log_out(self, token: str) -> None:
         with self._engine.begin() as connection:
@@ -384,15 +403,23 @@ class Identity:
         with self._engine.connect() as connection:
             return self._account(connection, account_id)
 
-    def create_staff_member(self, email: str, role: Role) -> "CreatedStaffAccount":
+    def create_staff_member(
+        self, email: str, role: Role, display_name: str | None = None
+    ) -> "CreatedStaffAccount":
         """Creates an invited account and emails a link for choosing a password. If the email
         cannot be sent, the account still exists and an Admin can send a new link later."""
         email = _valid_email(email)
+        display_name = _display_name(display_name)
         try:
             with self._engine.begin() as connection:
                 user_id = connection.scalar(
                     insert(users)
-                    .values(email=email, role=role, created_at=self._clock.now())
+                    .values(
+                        email=email,
+                        role=role,
+                        display_name=display_name,
+                        created_at=self._clock.now(),
+                    )
                     .returning(users.c.id)
                 )
                 assert user_id is not None
@@ -407,7 +434,7 @@ class Identity:
             email_sent = True
         except MailNotSent:
             email_sent = False
-        return CreatedStaffAccount(user_id, email, role, "invited", False, email_sent)
+        return CreatedStaffAccount(user_id, email, role, "invited", False, display_name, email_sent)
 
     def send_new_link(self, account_id: int) -> None:
         """Replaces an invited account's verification link, e.g. after it expired.
@@ -497,6 +524,18 @@ class Identity:
             if role != "admin":
                 self._ensure_another_active_admin(connection, account)
             connection.execute(update(users).where(users.c.id == account_id).values(role=role))
+            return self._account(connection, account_id)
+
+    def set_display_name(self, account_id: int, display_name: str | None) -> StaffAccount:
+        """Gives the account a display name; None or blank removes it."""
+        display_name = _display_name(display_name)
+        with self._engine.begin() as connection:
+            account = self._account(connection, account_id)
+            connection.execute(
+                update(users).where(users.c.id == account.id).values(display_name=display_name)
+            )
+            # Not the name itself: logs leave the server more easily than its database.
+            logger.info("Display name of Staff account %d changed by an Admin", account.id)
             return self._account(connection, account_id)
 
     def unlock(self, account_id: int) -> StaffAccount:

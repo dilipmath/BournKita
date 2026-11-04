@@ -9,7 +9,13 @@ export async function fetchHealth(): Promise<Health> {
 
 // Who is logged in, and how long the session survives without activity.
 // A Guest sees the Kita-wide calendar only, read-only.
-export type Session = { email: string; role: 'admin' | 'teacher' | 'guest'; inactivityTimeoutMinutes: number }
+// displayName: what the app calls them, null until an Admin gives one.
+export type Session = {
+  email: string
+  role: 'admin' | 'teacher' | 'guest'
+  displayName: string | null
+  inactivityTimeoutMinutes: number
+}
 
 /** The current session, or null when nobody is logged in. */
 export async function fetchCurrentSession(): Promise<Session | null> {
@@ -37,6 +43,7 @@ const refusals = {
   password_too_short: 'passwordTooShort',
   mail_not_sent: 'mailNotSent',
   not_found: 'notFound',
+  display_name_too_long: 'displayNameTooLong',
   name_required: 'nameRequired',
   too_long: 'tooLong',
   already_given: 'alreadyGiven',
@@ -101,6 +108,7 @@ export type StaffAccount = {
   status: 'invited' | 'active' | 'deactivated'
   // Locked by failed logins, for now.
   locked: boolean
+  displayName: string | null
   groupIds: number[]
 }
 
@@ -115,13 +123,17 @@ export async function fetchStaffAccounts(): Promise<StaffAccount[] | Refusal> {
 export type CreatedStaffAccount = StaffAccount & { emailSent: boolean }
 
 /** Creates an invited account; the API emails a link for choosing a password. */
-export async function createStaffMember(email: string, role: Role): Promise<CreatedStaffAccount | Refusal> {
-  const response = await sendJson('/api/staff', 'POST', { email, role })
+export async function createStaffMember(
+  email: string,
+  role: Role,
+  displayName: string | null = null,
+): Promise<CreatedStaffAccount | Refusal> {
+  const response = await sendJson('/api/staff', 'POST', { email, role, ...(displayName && { displayName }) })
   if (!response.ok) return refusalOf(response, 'Creating the account')
   return (await response.json()) as CreatedStaffAccount
 }
 
-async function changeStaffAccount(id: number, change: 'role' | 'active', body: object): Promise<StaffAccount | Refusal> {
+async function changeStaffAccount(id: number, change: 'role' | 'active' | 'display-name', body: object): Promise<StaffAccount | Refusal> {
   const response = await sendJson(`/api/staff/${id}/${change}`, 'PUT', body)
   if (!response.ok) return refusalOf(response, 'Changing the account')
   return (await response.json()) as StaffAccount
@@ -133,6 +145,11 @@ export function changeRole(id: number, role: Role): Promise<StaffAccount | Refus
 
 export function setActive(id: number, active: boolean): Promise<StaffAccount | Refusal> {
   return changeStaffAccount(id, 'active', { active })
+}
+
+/** Gives the account a display name; a blank one removes it. */
+export function setDisplayName(id: number, displayName: string): Promise<StaffAccount | Refusal> {
+  return changeStaffAccount(id, 'display-name', { displayName })
 }
 
 /** Ends a lock by failed logins at once. */

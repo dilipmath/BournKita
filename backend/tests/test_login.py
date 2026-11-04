@@ -16,7 +16,7 @@ def test_first_admin_created_by_the_setup_command_can_log_in(
     response = log_in(client)
 
     assert response.status_code == 200
-    session = {"email": EMAIL, "role": "admin", "inactivityTimeoutMinutes": 30}
+    session = {"email": EMAIL, "role": "admin", "displayName": None, "inactivityTimeoutMinutes": 30}
     assert response.json() == session
     assert client.get("/api/session").json() == session
 
