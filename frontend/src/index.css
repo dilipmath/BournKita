@@ -5,7 +5,7 @@
   --ok: #1f7a3a;
   --bad: #b42318;
   --surface: #ffffff;
-  --border: #c9c4ba;
+  --border: #8a8478;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   font-size: 20px;
   line-height: 1.5;
@@ -21,7 +21,7 @@
     --ok: #6fd18f;
     --bad: #ff8a7a;
     --surface: #22252a;
-    --border: #4a4f57;
+    --border: #7a808a;
   }
 }
 

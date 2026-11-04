@@ -18,7 +18,7 @@ Mitarbeiter:innen mit Grundkenntnissen am Computer, ein Tablet in einer Hand, of
 | **Kontrast von Text** (WCAG 1.4.3, 4,5:1) | Text #1f2328 auf #fdfbf7 | 15,3:1 (dunkler Modus 14,7:1) | ✓ |
 | | Grün (Akzent) #2f6f4f auf dem Hintergrund; helle Schrift auf grünen Knöpfen | je 5,8:1 (dunkler Modus 8,6:1) | ✓ |
 | | Rot (Allergien, Gefahr) #b42318 auf dem Hintergrund | 6,4:1 (dunkler Modus 7,7:1) | ✓ |
-| **Kontrast von Umrissen** (WCAG 1.4.11, 3:1 für das, was zeigt, wo ein Feld oder Knopf ist) | Rand #c9c4ba auf dem Hintergrund und auf Karten | **1,7:1** (dunkler Modus 1,9 bis 2,1:1) | ✗ |
+| **Kontrast von Umrissen** (WCAG 1.4.11, 3:1 für das, was zeigt, wo ein Feld oder Knopf ist) | Rand #8a8478 auf dem Hintergrund und auf Karten (dunkler Modus #7a808a) | 3,6:1 auf dem Hintergrund, 3,7:1 auf Karten (dunkler Modus 4,4:1 und 3,9:1) | ✓ |
 | **Fokus** | Ein deutlicher Rahmen um das, was den Tastaturfokus hat | 3px-Rahmen in der Akzentfarbe | ✓ |
 | **Symbole mit Text** | Nie ein Symbol allein: Gruppensymbole stehen neben dem Namen der Gruppe; Allergien zeigen z. B. „⚠ Allergien: Peanuts“ | **Im Monatskalender zeigen Termine einer Gruppe nur ihr Symbol** (der Name ist nur für Bildschirmleser da) | ✗ |
 | **Gruppensymbole** | Jede Gruppe hat ein Tier- oder Pflanzensymbol, in der Gruppenauswahl, in „Heute“ und im Kalender | — | ✓ |
@@ -29,8 +29,7 @@ Mitarbeiter:innen mit Grundkenntnissen am Computer, ein Tablet in einer Hand, of
 
 ## Noch nicht erfüllt (nach dem Test beheben, wenn er es bestätigt)
 
-1. **Kontrast von Umrissen:** Ränder von Feldern und Knöpfen sind zu hell (1,7:1, nötig 3:1). Ein dunklerer Rand, z. B. #8a8478 (3,6:1), würde reichen.
-2. **Einträge im Monatskalender** (Termine, Geburtstage) sind 32px hoch, mit 14px Schrift auf dem Handy, und Termine einer Gruppe zeigen nur ihr Symbol. Größere machen das Monatsraster viel höher; Wochen- und Listenansicht sind die Ausweichmöglichkeit. Im Test prüfen, ob die Mitarbeiter:innen damit zurechtkommen.
+1. **Einträge im Monatskalender** (Termine, Geburtstage) sind 32px hoch, mit 14px Schrift auf dem Handy, und Termine einer Gruppe zeigen nur ihr Symbol. Größere machen das Monatsraster viel höher; Wochen- und Listenansicht sind die Ausweichmöglichkeit. Im Test prüfen, ob die Mitarbeiter:innen damit zurechtkommen.
 
 ## Worte und Aufbau
 

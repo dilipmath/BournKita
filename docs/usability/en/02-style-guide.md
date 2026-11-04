@@ -18,7 +18,7 @@ Staff with basic computer skills, on a tablet held in one hand, often in a hurry
 | **Text contrast** (WCAG 1.4.3, 4.5:1) | Text #1f2328 on #fdfbf7 | 15.3:1 (dark mode 14.7:1) | ✓ |
 | | Green (accent) #2f6f4f on the background; light text on green buttons | 5.8:1 each (dark mode 8.6:1) | ✓ |
 | | Red (Alerts, danger) #b42318 on the background | 6.4:1 (dark mode 7.7:1) | ✓ |
-| **Outline contrast** (WCAG 1.4.11, 3:1 for what shows where a field or button is) | Border #c9c4ba on the background and on cards | **1.7:1** (dark mode 1.9 to 2.1:1) | ✗ |
+| **Outline contrast** (WCAG 1.4.11, 3:1 for what shows where a field or button is) | Border #8a8478 on the background and on cards (dark mode #7a808a) | 3.6:1 on the background, 3.7:1 on cards (dark mode 4.4:1 and 3.9:1) | ✓ |
 | **Focus** | A clear outline around whatever has the keyboard focus | 3px outline in the accent colour | ✓ |
 | **Icons with text** | Never an icon alone: Group icons stand next to the Group's name; Alerts show e.g. "⚠ Allergies: Peanuts" | **In the month calendar, a Group's Events show only its icon** (the name is there for screen readers only) | ✗ |
 | **Group icons** | Each Group has an animal or plant icon, shown in the Group picker, the Today view and the Calendar | — | ✓ |
@@ -29,8 +29,7 @@ Staff with basic computer skills, on a tablet held in one hand, often in a hurry
 
 ## Not met yet (to fix after the test, if it confirms them)
 
-1. **Outline contrast:** borders of fields and buttons are too light (1.7:1, needs 3:1). A darker border, e.g. #8a8478 (3.6:1), would meet it.
-2. **Month calendar chips** (Events, Birthdays) are 32px tall, with 14px text on phones, and a Group's Events show only its icon. Bigger chips make the month grid much taller; the week and agenda views are the fallback. Check in the test whether staff manage.
+1. **Month calendar chips** (Events, Birthdays) are 32px tall, with 14px text on phones, and a Group's Events show only its icon. Bigger chips make the month grid much taller; the week and agenda views are the fallback. Check in the test whether staff manage.
 
 ## Words and layout
 
