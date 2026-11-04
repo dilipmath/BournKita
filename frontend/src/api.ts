@@ -611,6 +611,32 @@ export async function removeAbsence(childId: number, absenceId: number): Promise
   return true
 }
 
+// A Group's day in numbers, for the Kita overview: here, gone, absent and notYet add up to expected.
+export type GroupDay = Group & {
+  mine: boolean
+  expected: number
+  here: number
+  gone: number
+  absent: number
+  notYet: number
+  // Children with an Alert who are here now.
+  alertsHere: number
+  birthdays: ChildSummary[]
+}
+// Today at the whole Kita: each Group's day (the Admin's own first), and the Kita-wide counts.
+export type KitaOverview = {
+  day: string
+  groups: GroupDay[]
+  kita: { stillCheckedIn: number; withoutGroup: ChildSummary[]; incidentsToday: number }
+}
+
+/** Today at the whole Kita. Admins only. */
+export async function fetchOverview(): Promise<KitaOverview> {
+  const response = await fetch('/api/overview')
+  if (!response.ok) throw new Error(`Loading the Kita overview failed: ${response.status}`)
+  return (await response.json()) as KitaOverview
+}
+
 /** A Group's dashboard, or null when there is no such Group. */
 export async function fetchGroupDashboard(id: number): Promise<GroupDashboard | null> {
   const response = await fetch(`/api/groups/${id}`)

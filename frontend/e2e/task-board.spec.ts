@@ -18,9 +18,8 @@ test('Staff drag a Task across their Group’s board by touch', async ({ page })
   await expect(page.getByRole('heading', { name: groupName })).toBeVisible()
 
   await page.getByRole('link', { name: 'Home' }).tap()
-  // The start page: only its Group picker offers this.
-  await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
-  await page.getByLabel('Group', { exact: true }).selectOption({ label: `🦉 ${groupName}` })
+  // An Admin's start page, the Kita overview: a tile for each Group.
+  await page.getByRole('link', { name: new RegExp(groupName) }).tap()
   await page.getByRole('link', { name: 'Tasks' }).tap()
   await expect(page.getByRole('heading', { name: `Task board: ${groupName}` })).toBeVisible()
 

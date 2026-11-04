@@ -14,7 +14,8 @@ test('the Emergency button in a Group prints its emergency list as a PDF', async
   await newGroup.getByRole('button', { name: 'Create Group' }).tap()
   await expect(page.getByRole('heading', { name: groupName })).toBeVisible()
   await page.getByRole('link', { name: 'Home' }).tap()
-  await page.getByLabel('Group', { exact: true }).selectOption({ label: `🦉 ${groupName}` })
+  // An Admin's start page, the Kita overview: a tile for each Group.
+  await page.getByRole('link', { name: new RegExp(groupName) }).tap()
 
   // Opened in a tab of its own, with the tablet's session: a PDF the browser shows and prints.
   const pdf = page.context().waitForEvent('response', (response) => response.url().includes('/api/emergency-list'))

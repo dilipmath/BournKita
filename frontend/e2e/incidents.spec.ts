@@ -24,9 +24,8 @@ test('an incident reported from the Today view is in the log, where the Admin fo
   await expect(group).not.toHaveValue('')
 
   await page.getByRole('link', { name: 'Home' }).tap()
-  // The start page: only its Group picker offers this.
-  await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
-  await page.getByLabel('Group', { exact: true }).selectOption({ label: `🐸 ${groupName}` })
+  // An Admin's start page, the Kita overview: a tile for each Group.
+  await page.getByRole('link', { name: new RegExp(groupName) }).tap()
   const card = page.getByRole('listitem', { name })
   await card.getByRole('button', { name: `Report incident: ${name}` }).tap()
   const form = card.getByRole('form', { name: `Incident of ${name}` })

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { e2eAdmin, logInAsAdmin } from './credentials.ts'
 
-test('an Admin sets up a Group, and the start page leads to its dashboard', async ({ page }) => {
+test('an Admin sets up a Group, and the Kita overview leads to its dashboard', async ({ page }) => {
   // Unique per run, since the stack's database keeps data between runs.
   const run = Date.now()
   const groupName = `Monkeys ${run}`
@@ -33,12 +33,12 @@ test('an Admin sets up a Group, and the start page leads to its dashboard', asyn
   await expect(works).toBeChecked()
 
   await page.getByRole('link', { name: 'Home' }).tap()
-  await page.getByLabel('Group', { exact: true }).selectOption({ label: `🐒 ${groupName}` })
+  // An Admin's start page, the Kita overview: a tile for each Group.
+  await page.getByRole('link', { name: new RegExp(groupName) }).tap()
   await expect(page.getByRole('heading', { name: groupName, level: 2 })).toBeVisible()
   await expect(page.getByRole('link', { name: `Lena ${lastName}` })).toBeVisible()
 
-  // This tablet remembers the Group.
+  // Its tile counts the day.
   await page.getByRole('link', { name: 'Home' }).tap()
-  await page.getByRole('link', { name: `Open ${groupName}` }).tap()
-  await expect(page.getByRole('heading', { name: groupName, level: 2 })).toBeVisible()
+  await expect(page.getByRole('link', { name: new RegExp(groupName) })).toContainText('Not here yet 1')
 })

@@ -60,6 +60,8 @@ from kita.incidents import Incidents
 from kita.incidents_api import incidents_router
 from kita.jobs import run_regularly
 from kita.mail import Mailer, mailer_from_settings
+from kita.overview import KitaOverview
+from kita.overview_api import overview_router
 from kita.parents import Parents
 from kita.parents_api import parents_router
 from kita.photos import DiskFileStore, FileStore, Photos
@@ -193,6 +195,8 @@ def create_app(
     app.include_router(
         groups_router(identity, groups, alerts, attendance, birthdays, photos, audited_route_class)
     )
+    overview = KitaOverview(groups, children, attendance, alerts, birthdays, incidents)
+    app.include_router(overview_router(identity, overview))
     emergency_lists = EmergencyLists(clock, children, groups, attendance, alerts, parents, contacts)
     app.include_router(emergency_list_router(identity, emergency_lists, audited_route_class))
     app.include_router(tasks_router(identity, Tasks(engine, clock)))

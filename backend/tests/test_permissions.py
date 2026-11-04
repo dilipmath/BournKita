@@ -61,7 +61,7 @@ def test_a_teacher_cannot_change_anything_but_the_days_work(
 
 
 # What only Admins may read: the Staff accounts, the Audit log, the Archive, Feedback, the
-# Holidays imported, and a Parent's data export (Data-access request).
+# Holidays imported, a Parent's data export (Data-access request) and the Kita overview.
 ADMIN_READS = [
     "/api/staff",
     "/api/audit-log",
@@ -69,6 +69,7 @@ ADMIN_READS = [
     "/api/feedback",
     "/api/holidays",
     "/api/parents/{parent_id}/export",
+    "/api/overview",
 ]
 
 

@@ -44,6 +44,10 @@ _Avoid_: Class, room, Gruppe (in code and docs)
 The page a Staff member lands on after picking a Group, also called the Today view: that Group's day at the Kita. Each Child's photo, Attendance or Absence, their Alerts, and today's Birthdays; Staff check Children in and out and record Absences here. Before a Child is checked out, it shows who may pick them up.
 _Avoid_: Group page, overview
 
+**Kita overview**:
+An Admin's start page: today at the whole Kita. For each Group, how many of its Children are here, gone home, absent or not here yet, how many with Alerts are here, and whose Birthday it is; for the Kita, who is still checked in, which Children are in no Group, and how many Incidents happened today. Counts and names only, never what an Alert, Absence or Incident says.
+_Avoid_: Dashboard (that is a Group's), admin home
+
 **Attendance**:
 Whether a Child is at the Kita today: checked in when they arrive and checked out when they leave, each once a day, at the Kita's local time. A mistaken step can be undone. Each day starts afresh.
 _Avoid_: Presence list, Anwesenheit (in code and docs), register

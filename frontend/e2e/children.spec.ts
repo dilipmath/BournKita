@@ -6,7 +6,7 @@ test('an Admin creates, finds, edits and deletes a Child profile', async ({ page
   const lastName = `Müller${Date.now()}`
   await logInAsAdmin(page)
 
-  await page.getByRole('link', { name: 'Children' }).tap()
+  await page.getByRole('link', { name: 'Children', exact: true }).tap()
   await page.getByRole('link', { name: 'New Child profile' }).tap()
   await page.getByLabel('First name').fill('Lena')
   await page.getByLabel('Last name').fill(lastName)

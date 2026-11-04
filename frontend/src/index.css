@@ -528,6 +528,47 @@ main.with-navigation {
   white-space: nowrap;
 }
 
+/* Group tiles on the start page: each Group's day; one tap opens it. */
+.group-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 96px;
+  padding: 16px;
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+}
+
+.group-tile:hover,
+.group-tile:focus-visible {
+  border-color: var(--accent);
+}
+
+.group-tile-name {
+  font-size: 1.2rem;
+}
+
+.group-tile-alerts {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+.kita-today p {
+  margin: 4px 0;
+}
+
 .administration ul {
   display: flex;
   flex-direction: column;

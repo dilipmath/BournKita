@@ -223,6 +223,17 @@ class Groups:
             ).all()
         return [ChildSummary(row.id, row.first_name, row.last_name) for row in rows]
 
+    def children_without_group(self) -> list[ChildSummary]:
+        """The Children in no Group, by first name: for an Admin to place."""
+        with transaction(self._engine) as connection:
+            rows = connection.execute(
+                select(children.c.id, children.c.first_name, children.c.last_name)
+                .outerjoin(child_groups, child_groups.c.child_id == children.c.id)
+                .where(child_groups.c.child_id.is_(None), CURRENT)
+                .order_by(children.c.first_name, children.c.last_name, children.c.id)
+            ).all()
+        return [ChildSummary(row.id, row.first_name, row.last_name) for row in rows]
+
     def set_staff_groups(self, account_id: int, group_ids: Sequence[int]) -> list[int]:
         """Says which Groups the Staff member works in, instead of any before; returns them by
         ID."""

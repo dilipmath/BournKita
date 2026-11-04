@@ -25,9 +25,8 @@ test('at the door, a Child is checked in and out by tap, and another marked abse
   }
 
   await page.getByRole('link', { name: 'Home' }).tap()
-  // The start page: only its Group picker offers this.
-  await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
-  await page.getByLabel('Group', { exact: true }).selectOption({ label: `🦔 ${groupName}` })
+  // An Admin's start page, the Kita overview: a tile for each Group.
+  await page.getByRole('link', { name: new RegExp(groupName) }).tap()
   const lena = page.getByRole('listitem', { name: `Lena ${lastName}` })
   const mia = page.getByRole('listitem', { name: `Mia ${lastName}` })
   await expect(lena).toContainText('Not here yet')

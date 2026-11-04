@@ -40,9 +40,8 @@ test('an Admin records an allergy, and it shows on the profile and the Group das
   await page.getByRole('link', { name: 'Home' }).tap()
   // The profile has a Group drop-down too: pick from the start page's only once that page shows.
   // (The address changes before the new page is drawn, so waiting for it is not enough.)
-  // The start page: only its Group picker offers this.
-  await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
-  await page.getByLabel('Group', { exact: true }).selectOption({ label: `🐝 ${groupName}` })
+  // An Admin's start page, the Kita overview: a tile for each Group.
+  await page.getByRole('link', { name: new RegExp(groupName) }).tap()
   const lena = page.getByRole('listitem').filter({ has: page.getByRole('link', { name: `Lena ${lastName}` }) })
   await expect(lena).toContainText('Alerts: Peanuts')
 })

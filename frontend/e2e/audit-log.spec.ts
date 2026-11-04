@@ -6,7 +6,7 @@ test('viewing and changing a Child profile shows up in the audit log', async ({ 
   const lastName = `Audit${Date.now()}`
   await logInAsAdmin(page)
 
-  await page.getByRole('link', { name: 'Children' }).tap()
+  await page.getByRole('link', { name: 'Children', exact: true }).tap()
   await page.getByRole('link', { name: 'New Child profile' }).tap()
   await page.getByLabel('First name').fill('Jonas')
   await page.getByLabel('Last name').fill(lastName)

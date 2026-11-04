@@ -20,6 +20,7 @@ from sqlalchemy import (
     Table,
     Text,
     Time,
+    func,
     insert,
     select,
     update,
@@ -253,6 +254,17 @@ class Incidents:
                 )
             )
             return self._loaded(connection, ids)
+
+    def count_on(self, day: date) -> int:
+        """How many Incidents happened on the day, to the current Children."""
+        with transaction(self._engine) as connection:
+            counted: int = connection.execute(
+                select(func.count())
+                .select_from(incidents)
+                .join(children, children.c.id == incidents.c.child_id)
+                .where(incidents.c.happened_on == day, CURRENT)
+            ).scalar_one()
+        return counted
 
     def log(self, matching: IncidentFilter) -> list[Incident]:
         """The Incidents matching, newest first."""

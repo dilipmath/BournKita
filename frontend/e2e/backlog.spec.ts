@@ -18,9 +18,8 @@ test('Staff plan a Task and put the backlog in order by touch', async ({ page })
 
   await page.getByRole('link', { name: 'Home' }).tap()
   // Pick from the start page's drop-down only once that page shows.
-  // The start page: only its Group picker offers this.
-  await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
-  await page.getByLabel('Group', { exact: true }).selectOption({ label: `🦊 ${groupName}` })
+  // An Admin's start page, the Kita overview: a tile for each Group.
+  await page.getByRole('link', { name: new RegExp(groupName) }).tap()
   await page.getByRole('link', { name: 'Tasks' }).tap()
 
   const toDo = page.getByRole('region', { name: 'To do' })

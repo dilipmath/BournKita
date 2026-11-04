@@ -10,6 +10,7 @@ import AuditLogPage from './AuditLogPage'
 import CalendarPage from './CalendarPage'
 import HolidaysPage from './HolidaysPage'
 import IncidentLogPage from './IncidentLogPage'
+import KitaOverviewPage from './KitaOverviewPage'
 import ParentPage, { ParentEditPage } from './ParentPage'
 import ChildForm from './ChildForm'
 import ChildProfilePage, { ChildEditPage } from './ChildProfilePage'
@@ -114,7 +115,7 @@ export default function App() {
           <Route path="/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
           <Route path="/holidays" element={isAdmin ? <HolidaysPage /> : adminsOnly('adminsOnlyHolidays')} />
           <Route path="/incidents" element={<IncidentLogPage isAdmin={isAdmin} />} />
-          <Route path="/" element={<GroupPicker />} />
+          <Route path="/" element={isAdmin ? <KitaOverviewPage /> : <GroupPicker />} />
           <Route path="*" element={null} />
         </Routes>
       )}

@@ -112,6 +112,19 @@ class Alerts:
             by_child.setdefault(row.child_id, []).append(self._to_alert(row))
         return by_child
 
+    def children_with_alerts(self, child_ids: Collection[int]) -> set[int]:
+        """Which of these Children have an Alert, without decrypting what it says."""
+        if not child_ids:
+            return set()
+        with transaction(self._engine) as connection:
+            return set(
+                connection.scalars(
+                    select(child_alerts.c.child_id)
+                    .where(child_alerts.c.child_id.in_(child_ids))
+                    .distinct()
+                )
+            )
+
     def add(self, child_id: int, details: AlertDetails) -> Alert:
         details = _checked(details)
         with transaction(self._engine) as connection:
