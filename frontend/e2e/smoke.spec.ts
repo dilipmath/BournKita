@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test'
 
-test('start page shows the system status in English and German', async ({ page }) => {
+test('the login page is in English and German', async ({ page }) => {
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { name: 'System status' })).toBeVisible()
-  await expect(page.getByText('All systems working')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Log in' })).toBeVisible()
+  // While the server works, nothing about it is shown.
+  await expect(page.getByRole('alert')).toBeHidden()
 
   await page.getByRole('button', { name: 'Deutsch' }).tap()
 
-  await expect(page.getByRole('heading', { name: 'Systemstatus' })).toBeVisible()
-  await expect(page.getByText('Alles funktioniert')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Anmelden' })).toBeVisible()
 })

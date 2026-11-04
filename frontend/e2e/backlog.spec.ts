@@ -17,7 +17,8 @@ test('Staff plan a Task and put the backlog in order by touch', async ({ page })
 
   await page.getByRole('link', { name: 'Start' }).tap()
   // Pick from the start page's drop-down only once that page shows.
-  await expect(page.getByRole('heading', { name: 'System status' })).toBeVisible()
+  // The start page: only its Group picker offers this.
+  await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
   await page.getByLabel('Group', { exact: true }).selectOption({ label: `🦊 ${groupName}` })
   await page.getByRole('link', { name: 'Task board' }).tap()
 

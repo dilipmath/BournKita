@@ -5,9 +5,6 @@ export const resources = {
   en: {
     translation: {
       appName: 'Kita Kids Database',
-      systemStatus: 'System status',
-      checking: 'Checking…',
-      allWorking: 'All systems working',
       databaseUnavailable: 'Database not reachable',
       notReachable: 'System not reachable',
       language: 'Language',
@@ -275,6 +272,8 @@ export const resources = {
       calendar: 'Calendar',
       groupViews: 'The Group’s pages',
       emergencyList: 'Emergency list (PDF)',
+      emergency: 'Emergency',
+      menuFor: 'Menu for {{name}}',
       emergencyListOfKita: 'Emergency list of the whole Kita (PDF)',
       kitaWideName: 'whole Kita',
       wholeKita: 'Whole Kita',
@@ -446,9 +445,6 @@ export const resources = {
   de: {
     translation: {
       appName: 'Kita Kids Database',
-      systemStatus: 'Systemstatus',
-      checking: 'Wird geprüft…',
-      allWorking: 'Alles funktioniert',
       databaseUnavailable: 'Datenbank nicht erreichbar',
       notReachable: 'System nicht erreichbar',
       language: 'Sprache',
@@ -710,6 +706,8 @@ export const resources = {
       calendar: 'Kalender',
       groupViews: 'Seiten der Gruppe',
       emergencyList: 'Notfallliste (PDF)',
+      emergency: 'Notfall',
+      menuFor: 'Menü für {{name}}',
       emergencyListOfKita: 'Notfallliste der ganzen Kita (PDF)',
       kitaWideName: 'ganze Kita',
       wholeKita: 'Ganze Kita',

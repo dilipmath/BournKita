@@ -24,7 +24,8 @@ test('at the door, a Child is checked in and out by tap, and another marked abse
   }
 
   await page.getByRole('link', { name: 'Start' }).tap()
-  await expect(page.getByRole('heading', { name: 'System status' })).toBeVisible()
+  // The start page: only its Group picker offers this.
+  await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
   await page.getByLabel('Group', { exact: true }).selectOption({ label: `🦔 ${groupName}` })
   const lena = page.getByRole('listitem', { name: `Lena ${lastName}` })
   const mia = page.getByRole('listitem', { name: `Mia ${lastName}` })

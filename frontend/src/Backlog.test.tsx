@@ -124,7 +124,7 @@ describe('Backlog', () => {
       route: 'PUT /api/groups/2/tasks/31',
       body: { title: 'Wash the smocks', note: '', assigneeId: 5, dueOn: '2027-01-15', labels: ['Laundry', 'Art'] },
     })
-    const card = (await screen.findByText('teacher@kita.example')).closest('li')!
+    const card = (await screen.findByText('teacher@kita.example', { selector: 'li span' })).closest('li')!
     expect(card).toHaveTextContent('Laundry')
     expect(card).not.toHaveTextContent('Overdue')
   })

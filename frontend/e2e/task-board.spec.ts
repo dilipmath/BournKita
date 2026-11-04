@@ -17,7 +17,8 @@ test('Staff drag a Task across their Group’s board by touch', async ({ page })
   await expect(page.getByRole('heading', { name: groupName })).toBeVisible()
 
   await page.getByRole('link', { name: 'Start' }).tap()
-  await expect(page.getByRole('heading', { name: 'System status' })).toBeVisible()
+  // The start page: only its Group picker offers this.
+  await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
   await page.getByLabel('Group', { exact: true }).selectOption({ label: `🦉 ${groupName}` })
   await page.getByRole('link', { name: 'Task board' }).tap()
   await expect(page.getByRole('heading', { name: `Task board: ${groupName}` })).toBeVisible()

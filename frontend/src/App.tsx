@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import { fetchCurrentSession, fetchHealth, type Session } from './api'
 import AddParentPage from './AddParentPage'
 import AppHeader from './AppHeader'
@@ -15,7 +15,6 @@ import ChildProfilePage, { ChildEditPage } from './ChildProfilePage'
 import ChildrenPage from './ChildrenPage'
 import ForgotPasswordPage from './ForgotPasswordPage'
 import GroupDashboard from './GroupDashboard'
-import EmergencyListLink from './EmergencyListLink'
 import FeedbackButton from './FeedbackButton'
 import GroupPicker from './GroupPicker'
 import GroupsPage from './GroupsPage'
@@ -24,12 +23,12 @@ import TaskBoardPage from './TaskBoardPage'
 import LoginForm from './LoginForm'
 import ResetPasswordPage from './ResetPasswordPage'
 import StaffPage from './StaffPage'
-import SystemStatus, { type ServerStatus } from './SystemStatus'
+import StatusBanner, { type ServerStatus } from './StatusBanner'
 import VerifyEmailPage from './VerifyEmailPage'
 
 export default function App() {
   const { t } = useTranslation()
-  const { pathname } = useLocation()
+
   const [status, setStatus] = useState<ServerStatus>('checking')
   // undefined while the session is being checked, null when nobody is logged in.
   const [session, setSession] = useState<Session | null | undefined>(undefined)
@@ -73,6 +72,7 @@ export default function App() {
   return (
     <main>
       <AppHeader session={session ?? null} onLoggedOut={() => setSession(null)} />
+      <StatusBanner status={status} />
       <Routes>
         {/* Opened from an email by someone who has no password yet, so no login needed. */}
         <Route path="/verify-email" element={<VerifyEmailPage />} />
@@ -112,23 +112,12 @@ export default function App() {
           <Route path="/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
           <Route path="/holidays" element={isAdmin ? <HolidaysPage /> : adminsOnly('adminsOnlyHolidays')} />
           <Route path="/incidents" element={<IncidentLogPage isAdmin={isAdmin} />} />
-          <Route
-            path="/"
-            element={
-              <>
-                <GroupPicker />
-                <div className="actions">
-                  <EmergencyListLink />
-                </div>
-              </>
-            }
-          />
+          <Route path="/" element={<GroupPicker />} />
           <Route path="*" element={null} />
         </Routes>
       )}
       {/* On every page, for everyone logged in (Guests too). */}
       {session && <FeedbackButton />}
-      {pathname === '/' && <SystemStatus status={status} />}
     </main>
   )
 }

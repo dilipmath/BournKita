@@ -23,7 +23,8 @@ test('an incident reported from the Today view is in the log, where the Admin fo
   await expect(group).not.toHaveValue('')
 
   await page.getByRole('link', { name: 'Start' }).tap()
-  await expect(page.getByRole('heading', { name: 'System status' })).toBeVisible()
+  // The start page: only its Group picker offers this.
+  await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
   await page.getByLabel('Group', { exact: true }).selectOption({ label: `🐸 ${groupName}` })
   const card = page.getByRole('listitem', { name })
   await card.getByRole('button', { name: `Report incident: ${name}` }).tap()

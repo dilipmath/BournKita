@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { choosePassword, logIn, logInAsAdmin } from './credentials.ts'
+import { accountMenu, choosePassword, logIn, logInAsAdmin, logOut } from './credentials.ts'
 import { linkFromEmail } from './mailpit.ts'
 
 test('a new Staff member follows the emailed link, chooses a password and logs in', async ({ page }) => {
@@ -10,14 +10,12 @@ test('a new Staff member follows the emailed link, chooses a password and logs i
   await page.getByLabel('Email address').fill(email)
   await page.getByRole('button', { name: 'Create account' }).tap()
   await expect(page.getByRole('status')).toHaveText(`A verification email has been sent to ${email}.`)
-  await page.getByRole('button', { name: 'Log out' }).tap()
-  // Only once logged out: navigating sooner can cancel the logout and keep the Admin's session.
-  await expect(page.getByRole('button', { name: 'Log in' })).toBeVisible()
+  await logOut(page)
 
   await page.goto(await linkFromEmail(email, '/verify-email'))
   await choosePassword(page, password)
   await page.getByRole('link', { name: 'Go to login' }).tap()
 
   await logIn(page, email, password)
-  await expect(page.getByText(`Logged in as ${email}`)).toBeVisible()
+  await expect(accountMenu(page, email)).toBeVisible()
 })

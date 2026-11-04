@@ -33,6 +33,18 @@ describe('Guests', () => {
     vi.useRealTimers()
   })
 
+  it('offers Guests no emergency list', async () => {
+    fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': sessionAs('guest'),
+      'GET /api/calendar?from=2026-12-28&to=2027-01-31': { status: 200, body: { events: [], birthdays: [], holidays: [] } },
+    })
+    renderAt('/', <App />)
+
+    expect(await screen.findByRole('button', { name: 'Menu for guest@kita.example' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Emergency' })).toBeNull()
+  })
+
   it('shows a Guest the Kita-wide calendar only, read-only', async () => {
     const calls = fakeApi({
       'GET /api/health': health,

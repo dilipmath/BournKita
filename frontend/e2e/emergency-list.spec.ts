@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { logInAsAdmin } from './credentials.ts'
 
-test('the Today view prints the Group’s emergency list as a PDF', async ({ page }) => {
+test('the Emergency button in a Group prints its emergency list as a PDF', async ({ page }) => {
   const run = Date.now()
   const groupName = `Owls ${run}`
   await logInAsAdmin(page)
@@ -17,6 +17,7 @@ test('the Today view prints the Group’s emergency list as a PDF', async ({ pag
 
   // Opened in a tab of its own, with the tablet's session: a PDF the browser shows and prints.
   const pdf = page.context().waitForEvent('response', (response) => response.url().includes('/api/emergency-list'))
+  await page.getByRole('button', { name: 'Emergency' }).tap()
   await page.getByRole('link', { name: 'Emergency list (PDF)' }).tap()
   const response = await pdf
 
