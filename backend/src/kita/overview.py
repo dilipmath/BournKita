@@ -60,6 +60,10 @@ class KitaOverview:
         listed = self._groups.for_staff_member(email)
         return sorted(listed, key=lambda group: not group.mine)
 
+    def own_groups(self, email: str) -> list[GroupForStaffMember]:
+        """The Groups the Staff member works in, by name."""
+        return [group for group in self._groups.for_staff_member(email) if group.mine]
+
     def group_day(self, group: GroupForStaffMember, day: date) -> GroupDay:
         children = self._groups.children_of(group.id)
         child_ids = [child.id for child in children]

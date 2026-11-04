@@ -41,7 +41,7 @@ A set of Children cared for together, with a name and an icon (e.g. Monkeys). A 
 _Avoid_: Class, room, Gruppe (in code and docs)
 
 **Group dashboard**:
-The page a Staff member lands on after picking a Group, also called the Today view: that Group's day at the Kita. Each Child's photo, Attendance or Absence, their Alerts, and today's Birthdays; Staff check Children in and out and record Absences here. Before a Child is checked out, it shows who may pick them up.
+A Group's Today tab, also called the Today view; a Teacher who works in one Group lands on it after logging in: that Group's day at the Kita. Each Child's photo, Attendance or Absence, their Alerts, and today's Birthdays; Staff check Children in and out and record Absences here. Before a Child is checked out, it shows who may pick them up.
 _Avoid_: Group page, overview
 
 **Kita overview**:

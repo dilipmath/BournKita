@@ -21,7 +21,7 @@ Mitarbeiter:innen mit Grundkenntnissen am Computer, ein Tablet in einer Hand, of
 | **Kontrast von Umrissen** (WCAG 1.4.11, 3:1 für das, was zeigt, wo ein Feld oder Knopf ist) | Rand #8a8478 auf dem Hintergrund und auf Karten (dunkler Modus #7a808a) | 3,6:1 auf dem Hintergrund, 3,7:1 auf Karten (dunkler Modus 4,4:1 und 3,9:1) | ✓ |
 | **Fokus** | Ein deutlicher Rahmen um das, was den Tastaturfokus hat | 3px-Rahmen in der Akzentfarbe | ✓ |
 | **Symbole mit Text** | Nie ein Symbol allein: Gruppensymbole stehen neben dem Namen der Gruppe; Allergien zeigen z. B. „⚠ Allergien: Peanuts“ | **Im Monatskalender zeigen Termine einer Gruppe nur ihr Symbol** (der Name ist nur für Bildschirmleser da) | ✗ |
-| **Gruppensymbole** | Jede Gruppe hat ein Tier- oder Pflanzensymbol, in der Gruppenauswahl, in „Heute“ und im Kalender | — | ✓ |
+| **Gruppensymbole** | Jede Gruppe hat ein Tier- oder Pflanzensymbol, auf den Gruppenkacheln der Startseite, in „Heute“ und im Kalender | — | ✓ |
 | **Nie nur Farbe** | Der Status steht auch als Text da: „Da seit 08:12“, „Abwesend: krank“, „Abgeholt um 15:30“ | — | ✓ |
 | **Einfache Worte** | Die Begriffe des Glossars (Kind, Gruppe, Allergien und Erkrankungen, Abholberechtigte …), auf Deutsch und Englisch | — | ✓ |
 | **Zweiter Schritt vor allem, was Daten löscht** | Löschen fragt nach; endgültiges Löschen sagt, dass es nicht rückgängig zu machen ist | — | ✓ |

@@ -65,33 +65,6 @@ describe('Groups', () => {
     expect(await screen.findByText('No Groups yet.')).toBeInTheDocument()
   })
 
-  it('takes a Staff member from the start page to their Group dashboard, and remembers it', async () => {
-    fakeApi({
-      'GET /api/health': health,
-      'GET /api/session': sessionAs('teacher'),
-      'GET /api/groups': { status: 200, body: [{ ...bees, mine: false }, { ...monkeys, mine: true }, { ...owls, mine: false }] },
-      'GET /api/groups/5': { status: 200, body: { ...monkeys, day: '2027-01-04', children: [{ id: 7, firstName: 'Lena', lastName: 'Müller', alerts: [], attendance: null, absence: null, birthdayToday: false }] } },
-    })
-    const { unmount } = renderAt('/', <App />)
-
-    const picker = await screen.findByLabelText('Group')
-    // The Staff member's own Groups first.
-    expect(within(picker).getAllByRole('option').map((option) => option.textContent)).toEqual([
-      'Choose a Group',
-      '🐒 Monkeys',
-      '🐝 Bees',
-      '🦉 Owls',
-    ])
-    await userEvent.selectOptions(picker, '5')
-
-    expect(await screen.findByRole('heading', { name: 'Monkeys', level: 2 })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Lena Müller' })).toHaveAttribute('href', '/children/7')
-    unmount()
-
-    renderAt('/', <App />)
-    expect(await screen.findByRole('link', { name: 'Open Monkeys' })).toHaveAttribute('href', '/groups/5')
-  })
-
   it('says when a Group has no Children yet', async () => {
     fakeApi({
       'GET /api/health': health,

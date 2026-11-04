@@ -923,18 +923,6 @@ main.with-navigation {
   height: 1px;
 }
 
-.group-picker {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 12px;
-}
-
-.group-picker label {
-  flex-basis: 100%;
-  font-weight: 600;
-}
-
 .staff-groups {
   border: none;
   padding: 0;

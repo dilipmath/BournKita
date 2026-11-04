@@ -637,6 +637,13 @@ export async function fetchOverview(): Promise<KitaOverview> {
   return (await response.json()) as KitaOverview
 }
 
+/** Today in the Groups the logged-in Staff member works in. */
+export async function fetchOwnGroups(): Promise<GroupDay[]> {
+  const response = await fetch('/api/overview/mine')
+  if (!response.ok) throw new Error(`Loading the Staff member's Groups failed: ${response.status}`)
+  return ((await response.json()) as { groups: GroupDay[] }).groups
+}
+
 /** A Group's dashboard, or null when there is no such Group. */
 export async function fetchGroupDashboard(id: number): Promise<GroupDashboard | null> {
   const response = await fetch(`/api/groups/${id}`)

@@ -18,7 +18,6 @@ import ChildrenPage from './ChildrenPage'
 import ForgotPasswordPage from './ForgotPasswordPage'
 import GroupDashboard from './GroupDashboard'
 import FeedbackButton from './FeedbackButton'
-import GroupPicker from './GroupPicker'
 import GroupsPage from './GroupsPage'
 import BacklogPage from './BacklogPage'
 import TaskBoardPage from './TaskBoardPage'
@@ -26,6 +25,7 @@ import LoginForm from './LoginForm'
 import ResetPasswordPage from './ResetPasswordPage'
 import StaffPage from './StaffPage'
 import StatusBanner, { type ServerStatus } from './StatusBanner'
+import TeacherStartPage from './TeacherStartPage'
 import VerifyEmailPage from './VerifyEmailPage'
 
 export default function App() {
@@ -115,7 +115,7 @@ export default function App() {
           <Route path="/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
           <Route path="/holidays" element={isAdmin ? <HolidaysPage /> : adminsOnly('adminsOnlyHolidays')} />
           <Route path="/incidents" element={<IncidentLogPage isAdmin={isAdmin} />} />
-          <Route path="/" element={isAdmin ? <KitaOverviewPage /> : <GroupPicker />} />
+          <Route path="/" element={isAdmin ? <KitaOverviewPage /> : <TeacherStartPage />} />
           <Route path="*" element={null} />
         </Routes>
       )}

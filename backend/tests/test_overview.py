@@ -127,3 +127,39 @@ def test_the_admins_own_groups_come_first(admin: TestClient) -> None:
     groups = admin.get("/api/overview").json()["groups"]
 
     assert [(g["name"], g["mine"]) for g in groups] == [("Monkeys", True), ("Bears", False)]
+
+
+def test_a_teacher_sees_the_day_of_their_own_groups_only(
+    admin: TestClient, new_client: Callable[[], TestClient], mailer: CapturingMailer
+) -> None:
+    monkeys = create_group(admin, "Monkeys", "monkey")
+    bears = create_group(admin, "Bears", "bear")
+    lena = create_child(admin)
+    put_in_group(admin, lena, monkeys)
+    put_in_group(admin, create_child(admin, firstName="Ben"), bears)
+    teacher_id, teacher = onboard(admin, new_client, mailer)
+    admin.put(f"/api/staff/{teacher_id}/groups", json={"groupIds": [monkeys]})
+    step(teacher, lena, "check-in")
+
+    mine = teacher.get("/api/overview/mine")
+
+    assert mine.status_code == 200
+    assert [(g["name"], g["mine"], g["expected"], g["here"]) for g in mine.json()["groups"]] == [
+        ("Monkeys", True, 1, 1)
+    ]
+    # Not the whole Kita's day: that is the Admins'.
+    assert "kita" not in mine.json()
+
+
+def test_a_guest_sees_no_groups_day(
+    admin: TestClient, new_client: Callable[[], TestClient], mailer: CapturingMailer
+) -> None:
+    _, guest = onboard(admin, new_client, mailer, "gast@kita.example", "guest")
+
+    assert guest.get("/api/overview/mine").status_code == 403
+
+
+def test_a_teacher_in_no_group_gets_none(teacher: TestClient, admin: TestClient) -> None:
+    create_group(admin)
+
+    assert teacher.get("/api/overview/mine").json()["groups"] == []

@@ -21,7 +21,7 @@ Staff with basic computer skills, on a tablet held in one hand, often in a hurry
 | **Outline contrast** (WCAG 1.4.11, 3:1 for what shows where a field or button is) | Border #8a8478 on the background and on cards (dark mode #7a808a) | 3.6:1 on the background, 3.7:1 on cards (dark mode 4.4:1 and 3.9:1) | ✓ |
 | **Focus** | A clear outline around whatever has the keyboard focus | 3px outline in the accent colour | ✓ |
 | **Icons with text** | Never an icon alone: Group icons stand next to the Group's name; Alerts show e.g. "⚠ Allergies: Peanuts" | **In the month calendar, a Group's Events show only its icon** (the name is there for screen readers only) | ✗ |
-| **Group icons** | Each Group has an animal or plant icon, shown in the Group picker, the Today view and the Calendar | — | ✓ |
+| **Group icons** | Each Group has an animal or plant icon, shown on the Group tiles of the start page, the Today view and the Calendar | — | ✓ |
 | **Colour never alone** | Status is also written: "Here since 08:12", "Absent: sick", "Gone home at 15:30" | — | ✓ |
 | **Plain words** | The words of the glossary (Child, Group, Alert, Pick-up person …), in German and English | — | ✓ |
 | **Second step before anything that loses data** | Deleting asks again; deleting for good says it cannot be undone | — | ✓ |

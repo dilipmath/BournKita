@@ -1,44 +1,9 @@
 import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { fetchOverview, type GroupDay, type KitaOverview } from './api'
+import { fetchOverview, type KitaOverview } from './api'
 import { longDay } from './calendarDates'
-import GroupLabel from './GroupLabel'
-
-/** A Group's tile: its day in numbers; a tap opens its Today view. Shared with the Teachers'
- * start page. */
-export function GroupDayTile({ group }: { group: GroupDay }) {
-  const { t } = useTranslation()
-  const fullName = (child: { firstName: string; lastName: string }) => `${child.firstName} ${child.lastName}`
-  return (
-    <li>
-      <Link className="group-tile" to={`/groups/${group.id}`}>
-        <strong className="group-tile-name">
-          <GroupLabel group={group} />
-        </strong>
-        {group.expected === 0 ? (
-          <span>{t('noChildrenInGroup')}</span>
-        ) : (
-          <>
-            <span>{t('todayCounts', { here: group.here, gone: group.gone, absent: group.absent, notYet: group.notYet })}</span>
-            {group.alertsHere > 0 && (
-              <span className="group-tile-alerts">
-                <span aria-hidden="true">⚠ </span>
-                {t('withAlertsHere', { count: group.alertsHere })}
-              </span>
-            )}
-          </>
-        )}
-        {group.birthdays.length > 0 && (
-          <span>
-            <span aria-hidden="true">🎂 </span>
-            {t('birthdayToday', { names: group.birthdays.map(fullName).join(', ') })}
-          </span>
-        )}
-      </Link>
-    </li>
-  )
-}
+import GroupDayTile from './GroupDayTile'
 
 /** An Admin's start page: today at the whole Kita, each Group's day and what needs seeing to. */
 export default function KitaOverviewPage() {
