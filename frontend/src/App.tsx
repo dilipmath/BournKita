@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
-import { fetchCurrentSession, fetchHealth, logOut, type Session } from './api'
+import { Route, Routes, useLocation } from 'react-router-dom'
+import { fetchCurrentSession, fetchHealth, type Session } from './api'
 import AddParentPage from './AddParentPage'
+import AppHeader from './AppHeader'
 import ArchivePage from './ArchivePage'
 import AuditLogPage from './AuditLogPage'
 import CalendarPage from './CalendarPage'
@@ -23,19 +24,13 @@ import TaskBoardPage from './TaskBoardPage'
 import LoginForm from './LoginForm'
 import ResetPasswordPage from './ResetPasswordPage'
 import StaffPage from './StaffPage'
+import SystemStatus, { type ServerStatus } from './SystemStatus'
 import VerifyEmailPage from './VerifyEmailPage'
 
-type Status = 'checking' | 'ok' | 'databaseUnavailable' | 'unreachable'
-
-const languages = [
-  { code: 'de', label: 'Deutsch' },
-  { code: 'en', label: 'English' },
-] as const
-
 export default function App() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { pathname } = useLocation()
-  const [status, setStatus] = useState<Status>('checking')
+  const [status, setStatus] = useState<ServerStatus>('checking')
   // undefined while the session is being checked, null when nobody is logged in.
   const [session, setSession] = useState<Session | null | undefined>(undefined)
 
@@ -75,58 +70,9 @@ export default function App() {
     <p className="status status-problem">{t(message)}</p>
   )
 
-  const statusText = {
-    checking: t('checking'),
-    ok: t('allWorking'),
-    databaseUnavailable: t('databaseUnavailable'),
-    unreachable: t('notReachable'),
-  }[status]
-
   return (
     <main>
-      <header>
-        <h1>{t('appName')}</h1>
-        <nav aria-label={t('language')}>
-          {languages.map(({ code, label }) => (
-            <button
-              key={code}
-              type="button"
-              lang={code}
-              aria-pressed={i18n.language === code}
-              onClick={() => void i18n.changeLanguage(code)}
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
-      </header>
-      {session && (
-        <section className="session">
-          <p>{t('loggedInAs', { email: session.email })}</p>
-          <nav aria-label={t('mainNavigation')}>
-            {!isGuest && (
-              <NavLink to="/" end>
-                {t('start')}
-              </NavLink>
-            )}
-            {!isGuest && <NavLink to="/children">{t('children')}</NavLink>}
-            <NavLink to="/calendar">{t('calendar')}</NavLink>
-            {!isGuest && <NavLink to="/incidents">{t('incidentLog')}</NavLink>}
-            {isAdmin && (
-              <NavLink to="/groups" end>
-                {t('groups')}
-              </NavLink>
-            )}
-            {isAdmin && <NavLink to="/staff">{t('staffAccounts')}</NavLink>}
-            {isAdmin && <NavLink to="/audit-log">{t('auditLog')}</NavLink>}
-            {isAdmin && <NavLink to="/archive">{t('archive')}</NavLink>}
-          </nav>
-          {/* Even when the server cannot be reached, the logged-in view must not stay on screen. */}
-          <button type="button" onClick={() => void logOut().catch(() => undefined).finally(() => setSession(null))}>
-            {t('logOut')}
-          </button>
-        </section>
-      )}
+      <AppHeader session={session ?? null} onLoggedOut={() => setSession(null)} />
       <Routes>
         {/* Opened from an email by someone who has no password yet, so no login needed. */}
         <Route path="/verify-email" element={<VerifyEmailPage />} />
@@ -182,14 +128,7 @@ export default function App() {
       )}
       {/* On every page, for everyone logged in (Guests too). */}
       {session && <FeedbackButton />}
-      {pathname === '/' && (
-        <section>
-          <h2>{t('systemStatus')}</h2>
-          <p className={`status ${status === 'ok' ? 'status-ok' : status === 'checking' ? '' : 'status-problem'}`} role="status">
-            {statusText}
-          </p>
-        </section>
-      )}
+      {pathname === '/' && <SystemStatus status={status} />}
     </main>
   )
 }
