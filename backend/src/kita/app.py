@@ -191,7 +191,7 @@ def create_app(
     app.include_router(audit_router(identity, audit, children))
     birthdays = Birthdays(engine)
     app.include_router(
-        groups_router(identity, groups, alerts, attendance, birthdays, audited_route_class)
+        groups_router(identity, groups, alerts, attendance, birthdays, photos, audited_route_class)
     )
     emergency_lists = EmergencyLists(clock, children, groups, attendance, alerts, parents, contacts)
     app.include_router(emergency_list_router(identity, emergency_lists, audited_route_class))

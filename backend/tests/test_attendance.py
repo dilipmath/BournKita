@@ -10,6 +10,7 @@ from tests.accounts import ADMIN_EMAIL, TEACHER_EMAIL, log_in
 from tests.children import create_child
 from tests.fakes import FixedClock
 from tests.groups import create_group, put_in_group
+from tests.photos import give_photo_consent, jpeg, upload
 
 
 def at(clock: FixedClock, kita_time: str) -> None:
@@ -264,3 +265,22 @@ def test_an_absence_cannot_cover_a_day_the_child_was_here(
     )
 
     assert refused.json() == {"detail": "present_then"}
+
+
+def test_the_today_view_shows_each_childs_newest_photo_only_with_photo_consent(
+    admin: TestClient, teacher: TestClient
+) -> None:
+    monkeys = create_group(admin)
+    lena = create_child(admin)
+    mia = create_child(admin, firstName="Mia")
+    for child in (lena, mia):
+        put_in_group(admin, child, monkeys)
+    give_photo_consent(admin, lena)
+    upload(admin, f"/api/children/{lena}/photos", jpeg())
+    newest = upload(admin, f"/api/children/{lena}/photos", jpeg()).json()["id"]
+
+    assert child_today(teacher, monkeys, lena)["photoId"] == newest
+    assert child_today(teacher, monkeys, mia)["photoId"] is None
+
+    admin.post(f"/api/children/{lena}/consents/photo/withdrawn", json={"withdrawnOn": "2026-12-01"})
+    assert child_today(teacher, monkeys, lena)["photoId"] is None

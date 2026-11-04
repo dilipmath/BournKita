@@ -40,6 +40,8 @@ test('at the door, a Child is checked in and out by tap, and another marked abse
   await expect(page.getByText('Here 1 · Gone home 0 · Absent 1 · Not here yet 0')).toBeVisible()
 
   await lena.getByRole('button', { name: `Check out Lena ${lastName}` }).tap()
+  await expect(lena.getByRole('region', { name: `Who may pick up Lena ${lastName}` })).toContainText('Nobody may pick up yet.')
+  await lena.getByRole('button', { name: `Lena ${lastName} goes home now` }).tap()
   await expect(lena).toContainText('Gone home at')
 
   // Saved, not just shown.

@@ -1272,6 +1272,84 @@ button.danger {
   margin: 0;
 }
 
+/* Each Child's face, so they are recognised at a glance; initials without a photo. */
+.today-photo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.today-photo.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--border);
+  color: var(--text);
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* Before checking out: who may pick up, with their photos. */
+.check-out {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.check-out h4 {
+  margin: 0;
+}
+
+.check-out ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.check-out .contact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.check-out img {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* On a phone, the pick-up check opens as a sheet from the bottom, over the list. */
+@media (max-width: 700px) {
+  .check-out {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 10;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 16px;
+    border-top: 2px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    background: var(--surface);
+    box-shadow: 0 -4px 16px rgb(0 0 0 / 0.2);
+  }
+}
+
+.birthday-mark {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* "Show only who is not here yet", pressed. */
+.dashboard button[aria-pressed='true'] {
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
 /* Check in and out: large enough to hit while holding a child's hand. */
 button.big {
   min-height: 64px;

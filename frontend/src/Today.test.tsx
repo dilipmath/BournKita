@@ -34,6 +34,13 @@ const ida = {
 // A Child as the fake API holds it: any of the fields a Today view has.
 type Child = { id: number; [field: string]: unknown }
 
+function profileOf(child: Child, lists: Record<string, unknown[]> = {}) {
+  return {
+    status: 200,
+    body: { gender: null, languages: '', foodPreferences: '', interests: '', dateOfBirth: null, ...child, ...noProfileLists, ...lists },
+  }
+}
+
 /** The fake API of the Monkeys' Today view on Monday 4 January 2027, keeping its Children. */
 function todayApi(children: Child[], routes: Record<string, (body: unknown) => { status: number; body?: unknown }> = {}) {
   const state = { children }
@@ -41,6 +48,8 @@ function todayApi(children: Child[], routes: Record<string, (body: unknown) => {
     'GET /api/health': health,
     'GET /api/session': sessionAs('teacher'),
     'GET /api/groups/2': () => ({ status: 200, body: { ...monkeys, day: '2027-01-04', children: state.children } }),
+    // Who may pick each Child up, for checking out: nobody, unless a test says otherwise.
+    ...Object.fromEntries(children.map((child) => [`GET /api/children/${child.id}`, profileOf(child)])),
     ...Object.fromEntries(Object.entries(routes).map(([route, handler]) => [route, (body: unknown) => handler(body)])),
   })
   return { calls, state }
@@ -88,6 +97,7 @@ describe('Today view', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Check in Lena Müller' }))
     expect(await within(card('Lena Müller')).findByText('Here since 08:40')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Check out Lena Müller' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Lena Müller goes home now' }))
     expect(await within(card('Lena Müller')).findByText('Gone home at 15:00')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Undo for Lena Müller' }))
     expect(await within(card('Lena Müller')).findByText('Here since 08:40')).toBeInTheDocument()
@@ -160,5 +170,53 @@ describe('Today view', () => {
 
     expect(await within(section).findByText('No absences coming up.')).toBeInTheDocument()
     expect(calls.map((call) => call.route)).toContain('DELETE /api/children/7/absences/33')
+  })
+})
+
+describe('Today tiles', () => {
+  it('shows each Child’s photo, or a placeholder without one', async () => {
+    todayApi([{ ...lena, photoId: 41 }, { ...mia, photoId: null }])
+    renderAt('/groups/2', <App />)
+
+    expect(await within(await screen.findByRole('listitem', { name: 'Lena Müller' })).findByRole('img', { name: 'Photo of Lena Müller' })).toHaveAttribute(
+      'src',
+      '/api/children/7/photos/41/thumbnail',
+    )
+    expect(within(card('Mia Müller')).queryByRole('img', { name: 'Photo of Mia Müller' })).toBeNull()
+  })
+
+  it('shows who may pick the Child up before checking them out', async () => {
+    
+    const oma = { id: 51, name: 'Oma Gisela', relationship: 'Grandmother', phone: '', note: '', photoId: 61 }
+    const papa = { id: 52, firstName: 'Jonas', lastName: 'Müller', mayPickUp: true, photoId: null }
+    const { calls } = todayApi([mia], {
+      'GET /api/children/8': () => profileOf(mia, { pickUpPersons: [oma], parents: [papa] }),
+      'POST /api/children/8/attendance/check-out': () => ({ status: 204 }),
+    })
+    renderAt('/groups/2', <App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Check out Mia Müller' }))
+
+    const pickUp = await screen.findByRole('region', { name: 'Who may pick up Mia Müller' })
+    expect(pickUp).toHaveTextContent('Jonas Müller')
+    expect(pickUp).toHaveTextContent('Oma Gisela (Grandmother)')
+    expect(within(pickUp).getByRole('img', { name: 'Photo of Oma Gisela' })).toBeInTheDocument()
+    expect(calls.map((call) => call.route)).not.toContain('POST /api/children/8/attendance/check-out')
+
+    await userEvent.click(within(pickUp).getByRole('button', { name: 'Not now' }))
+    expect(screen.queryByRole('region', { name: 'Who may pick up Mia Müller' })).toBeNull()
+  })
+
+  it('shows only the Children not here yet when asked', async () => {
+    todayApi([emil, ida, lena, mia])
+    renderAt('/groups/2', <App />)
+
+    const filter = await screen.findByRole('button', { name: 'Show only who is not here yet' })
+    await userEvent.click(filter)
+
+    expect(filter).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getAllByRole('listitem').map((item) => item.getAttribute('aria-label'))).toEqual(['Lena Müller'])
+    await userEvent.click(filter)
+    expect(screen.getAllByRole('listitem')).toHaveLength(4)
   })
 })

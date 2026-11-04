@@ -30,6 +30,7 @@ from kita.groups import (
 )
 from kita.identity import Identity
 from kita.identity_api import role_dependency, staff_member_dependency, staff_member_of
+from kita.photos import Photos
 
 
 class GroupIn(BaseModel):
@@ -74,6 +75,8 @@ class GroupChildOut(BaseModel):
     # None: not absent today.
     absence: AbsenceOut | None
     birthday_today: bool
+    # Their newest photo, for their tile; None without one or without photo Consent.
+    photo_id: int | None
 
     @classmethod
     def of(
@@ -83,6 +86,7 @@ class GroupChildOut(BaseModel):
         day: AttendanceDay | None,
         absence: Absence | None,
         birthday_today: bool,
+        photo_id: int | None,
     ) -> "GroupChildOut":
         return cls(
             id=child.id,
@@ -92,6 +96,7 @@ class GroupChildOut(BaseModel):
             attendance=None if day is None else AttendanceDayOut.of(day),
             absence=None if absence is None else AbsenceOut.of(absence),
             birthday_today=birthday_today,
+            photo_id=photo_id,
         )
 
 
@@ -117,6 +122,7 @@ def groups_router(
     alerts: Alerts,
     attendance: Attendance,
     birthdays: Birthdays,
+    photos: Photos,
     audited_route_class: type[APIRoute],
 ) -> APIRouter:
     """`audited_route_class` comes from audited_route: the dashboard shows Children's Alerts, and
@@ -152,6 +158,7 @@ def groups_router(
         attendance_days = attendance.days_on(day, child_ids)
         absences_today = attendance.absences_on(day, child_ids)
         birthday_children = {b.child_id for b in birthdays.between(day, day, group_id)}
+        newest_photos = photos.newest_of_children(child_ids)
         # Names, Attendance and Birthdays are not logged (like the list of Children); Alerts are
         # health data, so their views are.
         note_children(request, list(its_alerts))
@@ -165,6 +172,7 @@ def groups_router(
                     attendance_days.get(child.id),
                     absences_today.get(child.id),
                     child.id in birthday_children,
+                    newest_photos.get(child.id),
                 )
                 for child in children
             ],

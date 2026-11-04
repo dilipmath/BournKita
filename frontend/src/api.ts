@@ -577,7 +577,14 @@ export const absenceReasonLabel = { sick: 'absenceSick', holiday: 'absenceHolida
 // Days a Child will not come (YYYY-MM-DD, both included), and why.
 export type Absence = { id: number; startsOn: string; endsOn: string; reason: AbsenceReason }
 // One of a Group's Children today.
-export type GroupChild = ChildSummary & { alerts: Alert[]; attendance: AttendanceDay | null; absence: Absence | null; birthdayToday: boolean }
+// photoId: their newest photo, for their tile; null without one or without photo Consent.
+export type GroupChild = ChildSummary & {
+  alerts: Alert[]
+  attendance: AttendanceDay | null
+  absence: Absence | null
+  birthdayToday: boolean
+  photoId: number | null
+}
 // The Group dashboard, the Today view: the Group, the day at the Kita, its Children by first name.
 export type GroupDashboard = Group & { day: string; children: GroupChild[] }
 

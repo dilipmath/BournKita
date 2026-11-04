@@ -22,6 +22,7 @@ from sqlalchemy import (
     Integer,
     Table,
     delete,
+    func,
     insert,
     select,
 )
@@ -232,6 +233,19 @@ class Photos:
                 .order_by(photos.c.id.desc())
             ).all()
         return [Photo(row.id, row.uploaded_at) for row in rows]
+
+    def newest_of_children(self, child_ids: Sequence[int]) -> dict[int, int]:
+        """The newest photo ID of each of these Children who has one and photo Consent, by
+        Child ID: their face on the Today view."""
+        shown = [child_id for child_id in child_ids if self._may_show(child_id)]
+        # Newest by ID: IDs grow with each upload, like uploaded_at.
+        with transaction(self._engine) as connection:
+            rows = connection.execute(
+                select(photos.c.child_id, func.max(photos.c.id))
+                .where(photos.c.child_id.in_(shown))
+                .group_by(photos.c.child_id)
+            ).all()
+        return {child_id: photo_id for child_id, photo_id in rows}
 
     def held_of_child(self, child_id: int) -> list[Photo]:
         """All the Child's photos, shown or not (without photo Consent), oldest first; for a
