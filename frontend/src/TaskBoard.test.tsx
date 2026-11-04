@@ -67,7 +67,7 @@ describe('Task board', () => {
     })
     renderAt('/groups/2', <App />)
 
-    expect(await screen.findByRole('link', { name: 'Task board' })).toHaveAttribute('href', '/groups/2/board')
+    expect(await screen.findByRole('link', { name: 'Tasks' })).toHaveAttribute('href', '/groups/2/board')
   })
 
   it('lets a Teacher add a Task to To do', async () => {

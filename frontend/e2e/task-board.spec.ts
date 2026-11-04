@@ -9,6 +9,7 @@ test('Staff drag a Task across their Group’s board by touch', async ({ page })
   const title = `Wash the smocks ${run}`
   await logInAsAdmin(page)
 
+  await page.getByRole('link', { name: 'Administration' }).tap()
   await page.getByRole('link', { name: 'Groups' }).tap()
   const newGroup = page.getByRole('form', { name: 'New Group' })
   await newGroup.getByLabel('Name').fill(groupName)
@@ -16,11 +17,11 @@ test('Staff drag a Task across their Group’s board by touch', async ({ page })
   await newGroup.getByRole('button', { name: 'Create Group' }).tap()
   await expect(page.getByRole('heading', { name: groupName })).toBeVisible()
 
-  await page.getByRole('link', { name: 'Start' }).tap()
+  await page.getByRole('link', { name: 'Home' }).tap()
   // The start page: only its Group picker offers this.
   await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
   await page.getByLabel('Group', { exact: true }).selectOption({ label: `🦉 ${groupName}` })
-  await page.getByRole('link', { name: 'Task board' }).tap()
+  await page.getByRole('link', { name: 'Tasks' }).tap()
   await expect(page.getByRole('heading', { name: `Task board: ${groupName}` })).toBeVisible()
 
   const toDo = page.getByRole('region', { name: 'To do' })

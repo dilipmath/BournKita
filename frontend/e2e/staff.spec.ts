@@ -6,6 +6,7 @@ test('an Admin creates a Staff member, changes the role and deactivates the acco
   const email = `teacher-${Date.now()}@kita.example`
   await logInAsAdmin(page)
 
+  await page.getByRole('link', { name: 'Administration' }).tap()
   await page.getByRole('link', { name: 'Staff accounts' }).tap()
   await expect(page.getByRole('row', { name: new RegExp(e2eAdmin.email) })).toContainText('Active')
 

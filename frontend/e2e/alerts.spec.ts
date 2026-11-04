@@ -8,6 +8,7 @@ test('an Admin records an allergy, and it shows on the profile and the Group das
   const lastName = `Alerts${run}`
   await logInAsAdmin(page)
 
+  await page.getByRole('link', { name: 'Administration' }).tap()
   await page.getByRole('link', { name: 'Groups' }).tap()
   const newGroup = page.getByRole('form', { name: 'New Group' })
   await newGroup.getByLabel('Name').fill(groupName)
@@ -36,7 +37,7 @@ test('an Admin records an allergy, and it shows on the profile and the Group das
   await expect(banner).toContainText('Peanuts')
   await expect(page.getByText('Allergies: Peanuts')).toBeVisible()
 
-  await page.getByRole('link', { name: 'Start' }).tap()
+  await page.getByRole('link', { name: 'Home' }).tap()
   // The profile has a Group drop-down too: pick from the start page's only once that page shows.
   // (The address changes before the new page is drawn, so waiting for it is not enough.)
   // The start page: only its Group picker offers this.

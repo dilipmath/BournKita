@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink, useMatch } from 'react-router-dom'
+import { Link, useMatch } from 'react-router-dom'
 import { logOut, type Session } from './api'
 import EmergencyListLink from './EmergencyListLink'
 import HeaderMenu from './HeaderMenu'
+import { GroupNavigation, MainNavigation } from './MainNavigation'
 
 const languages = [
   { code: 'de', label: 'Deutsch' },
@@ -30,12 +31,11 @@ function useCurrentGroupId(): number | null {
 }
 
 /** The top of every page: the app's name (back to the start page); once someone is logged in, the
- * Emergency button, their account menu (who it is, language, Log out) and the pages their Role
- * may open. Before that, the language choice. */
+ * Emergency button, their account menu (who it is, language, Log out), the pages their Role may
+ * open and, inside a Group, the Group's pages. Before that, the language choice. */
 export default function AppHeader({ session, onLoggedOut }: { session: Session | null; onLoggedOut: () => void }) {
   const { t } = useTranslation()
   const groupId = useCurrentGroupId()
-  const isAdmin = session?.role === 'admin'
   const isGuest = session?.role === 'guest'
   const name = session ? (session.displayName ?? session.email) : ''
 
@@ -67,28 +67,8 @@ export default function AppHeader({ session, onLoggedOut }: { session: Session |
           <LanguageChoice />
         )}
       </header>
-      {session && (
-        <section className="session">
-          <nav aria-label={t('mainNavigation')}>
-            {!isGuest && (
-              <NavLink to="/" end>
-                {t('start')}
-              </NavLink>
-            )}
-            {!isGuest && <NavLink to="/children">{t('children')}</NavLink>}
-            <NavLink to="/calendar">{t('calendar')}</NavLink>
-            {!isGuest && <NavLink to="/incidents">{t('incidentLog')}</NavLink>}
-            {isAdmin && (
-              <NavLink to="/groups" end>
-                {t('groups')}
-              </NavLink>
-            )}
-            {isAdmin && <NavLink to="/staff">{t('staffAccounts')}</NavLink>}
-            {isAdmin && <NavLink to="/audit-log">{t('auditLog')}</NavLink>}
-            {isAdmin && <NavLink to="/archive">{t('archive')}</NavLink>}
-          </nav>
-        </section>
-      )}
+      {session && <MainNavigation role={session.role} />}
+      {session && !isGuest && groupId !== null && <GroupNavigation groupId={groupId} />}
     </>
   )
 }

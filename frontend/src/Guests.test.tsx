@@ -56,7 +56,7 @@ describe('Guests', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Trip to the farm/ }))
 
     const menu = screen.getByRole('navigation', { name: 'Main navigation' })
-    expect(within(menu).getAllByRole('link').map((link) => link.textContent)).toEqual(['Calendar'])
+    expect(within(menu).getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual(['/calendar'])
     expect(screen.queryByRole('button', { name: 'Add event' })).not.toBeInTheDocument()
     const details = screen.getByRole('region', { name: 'Trip to the farm' })
     expect(within(details).queryByRole('button', { name: /Change|Delete/ })).not.toBeInTheDocument()

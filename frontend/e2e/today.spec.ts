@@ -7,6 +7,7 @@ test('at the door, a Child is checked in and out by tap, and another marked abse
   const lastName = `Today${run}`
   await logInAsAdmin(page)
 
+  await page.getByRole('link', { name: 'Administration' }).tap()
   await page.getByRole('link', { name: 'Groups' }).tap()
   const newGroup = page.getByRole('form', { name: 'New Group' })
   await newGroup.getByLabel('Name').fill(groupName)
@@ -23,7 +24,7 @@ test('at the door, a Child is checked in and out by tap, and another marked abse
     await expect(group).not.toHaveValue('')
   }
 
-  await page.getByRole('link', { name: 'Start' }).tap()
+  await page.getByRole('link', { name: 'Home' }).tap()
   // The start page: only its Group picker offers this.
   await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
   await page.getByLabel('Group', { exact: true }).selectOption({ label: `🦔 ${groupName}` })

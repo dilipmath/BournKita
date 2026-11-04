@@ -35,6 +35,7 @@ describe('audit log', () => {
     })
     renderAt('/', <App />)
 
+    await userEvent.click(await screen.findByRole('link', { name: 'Administration' }))
     await userEvent.click(await screen.findByRole('link', { name: 'Audit log' }))
 
     const changeRow = await screen.findByRole('row', { name: /Changed/ })

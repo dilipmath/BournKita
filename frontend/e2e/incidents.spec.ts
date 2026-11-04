@@ -8,6 +8,7 @@ test('an incident reported from the Today view is in the log, where the Admin fo
   const name = `Lena ${lastName}`
   await logInAsAdmin(page)
 
+  await page.getByRole('link', { name: 'Administration' }).tap()
   await page.getByRole('link', { name: 'Groups' }).tap()
   const newGroup = page.getByRole('form', { name: 'New Group' })
   await newGroup.getByLabel('Name').fill(groupName)
@@ -22,7 +23,7 @@ test('an incident reported from the Today view is in the log, where the Admin fo
   await group.selectOption({ label: `🐸 ${groupName}` })
   await expect(group).not.toHaveValue('')
 
-  await page.getByRole('link', { name: 'Start' }).tap()
+  await page.getByRole('link', { name: 'Home' }).tap()
   // The start page: only its Group picker offers this.
   await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
   await page.getByLabel('Group', { exact: true }).selectOption({ label: `🐸 ${groupName}` })
@@ -35,7 +36,7 @@ test('an incident reported from the Today view is in the log, where the Admin fo
   await form.getByRole('button', { name: 'Save' }).tap()
   await expect(card.getByRole('status')).toHaveText('Incident reported.')
 
-  await page.getByRole('link', { name: 'Incident log' }).tap()
+  await page.getByRole('link', { name: 'Incidents' }).tap()
   const filters = page.getByRole('search', { name: 'Filter the incident log' })
   await filters.getByLabel('Child').selectOption({ label: name })
   await filters.getByRole('button', { name: 'Show' }).tap()

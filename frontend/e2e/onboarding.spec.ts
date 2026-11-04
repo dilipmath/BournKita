@@ -6,6 +6,7 @@ test('a new Staff member follows the emailed link, chooses a password and logs i
   const email = `onboarding-${Date.now()}@kita.example`
   const password = 'my own long password'
   await logInAsAdmin(page)
+  await page.getByRole('link', { name: 'Administration' }).tap()
   await page.getByRole('link', { name: 'Staff accounts' }).tap()
   await page.getByLabel('Email address').fill(email)
   await page.getByRole('button', { name: 'Create account' }).tap()

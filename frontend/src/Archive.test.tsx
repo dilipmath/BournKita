@@ -21,6 +21,7 @@ describe('Archive', () => {
     })
     renderAt('/', <App />)
 
+    await userEvent.click(await screen.findByRole('link', { name: 'Administration' }))
     await userEvent.click(await screen.findByRole('link', { name: 'Archive' }))
     const entry = await screen.findByRole('listitem')
     expect(entry).toHaveTextContent('Lena Müller')

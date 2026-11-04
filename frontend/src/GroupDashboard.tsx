@@ -54,14 +54,6 @@ export default function GroupDashboard() {
       <h2>
         <GroupLabel group={dashboard} />
       </h2>
-      <nav className="actions" aria-label={t('groupViews')}>
-        <Link className="button" to={`/groups/${dashboard.id}/board`}>
-          {t('taskBoard')}
-        </Link>
-        <Link className="button" to={`/groups/${dashboard.id}/calendar`}>
-          {t('calendar')}
-        </Link>
-      </nav>
       <h3>{t('todayIs', { day: longDay(dashboard.day, i18n.language) })}</h3>
       {birthdays.length > 0 && (
         <p className="birthday-banner">

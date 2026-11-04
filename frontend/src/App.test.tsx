@@ -14,6 +14,7 @@ describe('app navigation', () => {
     })
     renderAt('/', <App />)
 
+    await userEvent.click(await screen.findByRole('link', { name: 'Administration' }))
     await userEvent.click(await screen.findByRole('link', { name: 'Staff accounts' }))
 
     expect(await screen.findByRole('heading', { name: 'Staff accounts' })).toBeInTheDocument()

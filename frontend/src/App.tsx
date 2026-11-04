@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Route, Routes } from 'react-router-dom'
 import { fetchCurrentSession, fetchHealth, type Session } from './api'
 import AddParentPage from './AddParentPage'
+import AdministrationPage from './AdministrationPage'
 import AppHeader from './AppHeader'
 import ArchivePage from './ArchivePage'
 import AuditLogPage from './AuditLogPage'
@@ -65,12 +66,12 @@ export default function App() {
 
   const isAdmin = session?.role === 'admin'
   const isGuest = session?.role === 'guest'
-  const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyChildren' | 'adminsOnlyAuditLog' | 'adminsOnlyArchive' | 'adminsOnlyGroups' | 'adminsOnlyHolidays') => (
+  const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyAdministration' | 'adminsOnlyChildren' | 'adminsOnlyAuditLog' | 'adminsOnlyArchive' | 'adminsOnlyGroups' | 'adminsOnlyHolidays') => (
     <p className="status status-problem">{t(message)}</p>
   )
 
   return (
-    <main>
+    <main className={session ? 'with-navigation' : undefined}>
       <AppHeader session={session ?? null} onLoggedOut={() => setSession(null)} />
       <StatusBanner status={status} />
       <Routes>
@@ -95,6 +96,7 @@ export default function App() {
               isAdmin ? <StaffPage /> : adminsOnly('adminsOnly')
             }
           />
+          <Route path="/administration" element={isAdmin ? <AdministrationPage /> : adminsOnly('adminsOnlyAdministration')} />
           <Route path="/children" element={<ChildrenPage canEdit={isAdmin} />} />
           <Route path="/children/new" element={isAdmin ? <ChildForm /> : adminsOnly('adminsOnlyChildren')} />
           <Route path="/children/:id" element={<ChildProfilePage canEdit={isAdmin} />} />

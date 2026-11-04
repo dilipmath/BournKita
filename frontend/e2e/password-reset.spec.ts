@@ -6,6 +6,7 @@ test('a Staff member who forgot their password chooses a new one from the emaile
   // A Staff member of its own, so the shared e2e Admin's password stays as it is.
   const email = `forgetful-${Date.now()}@kita.example`
   await logInAsAdmin(page)
+  await page.getByRole('link', { name: 'Administration' }).tap()
   await page.getByRole('link', { name: 'Staff accounts' }).tap()
   await page.getByLabel('Email address').fill(email)
   await page.getByRole('button', { name: 'Create account' }).tap()

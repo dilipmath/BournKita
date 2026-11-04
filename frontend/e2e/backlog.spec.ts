@@ -8,6 +8,7 @@ test('Staff plan a Task and put the backlog in order by touch', async ({ page })
   const groupName = `Foxes ${run}`
   await logInAsAdmin(page)
 
+  await page.getByRole('link', { name: 'Administration' }).tap()
   await page.getByRole('link', { name: 'Groups' }).tap()
   const newGroup = page.getByRole('form', { name: 'New Group' })
   await newGroup.getByLabel('Name').fill(groupName)
@@ -15,12 +16,12 @@ test('Staff plan a Task and put the backlog in order by touch', async ({ page })
   await newGroup.getByRole('button', { name: 'Create Group' }).tap()
   await expect(page.getByRole('heading', { name: groupName })).toBeVisible()
 
-  await page.getByRole('link', { name: 'Start' }).tap()
+  await page.getByRole('link', { name: 'Home' }).tap()
   // Pick from the start page's drop-down only once that page shows.
   // The start page: only its Group picker offers this.
   await expect(page.getByRole('option', { name: 'Choose a Group' })).toBeAttached()
   await page.getByLabel('Group', { exact: true }).selectOption({ label: `🦊 ${groupName}` })
-  await page.getByRole('link', { name: 'Task board' }).tap()
+  await page.getByRole('link', { name: 'Tasks' }).tap()
 
   const toDo = page.getByRole('region', { name: 'To do' })
   for (const title of ['Wash the smocks', 'Water the plants', 'Buy lantern paper']) {
