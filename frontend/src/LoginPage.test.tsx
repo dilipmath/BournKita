@@ -117,7 +117,7 @@ describe('the login form', () => {
     await userEvent.type(password, 'wrong password')
     await userEvent.click(screen.getByRole('button', { name: 'Log in' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Email address or password is wrong.')
+    expect(await screen.findByText('Email address or password is wrong.')).toBeInTheDocument()
     expect(password).toHaveAttribute('type', 'password')
   })
 
@@ -129,7 +129,11 @@ describe('the login form', () => {
     await userEvent.type(screen.getByLabelText('Password'), 'wrong password')
     await userEvent.keyboard('{Enter}')
 
-    expect(await screen.findByRole('alert')).toHaveFocus()
+    // Read out once, with the hint about lockouts.
+    await screen.findByText('Email address or password is wrong.')
+    expect(document.activeElement).toHaveTextContent('Email address or password is wrong.')
+    expect(document.activeElement).toHaveTextContent('After 5 failed logins in a row')
+    expect(screen.queryByRole('alert')).toBeNull()
   })
 
   it('says it is logging in and takes no second tap meanwhile', async () => {

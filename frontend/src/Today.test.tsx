@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { fakeApi, health, noProfileLists, renderAt, sessionAs } from './testing'
 
@@ -218,5 +218,17 @@ describe('Today tiles', () => {
     expect(screen.getAllByRole('listitem').map((item) => item.getAttribute('aria-label'))).toEqual(['Lena Müller'])
     await userEvent.click(filter)
     expect(screen.getAllByRole('listitem')).toHaveLength(4)
+  })
+})
+
+describe('Today view while loading', () => {
+  it('keeps the page’s shape instead of saying Loading…', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': sessionAs('teacher') })
+    vi.stubGlobal('fetch', ((original) => (url: string, init?: RequestInit) =>
+      url === '/api/groups/2' ? new Promise<Response>(() => undefined) : original(url, init))(fetch))
+    renderAt('/groups/2', <App />)
+
+    expect(await screen.findByRole('region', { name: 'Loading today' })).toHaveAttribute('aria-busy', 'true')
+    expect(screen.queryByText('Loading…')).toBeNull()
   })
 })

@@ -35,7 +35,7 @@ test('wrong credentials show a clear message', async ({ page }) => {
   await page.getByLabel('Password').fill('not the password')
   await page.getByRole('button', { name: 'Log in' }).tap()
 
-  await expect(page.getByRole('alert')).toHaveText('Email address or password is wrong.')
+  await expect(page.getByText('Email address or password is wrong.')).toBeVisible()
 })
 
 test('the login form comes back once the session has timed out', async ({ page }) => {

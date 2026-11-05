@@ -27,6 +27,21 @@ export default function DayHeader({ name, day, counts }: Props) {
   )
 }
 
+/** Grey blocks in the shape of a Group's Today view, while it loads. */
+export function TodaySkeleton() {
+  const { t } = useTranslation()
+  return (
+    <section className="page dashboard" aria-label={t('loadingToday')} aria-busy="true">
+      <div className="skeleton skeleton-title" />
+      <div className="today-list">
+        <div className="skeleton skeleton-child" />
+        <div className="skeleton skeleton-child" />
+        <div className="skeleton skeleton-child" />
+      </div>
+    </section>
+  )
+}
+
 /** Grey blocks in the shape of the page, while its numbers load. */
 export function StartPageSkeleton() {
   const { t } = useTranslation()

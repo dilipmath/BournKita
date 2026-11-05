@@ -32,3 +32,13 @@ describe('day bar', () => {
     expect(screen.getByText('2 von 6 da · 1 abgeholt · 0 abwesend · 3 noch nicht da')).toBeInTheDocument()
   })
 })
+
+describe('day bar for screen readers', () => {
+  it('reads one plain sentence, not the bar and the dotted line', () => {
+    const { container } = render(<DayBar day={{ here: 12, gone: 1, absent: 1, notYet: 1 }} />)
+
+    const read = container.querySelector('.visually-hidden')
+    expect(read).toHaveTextContent('12 of 15 here, 1 gone home, 1 absent, 1 not here yet.')
+    expect(screen.getByText('12 of 15 here · 1 gone home · 1 absent · 1 not here yet')).toHaveAttribute('aria-hidden', 'true')
+  })
+})

@@ -28,7 +28,7 @@ test('a Staff member who forgot their password chooses a new one from the emaile
   await page.getByRole('link', { name: 'Go to login' }).tap()
 
   await logIn(page, email, 'first long password')
-  await expect(page.getByRole('alert')).toHaveText('Email address or password is wrong.')
+  await expect(page.getByText('Email address or password is wrong.')).toBeVisible()
   await logIn(page, email, 'second long password')
   await expect(accountMenu(page, email)).toBeVisible()
 })

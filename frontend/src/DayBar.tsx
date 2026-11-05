@@ -22,7 +22,11 @@ export default function DayBar({ day }: { day: DayCounts }) {
             </span>
           ))}
       </div>
-      <p className="day-bar-text">{t('dayInNumbers', { ...day, total })}</p>
+      {/* The dotted line is for the eye; a screen reader gets one plain sentence instead. */}
+      <p className="day-bar-text" aria-hidden="true">
+        {t('dayInNumbers', { ...day, total })}
+      </p>
+      <p className="visually-hidden">{t('dayInNumbersSentence', { ...day, total })}</p>
     </div>
   )
 }

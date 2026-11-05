@@ -17,6 +17,7 @@ import {
 } from './api'
 import { longDay } from './calendarDates'
 import DayBar from './DayBar'
+import { TodaySkeleton } from './DayHeader'
 import { kitaTime } from './dates'
 import GroupLabel from './GroupLabel'
 import IncidentReport from './IncidentReport'
@@ -48,6 +49,8 @@ export default function GroupDashboard() {
   // In the morning: only the Children still to come.
   const [notYetOnly, setNotYetOnly] = useState(false)
   const dashboard = loaded.record
+  // While loading: grey blocks in the page's shape, so nothing jumps when it comes.
+  if (dashboard === undefined && !loaded.failed) return <TodaySkeleton />
   if (!dashboard) return <RecordPlaceholder {...loaded} backTo={{ to: '/', label: t('backToStart') }} />
   const statuses = dashboard.children.map(statusOf)
   const count = (status: Status) => statuses.filter((each) => each === status).length

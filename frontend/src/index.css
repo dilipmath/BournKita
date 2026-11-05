@@ -317,6 +317,24 @@ button[aria-pressed='true'] {
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.06);
 }
 
+/* A refused login: the message and the lockout hint, focused together. */
+.login-problem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 12px;
+}
+
+.login-problem:focus-visible,
+.login-problem:focus {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.login-problem p {
+  margin: 0;
+}
+
 /* The password with its Show/Hide button beside it. */
 .password-field {
   display: flex;
@@ -834,6 +852,14 @@ main.with-navigation {
 
 .skeleton-tile {
   height: 150px;
+}
+
+.skeleton-title {
+  height: 72px;
+}
+
+.skeleton-child {
+  height: 260px;
 }
 
 .empty-state {

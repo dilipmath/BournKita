@@ -14,7 +14,7 @@ export default function LoginForm({ onLoggedIn }: { onLoggedIn: (session: Sessio
   const headingId = useId()
   const passwordId = useId()
   const [showPassword, setShowPassword] = useState(false)
-  const message = useRef<HTMLParagraphElement>(null)
+  const message = useRef<HTMLDivElement>(null)
 
   // A refusal is read out and the keyboard is there to act on it.
   useEffect(() => {
@@ -65,13 +65,14 @@ export default function LoginForm({ onLoggedIn }: { onLoggedIn: (session: Sessio
           </button>
         </div>
       </div>
+      {/* Focused when it appears, which reads it out once; a live role as well would read it twice. */}
       {problem && (
-        <p ref={message} tabIndex={-1} className="status status-problem" role="alert">
-          {t(problem)}
-        </p>
+        <div ref={message} tabIndex={-1} className="login-problem">
+          <p className="status status-problem">{t(problem)}</p>
+          {/* The API answers a locked account like a wrong password, so always explain both. */}
+          {problem === 'invalidCredentials' && <p>{t('lockoutHint')}</p>}
+        </div>
       )}
-      {/* The API answers a locked account like a wrong password, so always explain both. */}
-      {problem === 'invalidCredentials' && <p>{t('lockoutHint')}</p>}
       <button type="submit" className="primary" disabled={submitting} aria-busy={submitting}>
         {t(submitting ? 'loggingIn' : 'logIn')}
       </button>

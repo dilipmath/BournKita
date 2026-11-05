@@ -64,7 +64,7 @@ describe('forgotten password', () => {
     await userEvent.type(screen.getByLabelText('Password'), 'correct horse battery')
     await userEvent.click(screen.getByRole('button', { name: 'Log in' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Email address or password is wrong.')
+    expect(await screen.findByText('Email address or password is wrong.')).toBeInTheDocument()
     expect(
       screen.getByText(
         'After 5 failed logins in a row, the account is locked for 15 minutes. Choosing a new password unlocks it.',
@@ -81,8 +81,8 @@ describe('forgotten password', () => {
     await userEvent.type(screen.getByLabelText('Password'), 'correct horse battery')
     await userEvent.click(screen.getByRole('button', { name: 'Log in' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Too many failed logins from this tablet. Please wait up to 10 minutes, then try again.',
-    )
+    const message = 'Too many failed logins from this tablet. Please wait up to 10 minutes, then try again.'
+    await screen.findByText(message)
+    expect(document.activeElement).toHaveTextContent(message)
   })
 })
