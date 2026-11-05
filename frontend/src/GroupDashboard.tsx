@@ -16,6 +16,7 @@ import {
   type GroupChild,
 } from './api'
 import { longDay } from './calendarDates'
+import DayBar from './DayBar'
 import { kitaTime } from './dates'
 import GroupLabel from './GroupLabel'
 import IncidentReport from './IncidentReport'
@@ -64,9 +65,7 @@ export default function GroupDashboard() {
         <p>{t('noChildrenInGroup')}</p>
       ) : (
         <>
-          <p className="today-counts">
-            {t('todayCounts', { here: count('here'), gone: count('gone'), absent: count('absent'), notYet: count('notYet') })}
-          </p>
+          <DayBar day={{ here: count('here'), gone: count('gone'), absent: count('absent'), notYet: count('notYet') }} />
           <button type="button" aria-pressed={notYetOnly} onClick={() => setNotYetOnly(!notYetOnly)}>
             {t('onlyNotHereYet')}
           </button>

@@ -38,7 +38,7 @@ test('at the door, a Child is checked in and out by tap, and another marked abse
   await absence.getByLabel('Reason').selectOption({ label: 'Holiday' })
   await absence.getByRole('button', { name: 'Save' }).tap()
   await expect(mia).toContainText('Absent: Holiday')
-  await expect(page.getByText('Here 1 · Gone home 0 · Absent 1 · Not here yet 0')).toBeVisible()
+  await expect(page.getByText('1 of 2 here · 0 gone home · 1 absent · 0 not here yet')).toBeVisible()
 
   await lena.getByRole('button', { name: `Check out Lena ${lastName}` }).tap()
   await expect(lena.getByRole('region', { name: `Who may pick up Lena ${lastName}` })).toContainText('Nobody may pick up yet.')

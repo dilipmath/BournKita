@@ -6,6 +6,11 @@
   --bad: #b42318;
   --surface: #ffffff;
   --border: #8a8478;
+  /* The day bar: here, gone home, absent (and the text on them, all 4.5:1 or more). */
+  --part-here: #1f7a3a;
+  --part-gone: #6b665d;
+  --part-absent: #b42318;
+  --on-part: #ffffff;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   font-size: 20px;
   line-height: 1.5;
@@ -22,6 +27,10 @@
     --bad: #ff8a7a;
     --surface: #22252a;
     --border: #7a808a;
+    --part-here: #6fd18f;
+    --part-gone: #9aa0a8;
+    --part-absent: #ff8a7a;
+    --on-part: #17191c;
   }
 }
 
@@ -760,6 +769,56 @@ main.with-navigation {
 
 .kita-today p {
   margin: 4px 0;
+}
+
+/* A day in numbers: one bar in up to four parts, and the same written out. */
+.day-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.day-bar-track {
+  display: flex;
+  gap: 3px;
+  min-height: 28px;
+}
+
+.day-bar-part {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 0 6px;
+  color: var(--on-part);
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 8px;
+}
+
+.day-bar-part.here {
+  background: var(--part-here);
+}
+
+.day-bar-part.gone {
+  background: var(--part-gone);
+}
+
+/* Stripes, so absent differs from here and gone by more than colour. */
+.day-bar-part.absent {
+  background: repeating-linear-gradient(135deg, var(--part-absent) 0 8px, color-mix(in srgb, var(--part-absent) 80%, var(--surface)) 8px 12px);
+}
+
+/* Still to come: an outline, not a fill. */
+.day-bar-part.notYet {
+  color: var(--text);
+  background: var(--bg);
+  border: 2px dashed var(--accent);
+}
+
+.day-bar-text {
+  margin: 0;
+  font-weight: 600;
 }
 
 .administration ul {
@@ -1571,10 +1630,6 @@ main.with-navigation {
   font-weight: 600;
 }
 
-.today-counts {
-  margin: 0;
-  font-weight: 600;
-}
 
 .today-list {
   display: grid;

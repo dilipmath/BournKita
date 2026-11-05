@@ -66,7 +66,7 @@ describe('Today view', () => {
 
     expect(await screen.findByRole('heading', { name: 'Today, Monday, 4 January' })).toBeInTheDocument()
     expect(screen.getByText('Birthday today: Lena Müller')).toBeInTheDocument()
-    expect(screen.getByText('Here 1 · Gone home 1 · Absent 1 · Not here yet 1')).toBeInTheDocument()
+    expect(screen.getByText('1 of 4 here · 1 gone home · 1 absent · 1 not here yet')).toBeInTheDocument()
     expect(card('Lena Müller')).toHaveTextContent('Not here yet')
     expect(card('Lena Müller')).toHaveTextContent('Alerts: Peanuts')
     expect(card('Mia Müller')).toHaveTextContent('Here since 08:12')

@@ -31,7 +31,7 @@ describe('a Teacher’s start page', () => {
     renderAt('/', <App />)
 
     expect(await screen.findByRole('link', { name: /Monkeys/ })).toHaveAttribute('href', '/groups/2')
-    expect(screen.getByRole('link', { name: /Bears/ })).toHaveTextContent('Here 0 · Gone home 0 · Absent 0 · Not here yet 2')
+    expect(screen.getByRole('link', { name: /Bears/ })).toHaveTextContent('0 of 2 here · 0 gone home · 0 absent · 2 not here yet')
   })
 
   it('lists all Groups, and says how to get one, when they work in none', async () => {

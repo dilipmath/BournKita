@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { GroupDay } from './api'
+import DayBar from './DayBar'
 import GroupLabel from './GroupLabel'
 import Icon from './Icon'
 
@@ -19,7 +20,7 @@ export default function GroupDayTile({ group }: { group: GroupDay }) {
           <span>{t('noChildrenInGroup')}</span>
         ) : (
           <>
-            <span>{t('todayCounts', { here: group.here, gone: group.gone, absent: group.absent, notYet: group.notYet })}</span>
+            <DayBar day={group} />
             {group.alertsHere > 0 && (
               <span className="group-tile-alerts">
                 <Icon name="alert" />

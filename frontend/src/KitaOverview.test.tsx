@@ -22,7 +22,7 @@ describe('Kita overview', () => {
     expect(await screen.findByRole('heading', { name: 'Today at the Kita, Monday, 4 January' })).toBeInTheDocument()
     const monkeys = screen.getByRole('link', { name: /Monkeys/ })
     expect(monkeys).toHaveAttribute('href', '/groups/2')
-    expect(monkeys).toHaveTextContent('Here 1 · Gone home 1 · Absent 1 · Not here yet 1')
+    expect(monkeys).toHaveTextContent('1 of 4 here · 1 gone home · 1 absent · 1 not here yet')
     expect(monkeys).toHaveTextContent('With allergies or medical conditions here: 1')
     expect(monkeys).toHaveTextContent('Birthday today: Lena Müller')
     expect(screen.getByRole('link', { name: /Bears/ })).toHaveTextContent('No Children in this Group')
