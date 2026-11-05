@@ -68,6 +68,9 @@ def test_every_route_that_needs_a_login_refuses_a_guest_but_the_calendar(
     # The only ones that need no login, none showing anybody's data: so none slipped past above.
     assert without_login == {
         ("GET", "/api/health"),
+        # The Kita's name and logo, for the login page.
+        ("GET", "/api/kita"),
+        ("GET", "/api/kita/logo"),
         ("POST", "/api/crash-reports"),
         ("POST", "/api/crash-reports/backups"),
         ("POST", "/api/session"),
