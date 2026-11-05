@@ -7,8 +7,8 @@ import Icon, { type IconName } from './Icon'
 const fullName = (child: ChildSummary) => `${child.firstName} ${child.lastName}`
 
 /** Links to these Children, separated by commas. */
-function ChildLinks({ children, to }: { children: ChildSummary[]; to: (child: ChildSummary) => string }) {
-  return children.map((child, index) => (
+function ChildLinks({ items, to }: { items: ChildSummary[]; to: (child: ChildSummary) => string }) {
+  return items.map((child, index) => (
     <span key={child.id}>
       {index > 0 && ', '}
       <Link to={to(child)}>{fullName(child)}</Link>
@@ -51,12 +51,12 @@ export default function NeedsAttention({ overview }: { overview: KitaOverview })
       <ul>
         {late.length > 0 && (
           <Item icon="notYet" tone="warning" title={t('stillHereAfterClosing', { time: kita.closesAt })}>
-            <ChildLinks children={late} to={whereLate} />
+            <ChildLinks items={late} to={whereLate} />
           </Item>
         )}
         {kita.withoutGroup.length > 0 && (
           <Item icon="children" tone="warning" title={t('inNoGroupTitle')}>
-            <ChildLinks children={kita.withoutGroup} to={(child) => `/children/${child.id}`} />
+            <ChildLinks items={kita.withoutGroup} to={(child) => `/children/${child.id}`} />
           </Item>
         )}
         {kita.incidentsToday > 0 && (
