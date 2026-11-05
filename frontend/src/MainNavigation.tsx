@@ -34,7 +34,7 @@ export function MainNavigation({ role }: { role: Role }) {
           { to: '/calendar', icon: 'calendar', label: t('calendar'), end: true },
           { to: '/incidents', icon: 'incidents', label: t('incidents') },
           ...(role === 'admin'
-            ? [{ to: '/administration', icon: 'administration', label: t('administration'), also: (path: string) => adminPages.includes(path) }]
+            ? [{ to: '/administration', icon: 'administration', label: t('administration'), also: (path: string) => adminPages.includes(path) } satisfies Entry]
             : []),
         ]
   return (
