@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { kitaTime } from './dates'
 
 // A tablet on the wall stays current without loading the small server more often than this.
 export const REFRESH_EVERY_MS = 5 * 60_000
@@ -36,16 +34,4 @@ export function useLiveData<T>(fetchData: () => Promise<T>): Live<T> {
   useEffect(load, [load])
   useRefresh(load)
   return live
-}
-
-/** When the numbers on the page are from, and whether the last refresh failed. */
-export function UpdatedNote({ updatedAt, stale }: { updatedAt: string | null; stale: boolean }) {
-  const { t, i18n } = useTranslation()
-  if (updatedAt === null) return null
-  const time = kitaTime(updatedAt, i18n.language)
-  return (
-    <p className={stale ? 'updated-note status-problem' : 'updated-note'} role={stale ? 'status' : undefined}>
-      {t(stale ? 'couldNotUpdate' : 'updatedAt', { time })}
-    </p>
-  )
 }

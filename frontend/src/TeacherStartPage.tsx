@@ -4,7 +4,8 @@ import { fetchOwnGroups } from './api'
 import GroupLabel from './GroupLabel'
 import DayHeader, { StartPageSkeleton } from './DayHeader'
 import GroupDayTile from './GroupDayTile'
-import { UpdatedNote, useLiveData } from './refresh'
+import { useLiveData } from './refresh'
+import UpdatedNote from './UpdatedNote'
 import { useGroups } from './useGroups'
 
 /** Every Group, for a Staff member who works in none yet: they can still open one. */

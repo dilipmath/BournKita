@@ -4,7 +4,8 @@ import { fetchOverview } from './api'
 import DayHeader, { StartPageSkeleton } from './DayHeader'
 import GroupDayTile from './GroupDayTile'
 import NeedsAttention from './NeedsAttention'
-import { UpdatedNote, useLiveData } from './refresh'
+import { useLiveData } from './refresh'
+import UpdatedNote from './UpdatedNote'
 
 /** An Admin's start page: today at the whole Kita, what needs seeing to, and each Group's day;
  * kept fresh on a tablet left on the wall. */
