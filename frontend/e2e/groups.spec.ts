@@ -40,5 +40,5 @@ test('an Admin sets up a Group, and the Kita overview leads to its dashboard', a
 
   // Its tile counts the day.
   await page.getByRole('link', { name: 'Home' }).tap()
-  await expect(page.getByRole('link', { name: new RegExp(groupName) })).toContainText('Not here yet 1')
+  await expect(page.getByRole('link', { name: new RegExp(groupName) })).toContainText('1 not here yet')
 })
