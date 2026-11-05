@@ -8,7 +8,7 @@ For everyone at the Kita who works with the app. Part 1 is for every Staff membe
 
 ![The login page](../../usability/screens/en/01-login.png)
 
-Open the app from the tablet's home screen (or `https://kita.home.arpa` in the browser). Log in with your email address and your password. "Deutsch" or "English" at the top switches the language; the tablet remembers it.
+Open the app from the tablet's home screen (or `https://kita.home.arpa` in the browser). Log in with your email address and your password. "Show password" lets you check what you typed; it is hidden again once you log in. "Deutsch" or "English" at the top switches the language; the tablet remembers it.
 
 - **Your account.** An Admin creates it; you get an email with a link (valid for 7 days). Follow it and choose a password of at least 12 characters.
 - **Forgotten your password?** "Forgot your password?" on the login page sends you a link (valid for 1 hour).
@@ -21,7 +21,7 @@ Open the app from the tablet's home screen (or `https://kita.home.arpa` in the b
 
 ![The start page](../../usability/screens/en/02-start.png)
 
-After logging in you are where your day is. If you work in one Group, its Today view opens by itself. If you work in several, Home shows a tile for each with today's counts: tap yours. Admins see the Kita overview: every Group's day, who is still checked in, Children in no Group, and today's Incidents.
+After logging in you are where your day is. If you work in one Group, its Today view opens by itself. If you work in several, Home shows a tile for each with today's counts: tap yours. Admins see the Kita overview. It greets you by name and shows the whole Kita's day as a bar, then every Group's tile. **"Needs attention"** lists what to see to today: Children still checked in after closing time, Children in no Group, today's Incidents, and today's Birthdays. The numbers update by themselves every few minutes ("Updated 09:42").
 
 ![A Group's Today view](../../usability/screens/en/03-group-today.png)
 

@@ -6,7 +6,7 @@ Jede Karte auf eine eigene Seite drucken (A5 oder A6), laminieren und neben die 
 
 ## Karte 1: Jeden Tag (alle Mitarbeiter:innen)
 
-**Anmelden:** die App auf dem Startbildschirm des Tablets → E-Mail-Adresse und Passwort.
+**Anmelden:** die App auf dem Startbildschirm des Tablets → E-Mail-Adresse und Passwort („Passwort zeigen“, um das Getippte zu prüfen).
 
 1. Nach dem Anmelden öffnet sich **„Heute“** Ihrer Gruppe (mehrere Gruppen: auf die **Kachel Ihrer Gruppe** tippen).
 2. Ein Kind kommt → **„Ankommen“**. Abgeholt → **„Abholen“**. Falsch getippt → **„Rückgängig“**.

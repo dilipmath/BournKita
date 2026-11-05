@@ -4,7 +4,7 @@ Release 1 is built, so the "clickable prototype" is the app itself, run on the t
 
 | Sheet (`en/` · `de/`) | What it is |
 |---|---|
-| `screens/en/`, `screens/de/` | The main screens as they really look on a tablet (in place of wireframes): login, the start page (the Kita overview), a Group's Today view and its check-out with who may pick up, a Child profile with its Alerts, the Tasks, the Calendar, Administration, the Staff accounts, Feedback |
+| `screens/en/`, `screens/de/` | The main screens as they really look on a tablet (in place of wireframes): login, the start page (the Kita overview), a Group's Today view and its check-out with who may pick up, a Child profile with its Alerts, the Tasks, the Calendar, Administration, the Staff accounts, Feedback; the login page and the start page also on a phone (375px) |
 | `01-personas-and-task-flows.md` · `01-personas-und-ablaeufe.md` | Who uses the app and the everyday paths through it |
 | `02-style-guide.md` · `02-gestaltungsregeln.md` | The rules the screens follow (sizes, touch targets, contrast, icons with text), measured, with what does not meet them yet |
 | `03-test-script.md` · `03-testablauf.md` | How to run a session: introduction, the tasks, the closing questions |

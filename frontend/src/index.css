@@ -202,13 +202,15 @@ button[aria-pressed='true'] {
 /* The login page: a warm welcome beside the login card; one above the other on narrow screens. */
 .login-page {
   display: grid;
+  /* Never wider than the screen: the column may shrink below its content's natural width. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
   margin: 24px 0;
 }
 
 @media (min-width: 900px) {
   .login-page {
-    grid-template-columns: 1.1fr 1fr;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
     align-items: center;
     gap: 40px;
   }
@@ -325,11 +327,13 @@ button[aria-pressed='true'] {
 
 .password-field div {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
+/* At least about 12 characters wide; the button moves below the field when there is no room. */
 .password-field input {
-  flex: 1;
+  flex: 1 1 12rem;
   min-width: 0;
 }
 

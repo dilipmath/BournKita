@@ -8,7 +8,7 @@ Für alle in der Kita, die mit der App arbeiten. Teil 1 ist für alle Mitarbeite
 
 ![Die Anmeldeseite](../../usability/screens/de/01-login.png)
 
-Die App vom Startbildschirm des Tablets öffnen (oder `https://kita.home.arpa` im Browser). Mit Ihrer E-Mail-Adresse und Ihrem Passwort anmelden. „Deutsch“ oder „English“ oben wechselt die Sprache; das Tablet merkt sie sich.
+Die App vom Startbildschirm des Tablets öffnen (oder `https://kita.home.arpa` im Browser). Mit Ihrer E-Mail-Adresse und Ihrem Passwort anmelden. „Passwort zeigen“ zeigt, was Sie getippt haben; nach dem Anmelden ist es wieder verborgen. „Deutsch“ oder „English“ oben wechselt die Sprache; das Tablet merkt sie sich.
 
 - **Ihr Konto.** Eine Admin legt es an; Sie bekommen eine E-Mail mit einem Link (7 Tage gültig). Folgen Sie ihm und wählen Sie ein Passwort mit mindestens 12 Zeichen.
 - **Passwort vergessen?** „Passwort vergessen?“ auf der Anmeldeseite schickt Ihnen einen Link (1 Stunde gültig).
@@ -21,7 +21,7 @@ Die App vom Startbildschirm des Tablets öffnen (oder `https://kita.home.arpa` i
 
 ![Die Startseite](../../usability/screens/de/02-start.png)
 
-Nach dem Anmelden sind Sie dort, wo Ihr Tag ist. Arbeiten Sie in einer Gruppe, öffnet sich ihr „Heute“ von selbst. Arbeiten Sie in mehreren, zeigt die Startseite für jede eine Kachel mit den Zahlen von heute: auf Ihre tippen. Admins sehen die Übersicht der Kita: den Tag jeder Gruppe, wer noch da ist, Kinder ohne Gruppe und die Vorfälle von heute.
+Nach dem Anmelden sind Sie dort, wo Ihr Tag ist. Arbeiten Sie in einer Gruppe, öffnet sich ihr „Heute“ von selbst. Arbeiten Sie in mehreren, zeigt die Startseite für jede eine Kachel mit den Zahlen von heute: auf Ihre tippen. Admins sehen die Übersicht der Kita. Sie begrüßt Sie mit Namen und zeigt den Tag der ganzen Kita als Balken, dann die Kachel jeder Gruppe. **„Bitte beachten“** zeigt, worum man sich heute kümmern sollte: Kinder, die nach Schließzeit noch da sind, Kinder ohne Gruppe, die Vorfälle von heute und die Geburtstage. Die Zahlen aktualisieren sich alle paar Minuten von selbst („Aktualisiert 09:42“).
 
 ![Die Tagesansicht einer Gruppe](../../usability/screens/de/03-group-today.png)
 

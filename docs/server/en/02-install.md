@@ -192,6 +192,14 @@ echo "alias dc='docker compose -f /opt/kita/compose.prod.yaml'" >> ~/.bashrc   #
 
 Fill in `.env` as it explains: `KITA_HOSTNAME=kita.home.arpa`, `KITA_BACKUP_DIR=/mnt/backup/kita`, `KITA_OFFSITE_DIR=/mnt/offsite`, the mail settings, and the two keys (it says how to make them). **Print the app key and the backup private key** and lock them away. Then follow the README's "Run in production": start the stack, create the first Admin, install Caddy's root certificate on every tablet.
 
+Three settings make the app the Kita's own (all optional):
+
+- `KITA_NAME=Kita Sonnenschein`: the Kita's name on the login page and at the top of every page. Without it the app says "Kita Kids Database".
+- `KITA_LOGO=logo.png`: a logo beside the name. Put the file in `/opt/kita/branding/`. It must be a PNG, JPEG or WebP picture (not SVG), ideally square or wide, about 200 pixels high. Without it, or with any other file type, no logo is shown.
+- `KITA_CLOSES_AT=16:30`: when the Kita closes, in the Kita's own time. After it, the Kita overview lists under "Needs attention" every Child still checked in. Without it, that list never shows.
+
+After changing them: `dc up -d`.
+
 ## 12. The UPS
 
 Connect it by USB, then:

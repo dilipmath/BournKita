@@ -6,7 +6,7 @@ Print each card on its own page (A5 or A6), laminate it, and keep it next to the
 
 ## Card 1: Every day (all Staff)
 
-**Log in:** the app on the tablet's home screen → email address and password.
+**Log in:** the app on the tablet's home screen → email address and password ("Show password" to check what you typed).
 
 1. After logging in, your Group's **Today** opens (several Groups: tap **your Group's tile**).
 2. A Child arrives → **"Check in"**. Picked up → **"Check out"**. Wrong tap → **"Undo"**.

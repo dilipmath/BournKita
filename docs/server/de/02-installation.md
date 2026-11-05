@@ -192,6 +192,14 @@ echo "alias dc='docker compose -f /opt/kita/compose.prod.yaml'" >> ~/.bashrc   #
 
 `.env` ausfüllen, wie dort beschrieben: `KITA_HOSTNAME=kita.home.arpa`, `KITA_BACKUP_DIR=/mnt/backup/kita`, `KITA_OFFSITE_DIR=/mnt/offsite`, die Mail-Einstellungen und die beiden Schlüssel (dort steht, wie man sie erzeugt). **Den App-Schlüssel und den privaten Sicherungsschlüssel drucken** und wegschließen. Dann dem Abschnitt „Run in production“ der README folgen: die App starten, die erste Admin anlegen, das Stammzertifikat von Caddy auf jedem Tablet installieren.
 
+Drei Einstellungen machen die App zu der der Kita (alle freiwillig):
+
+- `KITA_NAME=Kita Sonnenschein`: der Name der Kita auf der Anmeldeseite und oben auf jeder Seite. Ohne ihn heißt die App „Kita Kids Database“.
+- `KITA_LOGO=logo.png`: ein Logo neben dem Namen. Die Datei in `/opt/kita/branding/` legen. Sie muss ein PNG-, JPEG- oder WebP-Bild sein (kein SVG), am besten quadratisch oder breit, etwa 200 Pixel hoch. Ohne sie, oder bei einer anderen Dateiart, erscheint kein Logo.
+- `KITA_CLOSES_AT=16:30`: wann die Kita schließt, in der Zeit der Kita. Danach zeigt die Übersicht der Kita unter „Bitte beachten“ jedes Kind, das noch angemeldet ist. Ohne sie erscheint diese Liste nie.
+
+Nach einer Änderung: `dc up -d`.
+
 ## 12. Die USV
 
 Per USB anschließen, dann:

@@ -60,14 +60,18 @@ async function seed(api: APIRequestContext): Promise<{ group: number; lena: numb
   return { group, lena }
 }
 
-async function shoot(page: Page, language: 'en' | 'de', name: string): Promise<void> {
+// A phone held upright, for the screens that change most there.
+const PHONE_WIDTH = 375
+
+async function shoot(page: Page, language: 'en' | 'de', name: string, width?: number): Promise<void> {
   // Settled first: no spinner or half-loaded list in the picture.
   await page.waitForLoadState('networkidle')
   // As tall as the page, so the tab bar is at its foot as on the tablet (a full-page shot would
   // leave it where the tablet's screen ends), then back to the tablet's size.
   const tablet = page.viewportSize()!
+  await page.setViewportSize({ width: width ?? tablet.width, height: tablet.height })
   const height = await page.evaluate(() => document.documentElement.scrollHeight)
-  await page.setViewportSize({ width: tablet.width, height: Math.max(height, tablet.height) })
+  await page.setViewportSize({ width: width ?? tablet.width, height: Math.max(height, tablet.height) })
   await page.screenshot({ path: `${out}${language}/${name}.png` })
   await page.setViewportSize(tablet)
 }
@@ -82,6 +86,7 @@ test('screenshots of the main screens', async ({ page }) => {
   test.setTimeout(120_000)
   await page.goto('/')
   await shoot(page, 'en', '01-login')
+  await shoot(page, 'en', '11-login-phone', PHONE_WIDTH)
   await logInAsAdmin(page)
   const { group, lena } = await seed(page.request)
 
@@ -95,6 +100,7 @@ test('screenshots of the main screens', async ({ page }) => {
     }
     await page.goto('/')
     await shoot(page, language, '02-start')
+    await shoot(page, language, '12-start-phone', PHONE_WIDTH)
     await page.goto(`/groups/${group}`)
     await shoot(page, language, '03-group-today')
     // Before Lena goes home: who may pick her up.
@@ -121,4 +127,5 @@ test('screenshots of the main screens', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('button', { name: 'Anmelden' })).toBeVisible()
   await shoot(page, 'de', '01-login')
+  await shoot(page, 'de', '11-login-phone', PHONE_WIDTH)
 })

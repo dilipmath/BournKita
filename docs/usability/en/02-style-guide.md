@@ -20,9 +20,9 @@ Staff with basic computer skills, on a tablet held in one hand, often in a hurry
 | | Red (Alerts, danger) #b42318 on the background | 6.4:1 (dark mode 7.7:1) | ✓ |
 | **Outline contrast** (WCAG 1.4.11, 3:1 for what shows where a field or button is) | Border #8a8478 on the background and on cards (dark mode #7a808a) | 3.6:1 on the background, 3.7:1 on cards (dark mode 4.4:1 and 3.9:1) | ✓ |
 | **Focus** | A clear outline around whatever has the keyboard focus | 3px outline in the accent colour | ✓ |
-| **Icons with text** | Never an icon alone: Group icons stand next to the Group's name; Alerts show e.g. "⚠ Allergies: Peanuts" | **In the month calendar, a Group's Events show only its icon** (the name is there for screen readers only) | ✗ |
+| **Icons with text** | Never an icon alone. Interface icons are simple line drawings in the colour of the text beside them (no emoji); Group icons (animals, plants) stand next to the Group's name; Alerts show a warning sign and e.g. "Allergies: Peanuts" | **In the month calendar, a Group's Events show only its icon** (the name is there for screen readers only) | ✗ |
 | **Group icons** | Each Group has an animal or plant icon, shown on the Group tiles of the start page, the Today view and the Calendar | — | ✓ |
-| **Colour never alone** | Status is also written: "Here since 08:12", "Absent: sick", "Gone home at 15:30" | — | ✓ |
+| **Colour never alone** | Status is also written: "Here since 08:12", "Absent: sick", "Gone home at 15:30". The day bar's parts also differ by pattern (solid, grey, stripes, dashed outline), carry their number, and are written out beside the bar | — | ✓ |
 | **Plain words** | The words of the glossary (Child, Group, Alert, Pick-up person …), in German and English | — | ✓ |
 | **Second step before anything that loses data** | Deleting asks again; deleting for good says it cannot be undone | — | ✓ |
 | **Dark mode** | Follows the device's setting | — | ✓ |

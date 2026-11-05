@@ -20,9 +20,9 @@ Mitarbeiter:innen mit Grundkenntnissen am Computer, ein Tablet in einer Hand, of
 | | Rot (Allergien, Gefahr) #b42318 auf dem Hintergrund | 6,4:1 (dunkler Modus 7,7:1) | ✓ |
 | **Kontrast von Umrissen** (WCAG 1.4.11, 3:1 für das, was zeigt, wo ein Feld oder Knopf ist) | Rand #8a8478 auf dem Hintergrund und auf Karten (dunkler Modus #7a808a) | 3,6:1 auf dem Hintergrund, 3,7:1 auf Karten (dunkler Modus 4,4:1 und 3,9:1) | ✓ |
 | **Fokus** | Ein deutlicher Rahmen um das, was den Tastaturfokus hat | 3px-Rahmen in der Akzentfarbe | ✓ |
-| **Symbole mit Text** | Nie ein Symbol allein: Gruppensymbole stehen neben dem Namen der Gruppe; Allergien zeigen z. B. „⚠ Allergien: Peanuts“ | **Im Monatskalender zeigen Termine einer Gruppe nur ihr Symbol** (der Name ist nur für Bildschirmleser da) | ✗ |
+| **Symbole mit Text** | Nie ein Symbol allein. Bedien-Symbole sind schlichte Strichzeichnungen in der Farbe des Textes daneben (keine Emoji); Gruppensymbole (Tiere, Pflanzen) stehen neben dem Namen der Gruppe; Allergien zeigen ein Warnzeichen und z. B. „Allergien: Peanuts“ | **Im Monatskalender zeigen Termine einer Gruppe nur ihr Symbol** (der Name ist nur für Bildschirmleser da) | ✗ |
 | **Gruppensymbole** | Jede Gruppe hat ein Tier- oder Pflanzensymbol, auf den Gruppenkacheln der Startseite, in „Heute“ und im Kalender | — | ✓ |
-| **Nie nur Farbe** | Der Status steht auch als Text da: „Da seit 08:12“, „Abwesend: krank“, „Abgeholt um 15:30“ | — | ✓ |
+| **Nie nur Farbe** | Der Status steht auch als Text da: „Da seit 08:12“, „Abwesend: krank“, „Abgeholt um 15:30“. Die Teile des Tagesbalkens unterscheiden sich auch im Muster (voll, grau, Streifen, gestrichelter Rand), tragen ihre Zahl und stehen ausgeschrieben neben dem Balken | — | ✓ |
 | **Einfache Worte** | Die Begriffe des Glossars (Kind, Gruppe, Allergien und Erkrankungen, Abholberechtigte …), auf Deutsch und Englisch | — | ✓ |
 | **Zweiter Schritt vor allem, was Daten löscht** | Löschen fragt nach; endgültiges Löschen sagt, dass es nicht rückgängig zu machen ist | — | ✓ |
 | **Dunkler Modus** | Folgt der Einstellung des Geräts | — | ✓ |
