@@ -7,7 +7,7 @@ Zwei kurze Schulungen an den eigenen Tablets der Kita, in der Woche vor dem Star
 | Minuten | Was | Wie |
 |---|---|---|
 | 5 | Wozu die App; was auf Papier bleibt (siehe Start-Checkliste, „Papier als Rückfall“) | Erklären |
-| 10 | Anmelden, die Sprache, die App zum Startbildschirm hinzufügen, abmelden; Passwort vergessen; automatisches Abmelden nach 30 Minuten | Alle an ihrem Tablet |
+| 10 | Anmelden, das Menü mit dem eigenen Namen (Sprache, abmelden), die Leiste unten und die Reiter der Gruppe, die App zum Startbildschirm hinzufügen; Passwort vergessen; automatisches Abmelden nach 30 Minuten | Alle an ihrem Tablet |
 | 15 | Der Tag der Gruppe: Ankommen, Abholen, Rückgängig, Abwesend; das Zeichen „Achtung“ | Alle lassen zwei Kinder ankommen und abholen |
 | 10 | Das Profil eines Kindes: Allergien, Essen, wer abholen darf | „Darf Tom Krause Lena abholen?“ |
 | 5 | Einen Vorfall melden | Alle melden einen erfundenen Vorfall |

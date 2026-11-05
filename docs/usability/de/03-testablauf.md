@@ -18,7 +18,7 @@ Jede Aufgabe vorlesen; keine Knöpfe oder Seiten nennen. Zeit notieren, wo gezö
 
 | Nr. | Aufgabe (vorlesen) | Geschafft, wenn |
 |---|---|---|
-| 1 | „Bitte melden Sie sich an. E-Mail und Passwort stehen auf dieser Karte.“ | Die Startseite erscheint |
+| 1 | „Bitte melden Sie sich an. E-Mail und Passwort stehen auf dieser Karte.“ | „Heute“ der Monkeys erscheint (Erzieher:in mit einer Gruppe); für die Kita-Leitung die Übersicht der Kita |
 | 2 | „Sie arbeiten heute bei den Monkeys. Öffnen Sie ihre Seite.“ | „Heute“ der Monkeys erscheint |
 | 3 | „Welche Kinder haben eine Allergie oder Erkrankung, auf die Sie achten müssen?“ | Sie nennen Lena (Peanuts) und Noah (Asthma) |
 | 4 | „Emil ist gerade angekommen. Halten Sie fest, dass er da ist.“ | Emil ist angekommen |

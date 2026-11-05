@@ -14,19 +14,21 @@ Open the app from the tablet's home screen (or `https://kita.home.arpa` in the b
 - **Forgotten your password?** "Forgot your password?" on the login page sends you a link (valid for 1 hour).
 - **Locked out?** After 5 wrong passwords in a row the account is locked for 15 minutes. Choosing a new password, or an Admin ("Unlock" on the Staff accounts page), unlocks it at once. After 20 failed logins from one tablet within 10 minutes, that tablet must wait up to 10 minutes.
 - **Logged out by itself?** After 30 minutes without a tap the app logs you out, so a tablet left lying around shows nothing. Just log in again.
-- Always "Log out" when you hand a tablet to someone else.
+- Always "Log out" when you hand a tablet to someone else: tap your name at the top right, then "Log out". The same menu changes the language.
+- **Finding your way:** the bar at the bottom of the tablet (on the office PC: down the left) has Home, Children, Calendar and Incidents; Admins also have Administration. Inside a Group, its tabs Today, Tasks and Calendar are at the top. **"Emergency"** is at the top of every page.
 
 ### Your Group's day
 
 ![The start page](../../usability/screens/en/02-start.png)
 
-The start page lists your Groups ("My Groups") and the others. Tap yours.
+After logging in you are where your day is. If you work in one Group, its Today view opens by itself. If you work in several, Home shows a tile for each with today's counts: tap yours. Admins see the Kita overview: every Group's day, who is still checked in, Children in no Group, and today's Incidents.
 
 ![A Group's Today view](../../usability/screens/en/03-group-today.png)
 
 The Group's page shows today: how many Children are here, gone home, absent or not here yet; today's birthdays; and every Child with their state.
 
-- **"Check in"** when a Child arrives, **"Check out"** when they are picked up. Tapped the wrong one? **"Undo"**.
+- **"Check in"** when a Child arrives. **"Check out"** when they are picked up: first it shows who may pick the Child up, with photos; check the person at the door, then **"Goes home now"** ("Not now" if it is someone else). Tapped the wrong one? **"Undo"**.
+- **"Show only who is not here yet"**: in the morning, only the Children still to come.
 - **"Absent"**: the reason (sick, holiday, other) and from when until when. It shows on the Child's profile; "Remove absence" takes it back.
 - The **"Alerts"** marker next to a name means an allergy or medical condition. Tap the name to see it.
 
@@ -50,19 +52,19 @@ On the Child's profile or the Group's page: **"Report incident"**. Write the dat
 
 ### The emergency list
 
-For a fire drill, an evacuation, or when the power or network may go: **"Emergency list (PDF)"** on the Group's page, or **"Emergency list of the whole Kita (PDF)"** on the start page. It lists the Children here right now (checked in, not yet checked out), with their allergies and conditions and whom to call. Print it, or open it on the tablet.
+For a fire drill, an evacuation, or when the power or network may go: **"Emergency"** at the top of every page → **"Emergency list (PDF)"** of the Group you are in, or **"Emergency list of the whole Kita (PDF)"**. It lists the Children here right now (checked in, not yet checked out), with their allergies and conditions and whom to call. Print it, or open it on the tablet.
 
 ### The Task board
 
 ![The Task board](../../usability/screens/en/05-task-board.png)
 
-On the Group's page: **"Task board"**. "Add task", then drag it with a finger between To do, Doing and Done (or use the buttons). "Edit" sets who does it, a due date and labels. **"Backlog"** shows the To do tasks in order of importance: drag them, or use "Up" and "Down".
+In the Group, the **"Tasks"** tab. "Add task", then drag it with a finger between To do, Doing and Done (or use the buttons). "Edit" sets who does it, a due date and labels. **"Backlog"** shows the To do tasks in order of importance: drag them, or use "Up" and "Down".
 
 ### The Calendar
 
 ![The Calendar](../../usability/screens/en/06-calendar.png)
 
-"Calendar" in the menu (the whole Kita), or on the Group's page (that Group). Month, Week or Agenda. It shows the Events, the public and school holidays, and the Children's birthdays.
+"Calendar" in the bar at the bottom (the whole Kita), or the Group's "Calendar" tab (that Group). Month, Week or Agenda. It shows the Events, the public and school holidays, and the Children's birthdays.
 
 "Add event": a title, for the Group or the whole Kita, all day or with times, repeating if wanted, and a Reminder. A Reminder is an email from 07:00 that morning, or 1, 2 or 7 days before, to every Staff member working in that Group (or, for the whole Kita, to every Staff member; never to Guests).
 
@@ -88,7 +90,7 @@ Something wrong, hard, or an idea? **"Feedback"**, on every page. Choose problem
 
 ### Groups
 
-"Groups": create one with a name and an icon, rename it, or remove it ("Remove for good"; its Children stay, in no Group).
+"Administration" → "Groups": create one with a name and an icon, rename it, or remove it ("Remove for good"; its Children stay, in no Group).
 
 ### Child profiles
 

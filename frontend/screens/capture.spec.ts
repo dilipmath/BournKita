@@ -5,7 +5,7 @@
 //   npm run screens
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 import { fileURLToPath } from 'node:url'
-import { logInAsAdmin } from '../e2e/credentials.ts'
+import { accountMenu, e2eAdmin, logInAsAdmin } from '../e2e/credentials.ts'
 
 const out = fileURLToPath(new URL('../../docs/usability/screens/', import.meta.url))
 
@@ -63,7 +63,13 @@ async function seed(api: APIRequestContext): Promise<{ group: number; lena: numb
 async function shoot(page: Page, language: 'en' | 'de', name: string): Promise<void> {
   // Settled first: no spinner or half-loaded list in the picture.
   await page.waitForLoadState('networkidle')
-  await page.screenshot({ path: `${out}${language}/${name}.png`, fullPage: true })
+  // As tall as the page, so the tab bar is at its foot as on the tablet (a full-page shot would
+  // leave it where the tablet's screen ends), then back to the tablet's size.
+  const tablet = page.viewportSize()!
+  const height = await page.evaluate(() => document.documentElement.scrollHeight)
+  await page.setViewportSize({ width: tablet.width, height: Math.max(height, tablet.height) })
+  await page.screenshot({ path: `${out}${language}/${name}.png` })
+  await page.setViewportSize(tablet)
 }
 
 // Only the made-up data, for a usability session: `npm run usability-stack` (keeps the stack).
@@ -79,33 +85,40 @@ test('screenshots of the main screens', async ({ page }) => {
   await logInAsAdmin(page)
   const { group, lena } = await seed(page.request)
 
-  // Each page in the language of this round (the app remembers the last choice; tapping it again is harmless).
-  async function open(path: string, language: 'en' | 'de'): Promise<void> {
-    await page.goto(path)
-    if (language === 'de') await page.getByRole('button', { name: 'Deutsch' }).tap()
-  }
-
   for (const language of ['en', 'de'] as const) {
-    await open('/', language)
+    // German: chosen once in the account menu; the app remembers it for the pages after.
+    if (language === 'de') {
+      await page.goto('/')
+      await accountMenu(page, e2eAdmin.email).tap()
+      await page.getByRole('button', { name: 'Deutsch' }).tap()
+      await page.keyboard.press('Escape')
+    }
+    await page.goto('/')
     await shoot(page, language, '02-start')
-    await open(`/groups/${group}`, language)
+    await page.goto(`/groups/${group}`)
     await shoot(page, language, '03-group-today')
-    await open(`/children/${lena}`, language)
+    // Before Lena goes home: who may pick her up.
+    await page.getByRole('button', { name: language === 'en' ? 'Check out Lena Weber' : 'Lena Weber wird abgeholt' }).tap()
+    await expect(page.getByText('Tom Krause')).toBeVisible()
+    await shoot(page, language, '09-check-out')
+    await page.goto(`/children/${lena}`)
     await shoot(page, language, '04-child-profile')
-    await open(`/groups/${group}/board`, language)
+    await page.goto(`/groups/${group}/board`)
     await shoot(page, language, '05-task-board')
-    await open(`/groups/${group}/calendar`, language)
+    await page.goto(`/groups/${group}/calendar`)
     await shoot(page, language, '06-calendar')
-    await open('/staff', language)
+    await page.goto('/administration')
+    await shoot(page, language, '10-administration')
+    await page.goto('/staff')
     await shoot(page, language, '07-staff-accounts')
-    await open('/children', language)
+    await page.goto('/children')
     await page.getByRole('button', { name: 'Feedback' }).tap()
     await shoot(page, language, '08-feedback')
   }
 
-  // The login page in German: logged out, then one tap.
+  // The login page in German: logged out; the language stays as chosen.
   await page.context().clearCookies()
-  await open('/', 'de')
+  await page.goto('/')
   await expect(page.getByRole('button', { name: 'Anmelden' })).toBeVisible()
   await shoot(page, 'de', '01-login')
 })

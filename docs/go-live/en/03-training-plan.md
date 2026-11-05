@@ -7,7 +7,7 @@ Two short sessions on the Kita's own tablets, in the week before go-live, with m
 | Minutes | What | How |
 |---|---|---|
 | 5 | Why the app; what stays on paper (see go-live checklist, "Paper fallback") | Talk |
-| 10 | Log in, the language, add the app to the home screen, log out; forgotten password; automatic logout after 30 minutes | Everyone on their tablet |
+| 10 | Log in, the menu with your name (language, log out), the bar at the bottom and the Group tabs, add the app to the home screen; forgotten password; automatic logout after 30 minutes | Everyone on their tablet |
 | 15 | The Group's day: Check in, Check out, Undo, Absent; the Alerts marker | Each checks in and out two Children |
 | 10 | A Child's profile: allergies, food, who may pick up | "Is Tom Krause allowed to pick up Lena?" |
 | 5 | Report an incident | Each reports one made-up incident |

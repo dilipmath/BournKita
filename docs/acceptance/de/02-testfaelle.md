@@ -10,11 +10,11 @@ Testende: ______________________  Tablet: ____________  Datum: ____________
 
 | Nr. | R | Tun | Erwartet | ✓ ✗ ~ | Notiz |
 |---|---|---|---|:-:|---|
-| A1 | R01, R04 | Auf einem Tablet `https://kita.home.arpa` öffnen. Mit dem Konto der Kita-Leitung anmelden. | Keine Zertifikatswarnung. Die Startseite erscheint. | | |
+| A1 | R01, R04 | Auf einem Tablet `https://kita.home.arpa` öffnen. Mit dem Konto der Kita-Leitung anmelden. | Keine Zertifikatswarnung. Die Übersicht der Kita erscheint: eine Kachel je Gruppe mit den Zahlen von heute. | | |
 | A2 | R35 | „English“ wählen, die Seite neu laden, dann wieder „Deutsch“ (oder umgekehrt). | Alle Texte wechseln; die Wahl bleibt nach dem Neuladen. | | |
 | A3 | R02, R03 | „Mitarbeiterkonten“: für alle Testenden ein Konto anlegen (Rolle Erzieher:in, auf Wunsch eine weitere Admin) und eines für den Gast (Rolle Gast). | Jedes zeigt „Eingeladen – E-Mail noch nicht bestätigt“; alle Testenden bekommen eine Einladung per E-Mail. | | |
 | A4 | R02 | Alle Testenden öffnen ihre Einladung, folgen dem Link und wählen ein Passwort (mindestens 12 Zeichen). | „Ihr Passwort ist gespeichert“; das Konto zeigt „Aktiv“. | | |
-| A5 | R10 | „Gruppen“: „Monkeys“ (Symbol Affe) und „Butterflies“ (Symbol Schmetterling) anlegen. „Butterflies“ in „Bees“ umbenennen. | Beide erscheinen mit ihrem Symbol; der neue Name erscheint überall. | | |
+| A5 | R10 | „Verwaltung“ → „Gruppen“: „Monkeys“ (Symbol Affe) und „Butterflies“ (Symbol Schmetterling) anlegen. „Butterflies“ in „Bees“ umbenennen. | Beide erscheinen mit ihrem Symbol; der neue Name erscheint überall. | | |
 | A6 | R10 | „Mitarbeiterkonten“: bei allen Erzieher:innen die Monkeys ankreuzen. | Gespeichert; alle Erzieher:innen arbeiten in den Monkeys. | | |
 | A7 | R06 | „Kinder“ → „Neues Kinderprofil“: Lena Weber (Mädchen, geboren 14.03.2022, Sprachen Deutsch und Türkisch, vegetarisch, malt gern). Auf ihrem Profil die Gruppe Monkeys wählen. Ebenso für Noah Fischer, Mia Schmidt, Sofia Wagner, und Emil Becker, **geboren am heutigen Datum vor vier Jahren**. | Jedes Profil zeigt das Eingetragene und die Gruppe; die Seite der Monkeys listet alle fünf. | | |
 | A8 | R06 | Lena bearbeiten: ihre Interessen ändern. | Die Änderung erscheint. | | |
@@ -33,7 +33,7 @@ Alle Erzieher:innen melden sich an einem Tablet mit ihrem eigenen Konto an. Admi
 | Nr. | R | Wer | Tun | Erwartet | ✓ ✗ ~ | Notiz |
 |---|---|---|---|---|:-:|---|
 | B1 | R15, R33 | Erzieher:in | Die App zum Startbildschirm des Tablets hinzufügen (Menü des Browsers → „Zum Startbildschirm hinzufügen“ / „App installieren“), von dort öffnen. | Sie öffnet sich wie eine App, ohne die Adressleiste des Browsers. | | |
-| B2 | R10 | Erzieher:in | Auf der Startseite die Monkeys wählen. | Die Seite der Monkeys: das heutige Datum, die Zahlen, alle Kinder der Gruppe. | | |
+| B2 | R10 | Erzieher:in | Anmelden (die Erzieherin arbeitet nur bei den Monkeys). | „Heute“ der Monkeys öffnet sich von selbst: das heutige Datum, die Zahlen, eine Kachel mit Foto für jedes Kind der Gruppe. | | |
 | B3 | R18 | Erzieher:in | Welche Kinder haben eine Allergie oder Erkrankung? | Lena und Noah tragen das Zeichen „Achtung“. | | |
 | B4 | R24 | Erzieher:in | Wer hat Geburtstag? | „Geburtstag heute: Emil Becker“. | | |
 | B5 | R21 | Erzieher:in | Emil, Lena und Noah „Ankommen“ lassen. Dann Lena „Abholen“. Dann „Rückgängig“ bei Lena. | Die Zahlen und die Zeile jedes Kindes ändern sich jedes Mal („Da seit …“, „Abgeholt um …“); nach Rückgängig ist Lena wieder da. | | |
@@ -43,8 +43,8 @@ Alle Erzieher:innen melden sich an einem Tablet mit ihrem eigenen Konto an. Admi
 | B9 | R06 | Erzieher:in | „Kinder“: nach „we“ suchen. | Lena und Ben Weber werden gefunden. (Nach Gruppe: die Seite der Gruppe, B2.) | | |
 | B10 | R23 | Erzieher:in | Noah: „Vorfall melden“: Knie an der Rutsche aufgeschürft, Pflaster, Vater telefonisch informiert. | „Vorfall gemeldet.“; er lässt sich danach nicht mehr ändern. | | |
 | B11 | R23 | Admin | „Vorfallbuch“: Noahs Vorfall finden, „Nachtrag hinzufügen“. | Der Nachtrag erscheint unter dem Vorfall, mit Angabe, wer ihn wann geschrieben hat. Das „Vorfallbuch“ von Erzieher:innen zeigt nur ihre eigenen Meldungen. | | |
-| B12 | R20 | Erzieher:in | Feuerübung: die „Notfallliste (PDF)“ der Monkeys. Auf dem Drucker im Büro drucken. Dann die „Notfallliste der ganzen Kita (PDF)“ auf der Startseite. | Zeigt die Kinder, die jetzt da sind (Emil, Lena, Noah; nicht Ben, Mia oder Sofia), mit ihren Allergien und Erkrankungen und wen man anruft; auf Papier lesbar. | | |
-| B13 | R12 | Erzieher:in | „Aufgaben“: „Aufgabe hinzufügen“ „Klebestifte kaufen“. Mit dem Finger nach In Arbeit ziehen, dann nach Erledigt. | Sie wandert jedes Mal und bleibt dort nach dem Neuladen. | | |
+| B12 | R20 | Erzieher:in | Feuerübung: in „Heute“ der Monkeys „Notfall“ → „Notfallliste (PDF)“. Auf dem Drucker im Büro drucken. Dann „Notfall“ → „Notfallliste der ganzen Kita (PDF)“. | Zeigt die Kinder, die jetzt da sind (Emil, Lena, Noah; nicht Ben, Mia oder Sofia), mit ihren Allergien und Erkrankungen und wen man anruft; auf Papier lesbar. | | |
+| B13 | R12 | Erzieher:in | Der Reiter „Aufgaben“ der Monkeys: „Aufgabe hinzufügen“ „Klebestifte kaufen“. Mit dem Finger nach In Arbeit ziehen, dann nach Erledigt. | Sie wandert jedes Mal und bleibt dort nach dem Neuladen. | | |
 | B14 | R12 | Erzieher:in | Drei weitere Aufgaben hinzufügen; mit „Bearbeiten“ einer davon jemanden geben („Wer macht es“), ein Fälligkeitsdatum und ein Schlagwort. „Backlog“: die wichtigste nach oben schieben (ziehen, oder „Hoch“). | Die Reihenfolge und die Angaben bleiben nach dem Neuladen. | | |
 | B15 | R13 | Erzieher:in | „Kalender“ der Monkeys → „Termin hinzufügen“: Puppentheater übermorgen, 10:00–11:00, Erinnerung „1 Tag vorher“. Monat, Woche und Liste ansehen. | Es erscheint übermorgen um 10:00 in allen drei Ansichten; der Monat zeigt auch die Feiertage und Emils Geburtstag (heute). | | |
 | B16 | R13 | Erzieher:in | „Termin hinzufügen“: Morgenkreis jeden Montag, 09:00–09:30, Wiederholung jede Woche. Dann mit „Bearbeiten“ auf 09:15 verschieben, dann „Löschen“. | Er erscheint an jedem Montag, dann um 09:15; nach dem Löschen an keinem Montag. | | |
@@ -52,9 +52,9 @@ Alle Erzieher:innen melden sich an einem Tablet mit ihrem eigenen Konto an. Admi
 | B18 | R16 | Erzieher:in | „Feedback“ (auf einer beliebigen Seite): Art Idee, „Das ist ein Test“. | „Danke! Ihr Feedback wurde gesendet.“; der Entwickler bekommt die E-Mail mit der Seite. | | |
 | B19 | R01 | Gast | Mit dem Gast-Konto anmelden. Sich umsehen. | Nur der Kalender, nur zum Lesen, mit den Terminen der ganzen Kita und den Feiertagen; kein Kind, keine Termine einer Gruppe, kein Name; keine Geburtstage. | | |
 | B20 | R01, R03 | Erzieher:in | Im Browser (nicht in der installierten App) versuchen, die Mitarbeiterkonten, das Protokoll und das Archiv zu öffnen (sie stehen nicht im Menü; die Adressen `/staff`, `/audit-log`, `/archive` bei der Admin erfragen). | Jedes Mal „Nur Admins …“. | | |
-| B21 | R02 | Erzieher:in | Abmelden. „Passwort vergessen?“: einen Link anfordern, ihm aus der E-Mail folgen, ein neues Passwort wählen, damit anmelden. | Klappt; das alte Passwort nicht mehr. | | |
+| B21 | R02 | Erzieher:in | Abmelden (das Menü mit ihrem Namen, oben rechts). „Passwort vergessen?“: einen Link anfordern, ihm aus der E-Mail folgen, ein neues Passwort wählen, damit anmelden. | Klappt; das alte Passwort nicht mehr. | | |
 | B22 | R01 | Erzieher:in | Das Tablet 30 Minuten nicht berühren, dann etwas antippen. | Die App verlangt wieder die Anmeldung. | | |
-| B23 | R01 | Erzieher:in | Abmelden. Fünfmal hintereinander mit falschem Passwort anmelden, dann mit dem richtigen. | Auch das richtige Passwort wird abgewiesen, 15 Minuten lang (die App erklärt die Sperre); ein neues Passwort (wie in B21) hebt sie sofort auf. | | |
+| B23 | R01 | Erzieher:in | Abmelden (das Menü mit ihrem Namen, oben rechts). Fünfmal hintereinander mit falschem Passwort anmelden, dann mit dem richtigen. | Auch das richtige Passwort wird abgewiesen, 15 Minuten lang (die App erklärt die Sperre); ein neues Passwort (wie in B21) hebt sie sofort auf. | | |
 
 ### Admin-Fälle
 

@@ -14,19 +14,21 @@ Die App vom Startbildschirm des Tablets öffnen (oder `https://kita.home.arpa` i
 - **Passwort vergessen?** „Passwort vergessen?“ auf der Anmeldeseite schickt Ihnen einen Link (1 Stunde gültig).
 - **Gesperrt?** Nach 5 falschen Passwörtern hintereinander ist das Konto 15 Minuten gesperrt. Ein neues Passwort, oder eine Admin („Entsperren“ unter Mitarbeiterkonten), hebt die Sperre sofort auf. Nach 20 fehlgeschlagenen Anmeldungen von einem Tablet in 10 Minuten muss dieses Tablet bis zu 10 Minuten warten.
 - **Von selbst abgemeldet?** Nach 30 Minuten ohne Tippen meldet die App Sie ab, damit ein liegen gelassenes Tablet nichts zeigt. Einfach wieder anmelden.
-- Immer „Abmelden“, bevor Sie ein Tablet weitergeben.
+- Immer „Abmelden“, bevor Sie ein Tablet weitergeben: oben rechts auf Ihren Namen tippen, dann „Abmelden“. Im selben Menü stellen Sie die Sprache um.
+- **Zurechtfinden:** Die Leiste unten am Tablet (am Büro-PC: links) hat Startseite, Kinder, Kalender und Vorfälle; Admins haben auch Verwaltung. In einer Gruppe stehen oben ihre Reiter Heute, Aufgaben und Kalender. **„Notfall“** steht oben auf jeder Seite.
 
 ### Der Tag Ihrer Gruppe
 
 ![Die Startseite](../../usability/screens/de/02-start.png)
 
-Die Startseite zeigt Ihre Gruppen („Meine Gruppen“) und die anderen. Tippen Sie auf Ihre.
+Nach dem Anmelden sind Sie dort, wo Ihr Tag ist. Arbeiten Sie in einer Gruppe, öffnet sich ihr „Heute“ von selbst. Arbeiten Sie in mehreren, zeigt die Startseite für jede eine Kachel mit den Zahlen von heute: auf Ihre tippen. Admins sehen die Übersicht der Kita: den Tag jeder Gruppe, wer noch da ist, Kinder ohne Gruppe und die Vorfälle von heute.
 
 ![Die Tagesansicht einer Gruppe](../../usability/screens/de/03-group-today.png)
 
 Die Seite der Gruppe zeigt den heutigen Tag: wie viele Kinder da, abgeholt, abwesend oder noch nicht da sind; die Geburtstage von heute; und jedes Kind mit seinem Stand.
 
-- **„Ankommen“**, wenn ein Kind kommt, **„Abholen“**, wenn es abgeholt wird. Falsch getippt? **„Rückgängig“**.
+- **„Ankommen“**, wenn ein Kind kommt. **„Abholen“**, wenn es abgeholt wird: zuerst zeigt die App, wer das Kind abholen darf, mit Fotos; die Person an der Tür prüfen, dann **„Geht jetzt nach Hause“** („Nicht jetzt“, wenn es jemand anderes ist). Falsch getippt? **„Rückgängig“**.
+- **„Nur zeigen, wer noch nicht da ist“**: morgens nur die Kinder, die noch kommen.
 - **„Abwesend“**: der Grund (krank, Urlaub, anderes) und von wann bis wann. Es erscheint auf dem Profil des Kindes; „Abwesenheit entfernen“ nimmt es zurück.
 - Das Zeichen **„Achtung“** neben einem Namen heißt: eine Allergie oder Erkrankung. Auf den Namen tippen, um sie zu sehen.
 
@@ -50,19 +52,19 @@ Auf dem Profil des Kindes oder der Seite der Gruppe: **„Vorfall melden“**. D
 
 ### Die Notfallliste
 
-Für eine Feuerübung, eine Räumung, oder wenn Strom oder Netz ausfallen könnten: **„Notfallliste (PDF)“** auf der Seite der Gruppe, oder **„Notfallliste der ganzen Kita (PDF)“** auf der Startseite. Sie zeigt die Kinder, die gerade da sind (angekommen, noch nicht abgeholt), mit ihren Allergien und Erkrankungen und wen man anruft. Drucken, oder auf dem Tablet öffnen.
+Für eine Feuerübung, eine Räumung, oder wenn Strom oder Netz ausfallen könnten: **„Notfallliste (PDF)“** über **„Notfall“** oben auf jeder Seite: die Liste der Gruppe, in der Sie sind, oder **„Notfallliste der ganzen Kita (PDF)“**. Sie zeigt die Kinder, die gerade da sind (angekommen, noch nicht abgeholt), mit ihren Allergien und Erkrankungen und wen man anruft. Drucken, oder auf dem Tablet öffnen.
 
 ### Die Aufgaben
 
 ![Die Aufgaben](../../usability/screens/de/05-task-board.png)
 
-Auf der Seite der Gruppe: **„Aufgaben“**. „Aufgabe hinzufügen“, dann mit dem Finger zwischen Zu tun, In Arbeit und Erledigt ziehen (oder die Schaltflächen nutzen). „Bearbeiten“ legt fest, wer es macht, ein Fälligkeitsdatum und Schlagwörter. **„Backlog“** zeigt die Aufgaben unter Zu tun nach Wichtigkeit: ziehen, oder „Hoch“ und „Runter“.
+In der Gruppe der Reiter **„Aufgaben“**. „Aufgabe hinzufügen“, dann mit dem Finger zwischen Zu tun, In Arbeit und Erledigt ziehen (oder die Schaltflächen nutzen). „Bearbeiten“ legt fest, wer es macht, ein Fälligkeitsdatum und Schlagwörter. **„Backlog“** zeigt die Aufgaben unter Zu tun nach Wichtigkeit: ziehen, oder „Hoch“ und „Runter“.
 
 ### Der Kalender
 
 ![Der Kalender](../../usability/screens/de/06-calendar.png)
 
-„Kalender“ im Menü (die ganze Kita) oder auf der Seite der Gruppe (diese Gruppe). Monat, Woche oder Liste. Er zeigt die Termine, die Feiertage und Schulferien und die Geburtstage der Kinder.
+„Kalender“ in der Leiste unten (die ganze Kita) oder der Reiter „Kalender“ der Gruppe (diese Gruppe). Monat, Woche oder Liste. Er zeigt die Termine, die Feiertage und Schulferien und die Geburtstage der Kinder.
 
 „Termin hinzufügen“: ein Titel, für die Gruppe oder die ganze Kita, ganztägig oder mit Uhrzeiten, auf Wunsch mit Wiederholung, und eine Erinnerung. Eine Erinnerung ist eine E-Mail ab 07:00 am selben Morgen, oder 1, 2 oder 7 Tage vorher, an alle Mitarbeiter:innen, die in dieser Gruppe arbeiten (oder, für die ganze Kita, an alle Mitarbeiter:innen; nie an Gäste).
 
@@ -88,7 +90,7 @@ Etwas stimmt nicht, ist schwierig, oder eine Idee? **„Feedback“**, auf jeder
 
 ### Gruppen
 
-„Gruppen“: eine mit Namen und Symbol anlegen, umbenennen, oder entfernen („Endgültig entfernen“; ihre Kinder bleiben, ohne Gruppe).
+„Verwaltung“ → „Gruppen“: eine mit Namen und Symbol anlegen, umbenennen, oder entfernen („Endgültig entfernen“; ihre Kinder bleiben, ohne Gruppe).
 
 ### Kinderprofile
 

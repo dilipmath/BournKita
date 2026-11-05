@@ -10,11 +10,11 @@ Tester(s): ______________________  Tablet: ____________  Date: ____________
 
 | # | R | Do | Expected | ✓ ✗ ~ | Note |
 |---|---|---|---|:-:|---|
-| A1 | R01, R04 | On a tablet, open `https://kita.home.arpa`. Log in with the Kita manager's account. | No certificate warning. The start page shows. | | |
+| A1 | R01, R04 | On a tablet, open `https://kita.home.arpa`. Log in with the Kita manager's account. | No certificate warning. The Kita overview shows: a tile for each Group with today's counts. | | |
 | A2 | R35 | Choose "Deutsch", reload the page, then choose "English" again (or the other way round). | All text switches; the choice stays after the reload. | | |
 | A3 | R02, R03 | "Staff accounts": create an account for each tester (Role Teacher, one more Admin if wanted) and one for the Guest (Role Guest). | Each shows "Invited – email not verified yet"; each tester gets an invitation email. | | |
 | A4 | R02 | Each tester opens their invitation email, follows the link and chooses a password (at least 12 characters). | "Your password is saved"; the account shows "Active". | | |
-| A5 | R10 | "Groups": create "Monkeys" (icon Monkey) and "Butterflies" (icon Butterfly). Rename "Butterflies" to "Bees". | Both show with their icon; the new name shows everywhere. | | |
+| A5 | R10 | "Administration" → "Groups": create "Monkeys" (icon Monkey) and "Butterflies" (icon Butterfly). Rename "Butterflies" to "Bees". | Both show with their icon; the new name shows everywhere. | | |
 | A6 | R10 | "Staff accounts": tick the Monkeys for each Teacher. | Saved; each Teacher works in the Monkeys. | | |
 | A7 | R06 | "Children" → "New Child profile": Lena Weber (girl, born 14.03.2022, languages German and Turkish, vegetarian, likes painting). On her profile, choose the Group Monkeys. The same for Noah Fischer, Mia Schmidt, Sofia Wagner, and Emil Becker **born on today's date four years ago**. | Each profile shows what was entered and the Group; the Monkeys' page lists all five. | | |
 | A8 | R06 | Edit Lena: change her interests. | The change shows. | | |
@@ -33,7 +33,7 @@ Each Teacher logs in on a tablet with their own account. Admins may watch, or ru
 | # | R | Who | Do | Expected | ✓ ✗ ~ | Note |
 |---|---|---|---|---|:-:|---|
 | B1 | R15, R33 | Teacher | Add the app to the tablet's home screen (browser menu → "Add to Home screen" / "Install app"), open it from there. | It opens like an app, without the browser's address bar. | | |
-| B2 | R10 | Teacher | On the start page, choose the Monkeys. | The Monkeys' page: today's date, the counts, every Child of the Group. | | |
+| B2 | R10 | Teacher | Log in (the Teacher works in the Monkeys only). | The Monkeys' Today view opens by itself: today's date, the counts, a tile with photo for every Child of the Group. | | |
 | B3 | R18 | Teacher | Which Children have an Alert? | Lena and Noah carry the "Alerts" marker. | | |
 | B4 | R24 | Teacher | Whose birthday is it? | "Birthday today: Emil Becker". | | |
 | B5 | R21 | Teacher | "Check in" Emil, Lena and Noah. Then "Check out" Lena. Then "Undo" for Lena. | The counts and each Child's line change each time ("Here since …", "Gone home at …"); after Undo Lena is here again. | | |
@@ -43,8 +43,8 @@ Each Teacher logs in on a tablet with their own account. Admins may watch, or ru
 | B9 | R06 | Teacher | "Children": search for "we". | Lena and Ben Weber are found. (By Group: the Group's page, B2.) | | |
 | B10 | R23 | Teacher | Noah: "Report incident": grazed his knee on the slide, plaster, father informed by phone. | "Incident reported."; it cannot be changed afterwards. | | |
 | B11 | R23 | Admin | "Incident log": find Noah's incident, "Add follow-up". | The follow-up shows under the incident, with who wrote it and when. A Teacher's "Incident log" shows only their own reports. | | |
-| B12 | R20 | Teacher | It is a fire drill: the Monkeys' "Emergency list (PDF)". Print it on the office printer. Then the start page's "Emergency list of the whole Kita (PDF)". | Lists the Children here now (Emil, Lena, Noah; not Ben, Mia or Sofia), with their Alerts and whom to call; readable on paper. | | |
-| B13 | R12 | Teacher | "Task board": "Add task" "Buy glue sticks". Drag it with a finger to Doing, then to Done. | It moves each time and stays there after a reload. | | |
+| B12 | R20 | Teacher | It is a fire drill: in the Monkeys' Today view, "Emergency" → "Emergency list (PDF)". Print it on the office printer. Then "Emergency" → "Emergency list of the whole Kita (PDF)". | Lists the Children here now (Emil, Lena, Noah; not Ben, Mia or Sofia), with their Alerts and whom to call; readable on paper. | | |
+| B13 | R12 | Teacher | The Monkeys' "Tasks" tab: "Add task" "Buy glue sticks". Drag it with a finger to Doing, then to Done. | It moves each time and stays there after a reload. | | |
 | B14 | R12 | Teacher | Add three more tasks; with "Edit", give one an assignee ("Who does it"), a due date and a label. "Backlog": move the most important to the top (drag it, or "Up"). | The order and the details stay after a reload. | | |
 | B15 | R13 | Teacher | Monkeys' "Calendar" → "Add event": puppet show the day after tomorrow, 10:00–11:00, reminder "1 day before". Look at Month, Week and Agenda. | It shows the day after tomorrow at 10:00 in all three views; the month also shows the holidays and Emil's birthday (today). | | |
 | B16 | R13 | Teacher | "Add event": morning circle every Monday, 09:00–09:30, repeating every week. Then "Edit" it to start at 09:15, then "Delete" it. | It shows on every Monday, then at 09:15; after deleting, on no Monday. | | |
@@ -52,9 +52,9 @@ Each Teacher logs in on a tablet with their own account. Admins may watch, or ru
 | B18 | R16 | Teacher | "Feedback" (on any page): kind Idea, "This is a test". | "Thank you! Your feedback was sent."; the developer gets the email with the page. | | |
 | B19 | R01 | Guest | Log in with the Guest account. Look around. | Only the Calendar, read-only, with the Kita-wide events and holidays; no Child, no Group's events, no name; no Birthdays. | | |
 | B20 | R01, R03 | Teacher | In the browser (not the installed app), try to open the Staff accounts, Audit log and Archive (they are not in the menu; ask the Admin for the addresses `/staff`, `/audit-log`, `/archive`). | "Only Admins can …" each time. | | |
-| B21 | R02 | Teacher | Log out. "Forgot your password?": ask for a link, follow it from the email, choose a new password, log in with it. | Works; the old password no longer does. | | |
+| B21 | R02 | Teacher | Log out (the menu with their name, top right). "Forgot your password?": ask for a link, follow it from the email, choose a new password, log in with it. | Works; the old password no longer does. | | |
 | B22 | R01 | Teacher | Leave the tablet untouched for 30 minutes, then tap something. | The app asks for the login again. | | |
-| B23 | R01 | Teacher | Log out. Log in with a wrong password 5 times in a row, then with the right one. | The right password is refused too, for 15 minutes (the app explains the lockout); a new password (B21's way) unlocks it at once. | | |
+| B23 | R01 | Teacher | Log out (the menu with their name, top right). Log in with a wrong password 5 times in a row, then with the right one. | The right password is refused too, for 15 minutes (the app explains the lockout); a new password (B21's way) unlocks it at once. | | |
 
 ### Admin cases
 

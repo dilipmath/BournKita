@@ -18,7 +18,7 @@ Read each task out; do not name buttons or screens. Note the time, where they he
 
 | # | Task (read out) | Done when |
 |---|---|---|
-| 1 | "Please log in. Your email and password are on this card." | The start page shows |
+| 1 | "Please log in. Your email and password are on this card." | The Monkeys' Today view shows (a Teacher with one Group); the Kita overview for the Kita manager |
 | 2 | "You work with the Monkeys today. Open their page." | The Monkeys' Today view shows |
 | 3 | "Which Children have an allergy or illness you must watch out for?" | They name Lena (peanuts) and Noah (asthma) |
 | 4 | "Emil has just arrived. Note that he is here." | Emil is checked in |
