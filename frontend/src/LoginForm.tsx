@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { logIn, type Refusal, type Session } from './api'
@@ -12,11 +12,21 @@ export default function LoginForm({ onLoggedIn }: { onLoggedIn: (session: Sessio
   const [problem, setProblem] = useState<Problem>(null)
   const [submitting, setSubmitting] = useState(false)
   const headingId = useId()
+  const passwordId = useId()
+  const [showPassword, setShowPassword] = useState(false)
+  const message = useRef<HTMLParagraphElement>(null)
+
+  // A refusal is read out and the keyboard is there to act on it.
+  useEffect(() => {
+    if (problem) message.current?.focus()
+  }, [problem])
 
   async function submit(event: FormEvent) {
     event.preventDefault()
     setSubmitting(true)
     setProblem(null)
+    // Not left readable for whoever takes the tablet next.
+    setShowPassword(false)
     try {
       const result = await logIn(email, password)
       if (typeof result === 'string') {
@@ -39,25 +49,31 @@ export default function LoginForm({ onLoggedIn }: { onLoggedIn: (session: Sessio
         {t('emailAddress')}
         <input type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} />
       </label>
-      <label>
-        {t('password')}
-        <input
-          type="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
-      </label>
+      <div className="password-field">
+        <label htmlFor={passwordId}>{t('password')}</label>
+        <div>
+          <input
+            id={passwordId}
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          <button type="button" aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)}>
+            {t(showPassword ? 'hidePassword' : 'showPassword')}
+          </button>
+        </div>
+      </div>
       {problem && (
-        <p className="status status-problem" role="alert">
+        <p ref={message} tabIndex={-1} className="status status-problem" role="alert">
           {t(problem)}
         </p>
       )}
       {/* The API answers a locked account like a wrong password, so always explain both. */}
       {problem === 'invalidCredentials' && <p>{t('lockoutHint')}</p>}
-      <button type="submit" className="primary" disabled={submitting}>
-        {t('logIn')}
+      <button type="submit" className="primary" disabled={submitting} aria-busy={submitting}>
+        {t(submitting ? 'loggingIn' : 'logIn')}
       </button>
       <Link to="/forgot-password">{t('forgotPasswordLink')}</Link>
     </form>

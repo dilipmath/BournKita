@@ -303,6 +303,43 @@ button[aria-pressed='true'] {
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.06);
 }
 
+/* The password with its Show/Hide button beside it. */
+.password-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.password-field label {
+  font-weight: 600;
+}
+
+.password-field div {
+  display: flex;
+  gap: 8px;
+}
+
+.password-field input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* On a phone the login comes first: only the greeting and the tagline stay above it. */
+@media (max-width: 599px) {
+  .login-illustration,
+  .login-points {
+    display: none;
+  }
+
+  .login-hero {
+    padding: 16px 20px;
+  }
+
+  .login-hero h2 {
+    font-size: 1.5rem;
+  }
+}
+
 .login-help {
   margin: 0;
   padding: 0 8px;

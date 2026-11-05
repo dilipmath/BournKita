@@ -92,3 +92,68 @@ describe('the Kita’s name', () => {
     expect(screen.queryByRole('img', { name: /Logo/ })).toBeNull()
   })
 })
+
+describe('the login form', () => {
+  const loginApi = (reply: { status: number; body?: unknown }) =>
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut, 'GET /api/kita': { status: 200, body: { name: null, hasLogo: false } }, 'POST /api/session': reply })
+
+  it('shows the password while typing, and hides it again after sending', async () => {
+    loginApi({ status: 401, body: { detail: 'invalid_credentials' } })
+    renderAt('/', <App />)
+
+    const password = await screen.findByLabelText('Password')
+    expect(password).toHaveAttribute('type', 'password')
+    const show = screen.getByRole('button', { name: 'Show password' })
+    expect(show).toHaveAttribute('aria-pressed', 'false')
+    await userEvent.click(show)
+    expect(password).toHaveAttribute('type', 'text')
+    expect(screen.getByRole('button', { name: 'Hide password' })).toHaveAttribute('aria-pressed', 'true')
+    // Password managers fill it in: the field still says what it is.
+    expect(password).toHaveAttribute('autocomplete', 'current-password')
+
+    await userEvent.type(screen.getByLabelText('Email address'), 'teacher@kita.example')
+    await userEvent.type(password, 'wrong password')
+    await userEvent.click(screen.getByRole('button', { name: 'Log in' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Email address or password is wrong.')
+    expect(password).toHaveAttribute('type', 'password')
+  })
+
+  it('moves the keyboard to the message when a login is refused', async () => {
+    loginApi({ status: 401, body: { detail: 'invalid_credentials' } })
+    renderAt('/', <App />)
+
+    await userEvent.type(await screen.findByLabelText('Email address'), 'teacher@kita.example')
+    await userEvent.type(screen.getByLabelText('Password'), 'wrong password')
+    await userEvent.keyboard('{Enter}')
+
+    expect(await screen.findByRole('alert')).toHaveFocus()
+  })
+
+  it('says it is logging in and takes no second tap meanwhile', async () => {
+    const calls = loginApi(sessionAs('teacher'))
+    // The server answers only when the test says so.
+    let answer: (response: Response) => void = () => undefined
+    const fakeFetch = fetch
+    vi.stubGlobal('fetch', (url: string, init?: RequestInit) =>
+      init?.method === 'POST' && url === '/api/session'
+        ? new Promise<Response>((resolve) => {
+            calls.push({ route: 'POST /api/session', body: undefined })
+            answer = resolve
+          })
+        : fakeFetch(url, init),
+    )
+    renderAt('/', <App />)
+
+    await userEvent.type(await screen.findByLabelText('Email address'), 'teacher@kita.example')
+    await userEvent.type(screen.getByLabelText('Password'), 'a long password')
+    await userEvent.click(screen.getByRole('button', { name: 'Log in' }))
+    const busy = screen.getByRole('button', { name: 'Logging in…' })
+    expect(busy).toBeDisabled()
+    expect(busy).toHaveAttribute('aria-busy', 'true')
+    await userEvent.click(busy)
+
+    expect(calls.filter((call) => call.route === 'POST /api/session')).toHaveLength(1)
+    answer(new Response(JSON.stringify(sessionAs('teacher').body), { status: 200 }))
+  })
+})
