@@ -38,7 +38,12 @@ export default function LoginPage({ kita, onLoggedIn }: { kita: Kita; onLoggedIn
     <div className="login-page">
       <section className="login-hero">
         <Illustration />
-        {kita.name && <p className="login-welcome">{t('welcomeTo', { name: kita.name })}</p>}
+        {(kita.name || kita.hasLogo) && (
+          <p className="login-welcome">
+            {kita.hasLogo && <img className="kita-logo" src="/api/kita/logo" alt={kita.name ? t('logoOf', { name: kita.name }) : t('kitaLogo')} />}
+            {kita.name && t('welcomeTo', { name: kita.name })}
+          </p>
+        )}
         <h2>{t(greeting())}</h2>
         <p className="login-tagline">{t('loginTagline')}</p>
         <p id={aboutId} className="visually-hidden">

@@ -14,6 +14,7 @@ services:
       KITA_PUBLIC_URL: http://localhost:8081
       # Always after closing time, so a Child checked in shows under Needs attention.
       KITA_CLOSES_AT: "00:00"
+      KITA_NAME: Kita Testhausen
 
   mailpit:
     ports: !override

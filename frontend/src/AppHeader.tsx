@@ -47,7 +47,7 @@ export default function AppHeader({ kita, session, onLoggedOut }: Props) {
       <header>
         <h1>
           <Link to="/">
-            {kita.hasLogo && kita.name && <img className="kita-logo" src="/api/kita/logo" alt={t('logoOf', { name: kita.name })} />}
+            {kita.hasLogo && <img className="kita-logo" src="/api/kita/logo" alt={kita.name ? t('logoOf', { name: kita.name }) : t('kitaLogo')} />}
             {kita.name ?? t('appName')}
           </Link>
         </h1>

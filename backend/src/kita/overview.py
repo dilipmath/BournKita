@@ -119,9 +119,5 @@ class KitaOverview:
         now = self._clock.now().astimezone(KITA_TIME_ZONE)
         if self._closes_at is None or now.date() != day or now.time() < self._closes_at or not here:
             return []
-        group_of = {
-            child.id: group.id
-            for group in self._groups.all()
-            for child in self._groups.children_of(group.id)
-        }
+        group_of = self._groups.groups_of_children(list(here))
         return [LateChild(child, group_of.get(child.id)) for child in everyone if child.id in here]

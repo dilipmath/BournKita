@@ -66,7 +66,7 @@ export default function NeedsAttention({ overview }: { overview: KitaOverview })
         )}
         {birthdays.length > 0 && (
           <Item icon="birthday" tone="good" title={t('birthdayTitle')}>
-            {birthdays.map(fullName).join(', ')}
+            <ChildLinks items={birthdays} to={(child) => `/children/${child.id}`} />
           </Item>
         )}
       </ul>

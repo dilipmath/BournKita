@@ -76,7 +76,9 @@ describe('the Kita’s name', () => {
     renderAt('/', <App />)
 
     expect(await screen.findByRole('heading', { level: 1, name: /Kita Sonnenschein/ })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Logo of Kita Sonnenschein' })).toHaveAttribute('src', '/api/kita/logo')
+    // In the header and in the welcome.
+    const logos = screen.getAllByRole('img', { name: 'Logo of Kita Sonnenschein' })
+    expect(logos.map((logo) => logo.getAttribute('src'))).toEqual(['/api/kita/logo', '/api/kita/logo'])
     expect(screen.getByText('Welcome to Kita Sonnenschein')).toBeInTheDocument()
   })
 

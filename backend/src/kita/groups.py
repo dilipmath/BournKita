@@ -223,6 +223,16 @@ class Groups:
             ).all()
         return [ChildSummary(row.id, row.first_name, row.last_name) for row in rows]
 
+    def groups_of_children(self, child_ids: Sequence[int]) -> dict[int, int]:
+        """The Group of each of these Children who is in one, by Child ID."""
+        with transaction(self._engine) as connection:
+            rows = connection.execute(
+                select(child_groups.c.child_id, child_groups.c.group_id).where(
+                    child_groups.c.child_id.in_(child_ids)
+                )
+            ).all()
+        return {row.child_id: row.group_id for row in rows}
+
     def children_without_group(self) -> list[ChildSummary]:
         """The Children in no Group, by first name: for an Admin to place."""
         with transaction(self._engine) as connection:

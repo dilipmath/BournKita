@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 // A tablet on the wall stays current without loading the small server more often than this.
 export const REFRESH_EVERY_MS = 5 * 60_000
@@ -26,12 +26,25 @@ export type Live<T> = { data: T | null; failed: boolean; stale: boolean; updated
  * answer rather than emptying the page. */
 export function useLiveData<T>(fetchData: () => Promise<T>): Live<T> {
   const [live, setLive] = useState<Live<T>>({ data: null, failed: false, stale: false, updatedAt: null })
+  // Only the newest load counts: an older one answering late must not overwrite it, and none
+  // after the page is gone.
+  const newest = useRef(0)
   const load = useCallback(() => {
+    const mine = ++newest.current
     fetchData()
-      .then((data) => setLive({ data, failed: false, stale: false, updatedAt: new Date().toISOString() }))
-      .catch(() => setLive((last) => (last.data === null ? { ...last, failed: true } : { ...last, stale: true })))
+      .then((data) => mine === newest.current && setLive({ data, failed: false, stale: false, updatedAt: new Date().toISOString() }))
+      .catch(
+        () =>
+          mine === newest.current &&
+          setLive((last) => (last.data === null ? { ...last, failed: true } : { ...last, stale: true })),
+      )
   }, [fetchData])
-  useEffect(load, [load])
+  useEffect(() => {
+    load()
+    return () => {
+      newest.current = -1
+    }
+  }, [load])
   useRefresh(load)
   return live
 }

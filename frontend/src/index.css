@@ -102,6 +102,9 @@ h1 a {
 }
 
 .login-welcome {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin: 0;
   font-weight: 600;
 }
@@ -880,8 +883,11 @@ main.with-navigation {
   background: var(--part-here);
 }
 
+/* Dots, so gone home differs from here by more than colour. */
 .day-bar-part.gone {
-  background: var(--part-gone);
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--part-gone) 55%, var(--surface)) 1.5px, transparent 2px) 0 0 / 7px 7px,
+    var(--part-gone);
 }
 
 /* Stripes, so absent differs from here and gone by more than colour. */
