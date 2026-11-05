@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate } from 'react-router-dom'
-import { fetchOwnGroups, type GroupDay } from './api'
+import { fetchOwnGroups } from './api'
 import GroupLabel from './GroupLabel'
 import DayHeader, { StartPageSkeleton } from './DayHeader'
 import GroupDayTile from './GroupDayTile'
+import { UpdatedNote, useLiveData } from './refresh'
 import { useGroups } from './useGroups'
 
 /** Every Group, for a Staff member who works in none yet: they can still open one. */
@@ -35,15 +35,9 @@ function AllGroups() {
  * for each of their Groups, or every Group while they work in none. */
 export default function TeacherStartPage({ name }: { name: string }) {
   const { t } = useTranslation()
-  const [own, setOwn] = useState<{ day: string; groups: GroupDay[] } | null | 'failed'>(null)
+  const { data: own, failed, stale, updatedAt } = useLiveData(fetchOwnGroups)
 
-  useEffect(() => {
-    fetchOwnGroups()
-      .then(setOwn)
-      .catch(() => setOwn('failed'))
-  }, [])
-
-  if (own === 'failed') return <p className="status status-problem">{t('somethingWentWrong')}</p>
+  if (failed) return <p className="status status-problem">{t('somethingWentWrong')}</p>
   if (own === null) return <StartPageSkeleton />
   const { day, groups } = own
   // Replaced, so Back leaves the app rather than coming back here and on again.
@@ -52,6 +46,7 @@ export default function TeacherStartPage({ name }: { name: string }) {
   return (
     <section className="page overview">
       <DayHeader name={name} day={day} />
+      {groups.length > 0 && <UpdatedNote updatedAt={updatedAt} stale={stale} />}
       {groups.length === 0 ? (
         <AllGroups />
       ) : (

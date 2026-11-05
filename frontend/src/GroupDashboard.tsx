@@ -23,6 +23,7 @@ import IncidentReport from './IncidentReport'
 import ProblemAlert from './ProblemAlert'
 import { useProfileChange } from './profileChange'
 import { useRecordAtAddress } from './recordAtAddress'
+import { UpdatedNote, useRefresh } from './refresh'
 import RecordPlaceholder from './RecordPlaceholder'
 import Icon from './Icon'
 
@@ -41,6 +42,8 @@ function statusOf(child: GroupChild): Status {
 export default function GroupDashboard() {
   const { t, i18n } = useTranslation()
   const [loaded, reload] = useRecordAtAddress(fetchGroupDashboard)
+  // A tablet by the door stays current; open forms and panels stay as they are.
+  useRefresh(reload)
   // In the morning: only the Children still to come.
   const [notYetOnly, setNotYetOnly] = useState(false)
   const dashboard = loaded.record
@@ -65,6 +68,7 @@ export default function GroupDashboard() {
         <p>{t('noChildrenInGroup')}</p>
       ) : (
         <>
+          <UpdatedNote updatedAt={loaded.loadedAt ?? null} stale={loaded.failed} />
           <DayBar day={{ here: count('here'), gone: count('gone'), absent: count('absent'), notYet: count('notYet') }} />
           <button type="button" aria-pressed={notYetOnly} onClick={() => setNotYetOnly(!notYetOnly)}>
             {t('onlyNotHereYet')}

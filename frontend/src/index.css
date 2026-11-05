@@ -892,6 +892,11 @@ main.with-navigation {
   border: 2px dashed var(--accent);
 }
 
+.updated-note {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
 .day-bar-text {
   margin: 0;
   font-weight: 600;
