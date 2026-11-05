@@ -638,7 +638,14 @@ export type GroupDay = Group & {
 export type KitaOverview = {
   day: string
   groups: GroupDay[]
-  kita: { stillCheckedIn: number; withoutGroup: ChildSummary[]; incidentsToday: number }
+  kita: {
+    stillCheckedIn: number
+    withoutGroup: ChildSummary[]
+    incidentsToday: number
+    // "HH:MM" at the Kita, null without a closing time; after it, who is still checked in.
+    closesAt: string | null
+    stillHereAfterClosing: (ChildSummary & { groupId: number | null })[]
+  }
 }
 
 /** Today at the whole Kita. Admins only. */

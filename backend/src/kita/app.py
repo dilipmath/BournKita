@@ -196,7 +196,9 @@ def create_app(
     app.include_router(
         groups_router(identity, groups, alerts, attendance, birthdays, photos, audited_route_class)
     )
-    overview = KitaOverview(groups, children, attendance, alerts, birthdays, incidents)
+    overview = KitaOverview(
+        groups, children, attendance, alerts, birthdays, incidents, clock, settings.closes_at
+    )
     app.include_router(overview_router(identity, overview))
     emergency_lists = EmergencyLists(clock, children, groups, attendance, alerts, parents, contacts)
     app.include_router(emergency_list_router(identity, emergency_lists, audited_route_class))

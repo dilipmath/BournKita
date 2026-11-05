@@ -84,6 +84,9 @@ def test_the_kita_overview_counts_each_groups_day_and_the_whole_kitas(
         "stillCheckedIn": 2,
         "withoutGroup": [{"id": paul, "firstName": "Paul", "lastName": "Müller"}],
         "incidentsToday": 1,
+        # No closing time set: nobody is late.
+        "closesAt": None,
+        "stillHereAfterClosing": [],
     }
     # Counts and names only: no Alert, no Absence reason, no Incident text.
     for word in ("Peanuts", "Asthma", "sick", "Fell over", "Mother"):

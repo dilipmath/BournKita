@@ -897,6 +897,62 @@ main.with-navigation {
   font-weight: 600;
 }
 
+/* Needs attention: what to see to today, on the Kita overview. */
+.needs-attention {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 24px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+}
+
+.needs-attention h3 {
+  margin: 0;
+}
+
+.needs-attention a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.needs-attention ul {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.attention-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-left: 6px solid var(--bad);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.attention-item .icon {
+  flex: none;
+  width: 1.4em;
+  height: 1.4em;
+  margin: 0.1em 0 0;
+  color: var(--bad);
+}
+
+/* Good news, not a warning: the accent, not red. */
+.attention-item.good {
+  border-left-color: var(--accent);
+}
+
+.attention-item.good .icon {
+  color: var(--accent);
+}
+
 .administration ul {
   display: flex;
   flex-direction: column;

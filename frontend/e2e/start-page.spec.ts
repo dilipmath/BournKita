@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { accountMenu, choosePassword, logIn, logInAsAdmin, logOut } from './credentials.ts'
+import { accountMenu, choosePassword, e2eAdmin, logIn, logInAsAdmin, logOut } from './credentials.ts'
 import { linkFromEmail } from './mailpit.ts'
 
 test('a Teacher with one Group logs in, lands on its Today view and checks a Child in by tap', async ({ page }) => {
@@ -50,4 +50,11 @@ test('a Teacher with one Group logs in, lands on its Today view and checks a Chi
   const lena = page.getByRole('listitem', { name: `Lena ${lastName}` })
   await lena.getByRole('button', { name: `Check in Lena ${lastName}` }).tap()
   await expect(lena).toContainText('Here since')
+
+  // The test stack closes at 00:00, so the Admin sees Lena under Needs attention.
+  await logOut(page, email)
+  await logIn(page, e2eAdmin.email, e2eAdmin.password)
+  await page.getByRole('link', { name: 'Home' }).tap()
+  const attention = page.getByRole('region', { name: 'Needs attention' })
+  await expect(attention.getByRole('listitem', { name: 'Still here after closing time (00:00)' }).getByRole('link', { name: `Lena ${lastName}` })).toBeVisible()
 })

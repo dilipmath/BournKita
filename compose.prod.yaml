@@ -47,6 +47,8 @@ services:
       # The Kita's name and logo on the login page and in the header (see docs/server). The logo is
       # a file in the branding folder, e.g. KITA_LOGO=logo.png; without one, none is shown.
       KITA_NAME: ${KITA_NAME:-}
+      # After this time (the Kita's), Children still checked in need the Admins' attention.
+      KITA_CLOSES_AT: ${KITA_CLOSES_AT:-}
       KITA_LOGO: /data/branding/${KITA_LOGO:-none}
     volumes:
       - ${KITA_BRANDING_DIR:-./branding}:/data/branding:ro

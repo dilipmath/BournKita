@@ -9,7 +9,7 @@ from kita.api_support import CAMEL_CASE
 from kita.children_api import ChildSummaryOut
 from kita.identity import Identity
 from kita.identity_api import role_dependency, staff_member_dependency, staff_member_of
-from kita.overview import GroupDay, KitaDay, KitaOverview
+from kita.overview import GroupDay, KitaDay, KitaOverview, LateChild
 
 
 class GroupDayOut(BaseModel):
@@ -44,12 +44,34 @@ class GroupDayOut(BaseModel):
         )
 
 
+class LateChildOut(BaseModel):
+    model_config = CAMEL_CASE
+
+    id: int
+    first_name: str
+    last_name: str
+    group_id: int | None
+
+    @classmethod
+    def of(cls, late: LateChild) -> "LateChildOut":
+        child = late.child
+        return cls(
+            id=child.id,
+            first_name=child.first_name,
+            last_name=child.last_name,
+            group_id=late.group_id,
+        )
+
+
 class KitaDayOut(BaseModel):
     model_config = CAMEL_CASE
 
     still_checked_in: int
     without_group: list[ChildSummaryOut]
     incidents_today: int
+    # "HH:MM" at the Kita, or None without a closing time.
+    closes_at: str | None
+    still_here_after_closing: list[LateChildOut]
 
     @classmethod
     def of(cls, day: KitaDay) -> "KitaDayOut":
@@ -57,6 +79,10 @@ class KitaDayOut(BaseModel):
             still_checked_in=day.still_checked_in,
             without_group=[ChildSummaryOut.of(child) for child in day.without_group],
             incidents_today=day.incidents_today,
+            closes_at=None if day.closes_at is None else day.closes_at.strftime("%H:%M"),
+            still_here_after_closing=[
+                LateChildOut.of(late) for late in day.still_here_after_closing
+            ],
         )
 
 

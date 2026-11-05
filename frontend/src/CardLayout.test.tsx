@@ -7,7 +7,7 @@ import { fakeApi, health, renderAt, sessionAs } from './testing'
 const day = (group: object) => ({ mine: true, expected: 0, here: 0, gone: 0, absent: 0, notYet: 0, alertsHere: 0, birthdays: [], ...group })
 const monkeys = day({ id: 2, name: 'Monkeys', icon: 'monkey', expected: 4, here: 2, gone: 1, absent: 0, notYet: 1 })
 const bears = day({ id: 3, name: 'Bears', icon: 'bear', mine: false, expected: 3, here: 1, gone: 0, absent: 1, notYet: 1 })
-const kita = { stillCheckedIn: 3, withoutGroup: [], incidentsToday: 0 }
+const kita = { stillCheckedIn: 3, withoutGroup: [], incidentsToday: 0, closesAt: null, stillHereAfterClosing: [] }
 const aylin = { ...sessionAs('admin'), body: { ...sessionAs('admin').body, displayName: 'Aylin' } }
 
 describe('the page after login', () => {

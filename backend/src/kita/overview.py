@@ -4,12 +4,13 @@ who is in no Group, and how many Incidents there were. Counts and names only: no
 Absence reason, nothing stored encrypted."""
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, time
 
 from kita.alerts import Alerts
 from kita.attendance import Attendance
 from kita.birthdays import Birthdays
 from kita.children import Children, ChildSummary
+from kita.clock import KITA_TIME_ZONE, Clock
 from kita.groups import GroupForStaffMember, Groups
 from kita.incidents import Incidents
 
@@ -29,10 +30,20 @@ class GroupDay:
 
 
 @dataclass(frozen=True)
+class LateChild:
+    child: ChildSummary
+    # Their Group, whose Today view to open; None: in no Group.
+    group_id: int | None
+
+
+@dataclass(frozen=True)
 class KitaDay:
     still_checked_in: int
     without_group: list[ChildSummary]
     incidents_today: int
+    closes_at: time | None
+    # Still checked in after closing time; none before it, or without one.
+    still_here_after_closing: list[LateChild]
 
 
 class KitaOverview:
@@ -44,7 +55,11 @@ class KitaOverview:
         alerts: Alerts,
         birthdays: Birthdays,
         incidents: Incidents,
+        clock: Clock,
+        closes_at: time | None,
     ) -> None:
+        self._clock = clock
+        self._closes_at = closes_at
         self._groups = groups
         self._children = children
         self._attendance = attendance
@@ -85,12 +100,28 @@ class KitaOverview:
         )
 
     def kita_day(self, day: date) -> KitaDay:
-        everyone = [child.id for child in self._children.summaries()]
-        days = self._attendance.days_on(day, everyone)
+        everyone = self._children.summaries()
+        days = self._attendance.days_on(day, [child.id for child in everyone])
         return KitaDay(
+            closes_at=self._closes_at,
+            still_here_after_closing=self._late(
+                day, everyone, {i for i, a in days.items() if a.checked_out_at is None}
+            ),
             still_checked_in=sum(
                 1 for attended in days.values() if attended.checked_out_at is None
             ),
             without_group=self._groups.children_without_group(),
             incidents_today=self._incidents.count_on(day),
         )
+
+    def _late(self, day: date, everyone: list[ChildSummary], here: set[int]) -> list[LateChild]:
+        """Those still here, by first name, once the Kita's closing time has passed today."""
+        now = self._clock.now().astimezone(KITA_TIME_ZONE)
+        if self._closes_at is None or now.date() != day or now.time() < self._closes_at or not here:
+            return []
+        group_of = {
+            child.id: group.id
+            for group in self._groups.all()
+            for child in self._groups.children_of(group.id)
+        }
+        return [LateChild(child, group_of.get(child.id)) for child in everyone if child.id in here]

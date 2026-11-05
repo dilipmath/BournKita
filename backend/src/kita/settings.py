@@ -1,7 +1,8 @@
+from datetime import time
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # How the connection to the mail server is secured: STARTTLS (usually port 587), TLS from the
@@ -50,3 +51,12 @@ class Settings(BaseSettings):
     # A PNG, JPEG or WebP picture on the server (KITA_LOGO) shown beside the name; unset or
     # unusable: none.
     logo: Path | None = None
+    # When the Kita closes (KITA_CLOSES_AT, e.g. 16:30, the Kita's time): after it, Children still
+    # checked in need the Admins' attention. Unset: never.
+    closes_at: time | None = None
+
+    @field_validator("closes_at", mode="before")
+    @classmethod
+    def _no_closing_time_when_blank(cls, value: object) -> object:
+        # compose passes an unset KITA_CLOSES_AT as an empty string.
+        return None if isinstance(value, str) and not value.strip() else value

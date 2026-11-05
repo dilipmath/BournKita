@@ -12,6 +12,8 @@ services:
     environment:
       # Links in emails (verification, password reset) lead to this stack's web server.
       KITA_PUBLIC_URL: http://localhost:8081
+      # Always after closing time, so a Child checked in shows under Needs attention.
+      KITA_CLOSES_AT: "00:00"
 
   mailpit:
     ports: !override
