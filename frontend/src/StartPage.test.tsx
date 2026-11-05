@@ -39,7 +39,7 @@ describe('a Teacher’s start page', () => {
     renderAt('/', <App />)
 
     expect(await screen.findByText('You don’t work in any Group yet. An Admin can add you to yours on the Staff accounts page.')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Bears/ })).toHaveAttribute('href', '/groups/3')
+    expect(await screen.findByRole('link', { name: /Bears/ })).toHaveAttribute('href', '/groups/3')
     expect(screen.getByRole('link', { name: /Monkeys/ })).toHaveAttribute('href', '/groups/2')
   })
 

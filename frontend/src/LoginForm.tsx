@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { logIn, type Refusal, type Session } from './api'
@@ -11,6 +11,7 @@ export default function LoginForm({ onLoggedIn }: { onLoggedIn: (session: Sessio
   const [password, setPassword] = useState('')
   const [problem, setProblem] = useState<Problem>(null)
   const [submitting, setSubmitting] = useState(false)
+  const headingId = useId()
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -32,8 +33,8 @@ export default function LoginForm({ onLoggedIn }: { onLoggedIn: (session: Sessio
   }
 
   return (
-    <form className="login" onSubmit={(event) => void submit(event)}>
-      <h2>{t('logIn')}</h2>
+    <form className="login" aria-labelledby={headingId} onSubmit={(event) => void submit(event)}>
+      <h2 id={headingId}>{t('logIn')}</h2>
       <label>
         {t('emailAddress')}
         <input type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} />

@@ -21,7 +21,7 @@ import FeedbackButton from './FeedbackButton'
 import GroupsPage from './GroupsPage'
 import BacklogPage from './BacklogPage'
 import TaskBoardPage from './TaskBoardPage'
-import LoginForm from './LoginForm'
+import LoginPage from './LoginPage'
 import ResetPasswordPage from './ResetPasswordPage'
 import StaffPage from './StaffPage'
 import StatusBanner, { type ServerStatus } from './StatusBanner'
@@ -81,7 +81,7 @@ export default function App() {
         {/* For whoever cannot log in, so no login needed either. */}
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="*" element={session === null && <LoginForm onLoggedIn={setSession} />} />
+        <Route path="*" element={session === null && <LoginPage onLoggedIn={setSession} />} />
       </Routes>
       {session && isGuest && (
         <Routes>
