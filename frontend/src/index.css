@@ -50,6 +50,32 @@ h1 {
   color: var(--accent);
 }
 
+/* Interface icons: line drawings in the colour of the text beside them. */
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+  margin-right: 0.3em;
+  vertical-align: -0.2em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.main-nav .nav-icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  margin: 0;
+}
+
+@media (min-width: 1100px) and (hover: hover) and (pointer: fine) {
+  .main-nav .nav-icon {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+}
+
 h1 a {
   color: inherit;
   text-decoration: none;
@@ -204,11 +230,7 @@ button[aria-pressed='true'] {
   width: 32px;
   height: 32px;
   padding: 6px;
-  fill: none;
   stroke: var(--accent);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
   background: var(--surface);
   border-radius: 12px;
 }
@@ -590,10 +612,6 @@ button.danger {
   border-radius: 12px;
 }
 
-.main-nav .nav-icon {
-  font-size: 1.4rem;
-  line-height: 1.2;
-}
 
 .main-nav a.active {
   color: var(--accent);

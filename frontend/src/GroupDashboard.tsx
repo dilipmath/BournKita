@@ -23,11 +23,10 @@ import ProblemAlert from './ProblemAlert'
 import { useProfileChange } from './profileChange'
 import { useRecordAtAddress } from './recordAtAddress'
 import RecordPlaceholder from './RecordPlaceholder'
+import Icon from './Icon'
 
 type Status = 'here' | 'gone' | 'absent' | 'notYet'
 
-// Beside the status text, so the state does not rest on the colour alone.
-const statusIcon: Record<Status, string> = { notYet: '⏳', here: '✅', gone: '🏠', absent: '✖️' }
 
 function statusOf(child: GroupChild): Status {
   if (child.absence) return 'absent'
@@ -57,7 +56,7 @@ export default function GroupDashboard() {
       <h3>{t('todayIs', { day: longDay(dashboard.day, i18n.language) })}</h3>
       {birthdays.length > 0 && (
         <p className="birthday-banner">
-          <span aria-hidden="true">🎂 </span>
+          <Icon name="birthday" />
           {t('birthdayToday', { names: birthdays.map((child) => `${child.firstName} ${child.lastName}`).join(', ') })}
         </p>
       )}
@@ -126,12 +125,12 @@ function ChildToday({ child, day, reload }: ChildProps) {
         <Link to={`/children/${child.id}`}>{name}</Link> <AlertMarker label={t('alertsMarker')} alerts={child.alerts} />
       </div>
       <p className="today-status">
-        <span aria-hidden="true">{statusIcon[status]} </span>
+        <Icon name={status} />
         {statusText()}
       </p>
       {child.birthdayToday && (
         <p className="birthday-mark">
-          <span aria-hidden="true">🎂 </span>
+          <Icon name="birthday" />
           {t('birthdayMark')}
         </p>
       )}

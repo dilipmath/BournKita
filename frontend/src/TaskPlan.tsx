@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { Task } from './api'
 import { kitaToday, localDate } from './dates'
+import Icon from './Icon'
 
 /** Who does a Task, when it is due (and whether that has passed) and its labels; nothing when
  * none of these is set. */
@@ -13,14 +14,14 @@ export default function TaskPlan({ task }: { task: Task }) {
     <div className="task-plan">
       {task.assignee && (
         <span>
-          <span aria-hidden="true">👤 </span>
+          <Icon name="person" />
           <span className="visually-hidden">{t('taskAssignee')}: </span>
           {task.assignee.email}
         </span>
       )}
       {task.dueOn && (
         <span className={overdue ? 'overdue' : undefined}>
-          <span aria-hidden="true">📅 </span>
+          <Icon name="calendar" />
           <span className="visually-hidden">{t('taskDueOn')}: </span>
           {localDate(task.dueOn).toLocaleDateString(i18n.language)}
           {overdue && ` – ${t('overdue')}`}

@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
 import type { Role } from './api'
+import Icon, { type IconName } from './Icon'
 
 // also: further addresses that belong to the entry (e.g. the Admin pages to Administration).
-type Entry = { to: string; icon: string; label: string; end?: boolean; also?: (path: string) => boolean }
+type Entry = { to: string; icon: IconName; label: string; end?: boolean; also?: (path: string) => boolean }
 
 const adminPages = ['/groups', '/staff', '/holidays', '/audit-log', '/archive']
 
@@ -13,9 +14,7 @@ function Links({ entries }: { entries: Entry[] }) {
     const current = (end ? pathname === to : pathname === to || pathname.startsWith(`${to}/`)) || (also?.(pathname) ?? false)
     return (
       <Link key={to} to={to} className={current ? 'active' : undefined} aria-current={current ? 'page' : undefined}>
-        <span className="nav-icon" aria-hidden="true">
-          {icon}{' '}
-        </span>
+        <Icon name={icon} className="nav-icon" />
         {label}
       </Link>
     )
@@ -28,14 +27,14 @@ export function MainNavigation({ role }: { role: Role }) {
   const { t } = useTranslation()
   const entries: Entry[] =
     role === 'guest'
-      ? [{ to: '/calendar', icon: '📅', label: t('calendar') }]
+      ? [{ to: '/calendar', icon: 'calendar', label: t('calendar') }]
       : [
-          { to: '/', icon: '🏠', label: t('home'), end: true },
-          { to: '/children', icon: '🧒', label: t('children'), also: (path) => path.startsWith('/parents/') },
-          { to: '/calendar', icon: '📅', label: t('calendar'), end: true },
-          { to: '/incidents', icon: '🩹', label: t('incidents') },
+          { to: '/', icon: 'home', label: t('home'), end: true },
+          { to: '/children', icon: 'children', label: t('children'), also: (path) => path.startsWith('/parents/') },
+          { to: '/calendar', icon: 'calendar', label: t('calendar'), end: true },
+          { to: '/incidents', icon: 'incidents', label: t('incidents') },
           ...(role === 'admin'
-            ? [{ to: '/administration', icon: '⚙️', label: t('administration'), also: (path: string) => adminPages.includes(path) }]
+            ? [{ to: '/administration', icon: 'administration', label: t('administration'), also: (path: string) => adminPages.includes(path) }]
             : []),
         ]
   return (
@@ -54,9 +53,9 @@ export function GroupNavigation({ groupId }: { groupId: number }) {
     <nav className="group-nav" aria-label={t('groupViews')}>
       <Links
         entries={[
-          { to: base, icon: '☀️', label: t('today'), end: true },
-          { to: `${base}/board`, icon: '✅', label: t('tasks'), also: (path) => path === `${base}/backlog` },
-          { to: `${base}/calendar`, icon: '📅', label: t('calendar') },
+          { to: base, icon: 'today', label: t('today'), end: true },
+          { to: `${base}/board`, icon: 'tasks', label: t('tasks'), also: (path) => path === `${base}/backlog` },
+          { to: `${base}/calendar`, icon: 'calendar', label: t('calendar') },
         ]}
       />
     </nav>

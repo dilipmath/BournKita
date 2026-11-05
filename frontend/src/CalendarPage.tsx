@@ -10,6 +10,7 @@ import GroupLabel from './GroupLabel'
 import ProblemAlert from './ProblemAlert'
 import { useProfileChange } from './profileChange'
 import { useGroups } from './useGroups'
+import Icon from './Icon'
 
 type View = 'month' | 'week' | 'agenda'
 const views: View[] = ['month', 'week', 'agenda']
@@ -139,7 +140,7 @@ export default function CalendarPage({ canImportHolidays, readOnly = false }: { 
         ))}
         {day.birthdays.map((birthday) => (
           <Link key={`birthday-${birthday.childId}`} className="birthday-chip" to={`/children/${birthday.childId}`}>
-            <span aria-hidden="true">🎂 </span>
+            <Icon name="birthday" />
             <span className="visually-hidden">{t('birthday')}: </span>
             {birthday.firstName} {birthday.lastName}
           </Link>

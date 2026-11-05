@@ -3,6 +3,7 @@ import { Link, useMatch } from 'react-router-dom'
 import { logOut, type Session } from './api'
 import EmergencyListLink from './EmergencyListLink'
 import HeaderMenu from './HeaderMenu'
+import Icon from './Icon'
 import { GroupNavigation, MainNavigation } from './MainNavigation'
 
 const languages = [
@@ -49,7 +50,15 @@ export default function AppHeader({ session, onLoggedOut }: { session: Session |
           <div className="header-actions">
             {/* Guests never see personal data, so no emergency list. */}
             {!isGuest && (
-              <HeaderMenu label={t('emergency')} className="emergency">
+              <HeaderMenu
+                label={
+                  <>
+                    <Icon name="alert" />
+                    {t('emergency')}
+                  </>
+                }
+                className="emergency"
+              >
                 {groupId !== null && <EmergencyListLink groupId={groupId} />}
                 <EmergencyListLink />
               </HeaderMenu>

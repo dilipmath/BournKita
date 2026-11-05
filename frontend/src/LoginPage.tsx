@@ -1,6 +1,7 @@
-import { useId, type ReactNode } from 'react'
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Session } from './api'
+import Icon from './Icon'
 import LoginForm from './LoginForm'
 
 /** The hour at the Kita, whatever time zone the tablet is set to. */
@@ -14,45 +15,10 @@ function greeting(): 'goodMorning' | 'goodDay' | 'goodEvening' {
   return hour < 18 ? 'goodDay' : 'goodEvening'
 }
 
-// Line icons drawn in the text colour; decoration only, so hidden from screen readers.
-function Icon({ children }: { children: ReactNode }) {
-  return (
-    <svg className="login-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      {children}
-    </svg>
-  )
-}
-
 const points = [
-  {
-    text: 'aboutToday',
-    icon: (
-      <Icon>
-        <circle cx="9" cy="8" r="3" />
-        <circle cx="17" cy="9" r="2.5" />
-        <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M14 20c.3-2.6 1.9-4.5 4-4.5 2.2 0 3.5 2 3.5 4.5" />
-      </Icon>
-    ),
-  },
-  {
-    text: 'aboutSafety',
-    icon: (
-      <Icon>
-        <path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z" />
-        <path d="M9 12l2 2 4-4" />
-      </Icon>
-    ),
-  },
-  {
-    text: 'aboutPrivacy',
-    icon: (
-      <Icon>
-        <path d="M4 11l8-7 8 7v9H4z" />
-        <rect x="9.5" y="13" width="5" height="4" rx="1" />
-        <path d="M10.5 13v-1.2a1.5 1.5 0 0 1 3 0V13" />
-      </Icon>
-    ),
-  },
+  { text: 'aboutToday', icon: 'children' },
+  { text: 'aboutSafety', icon: 'safety' },
+  { text: 'aboutPrivacy', icon: 'privacy' },
 ] as const
 
 /** A sun over a little house with a path: the Kita, friendly but calm. Decoration only. */
@@ -90,7 +56,7 @@ export default function LoginPage({ onLoggedIn }: { onLoggedIn: (session: Sessio
         <ul className="login-points" aria-labelledby={aboutId}>
           {points.map(({ text, icon }) => (
             <li key={text}>
-              {icon}
+              <Icon name={icon} className="login-icon" />
               {t(text)}
             </li>
           ))}

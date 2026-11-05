@@ -4,6 +4,7 @@ import { addAlert, alertKindLabel, removeAlert, updateAlert, type Alert } from '
 import AlertForm from './AlertForm'
 import ProblemAlert from './ProblemAlert'
 import { useProfileChange } from './profileChange'
+import Icon from './Icon'
 
 type Props = { childId: number; alerts: Alert[]; canEdit: boolean; reload: () => void }
 
@@ -24,7 +25,7 @@ export default function AlertsBanner({ childId, alerts, canEdit, reload }: Props
   return (
     <section className={alerts.length ? 'alert-banner' : 'alert-banner none'} aria-labelledby="alerts-heading">
       <h3 id="alerts-heading">
-        {alerts.length > 0 && <span aria-hidden="true">⚠ </span>}
+        {alerts.length > 0 && <Icon name="alert" />}
         {t('alerts')}
       </h3>
       {alerts.length === 0 ? (
