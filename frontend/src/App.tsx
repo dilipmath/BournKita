@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Route, Routes } from 'react-router-dom'
-import { fetchCurrentSession, fetchHealth, type Session } from './api'
+import { fetchCurrentSession, fetchHealth, fetchKita, noKitaName, type Kita, type Session } from './api'
 import AddParentPage from './AddParentPage'
 import AdministrationPage from './AdministrationPage'
 import AppHeader from './AppHeader'
@@ -32,6 +32,7 @@ export default function App() {
   const { t } = useTranslation()
 
   const [status, setStatus] = useState<ServerStatus>('checking')
+  const [kita, setKita] = useState<Kita>(noKitaName)
   // undefined while the session is being checked, null when nobody is logged in.
   const [session, setSession] = useState<Session | null | undefined>(undefined)
 
@@ -39,6 +40,10 @@ export default function App() {
     fetchHealth()
       .then((health) => setStatus(health.database === 'ok' ? 'ok' : 'databaseUnavailable'))
       .catch(() => setStatus('unreachable'))
+    // Without it, the app's own name: nothing to tell staff.
+    fetchKita()
+      .then(setKita)
+      .catch(() => undefined)
   }, [])
 
   const checkSession = useCallback(() => {
@@ -73,7 +78,7 @@ export default function App() {
 
   return (
     <main className={session ? 'with-navigation' : undefined}>
-      <AppHeader session={session ?? null} onLoggedOut={() => setSession(null)} />
+      <AppHeader kita={kita} session={session ?? null} onLoggedOut={() => setSession(null)} />
       <StatusBanner status={status} />
       <Routes>
         {/* Opened from an email by someone who has no password yet, so no login needed. */}
@@ -81,7 +86,7 @@ export default function App() {
         {/* For whoever cannot log in, so no login needed either. */}
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="*" element={session === null && <LoginPage onLoggedIn={setSession} />} />
+        <Route path="*" element={session === null && <LoginPage kita={kita} onLoggedIn={setSession} />} />
       </Routes>
       {session && isGuest && (
         <Routes>

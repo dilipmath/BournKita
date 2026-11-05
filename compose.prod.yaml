@@ -44,7 +44,12 @@ services:
       KITA_SMTP_PASSWORD: ${KITA_SMTP_PASSWORD:-}
       KITA_MAIL_FROM: ${KITA_MAIL_FROM:-Kita Kids Database <kita@localhost>}
       KITA_PHOTO_FOLDER: /data/photos
+      # The Kita's name and logo on the login page and in the header (see docs/server). The logo is
+      # a file in the branding folder, e.g. KITA_LOGO=logo.png; without one, none is shown.
+      KITA_NAME: ${KITA_NAME:-}
+      KITA_LOGO: /data/branding/${KITA_LOGO:-none}
     volumes:
+      - ${KITA_BRANDING_DIR:-./branding}:/data/branding:ro
       # Photo files: a Docker volume, or a folder such as a mounted network share
       # (KITA_PHOTO_DIR, see docs/server). Never the database: that stays on the server's disk.
       - ${KITA_PHOTO_DIR:-photos}:/data/photos

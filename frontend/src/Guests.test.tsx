@@ -63,6 +63,8 @@ describe('Guests', () => {
     // Nothing a Guest is refused is asked for.
     expect(calls.map((call) => call.route).filter((route) => !route.startsWith('GET /api/calendar'))).toEqual([
       'GET /api/health',
+      // Public: the Kita's name, for the header.
+      'GET /api/kita',
       'GET /api/session',
     ])
   })

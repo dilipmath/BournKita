@@ -1,5 +1,16 @@
 export type Health = { status: 'ok' | 'degraded'; database: 'ok' | 'unavailable'; time: string }
 
+// The Kita's own name (null: the app's own) and whether it has a logo, served at /api/kita/logo.
+export type Kita = { name: string | null; hasLogo: boolean }
+export const noKitaName: Kita = { name: null, hasLogo: false }
+
+/** The Kita's name and logo, readable before logging in. */
+export async function fetchKita(): Promise<Kita> {
+  const response = await fetch('/api/kita')
+  if (!response.ok) throw new Error(`Loading the Kita's name failed: ${response.status}`)
+  return (await response.json()) as Kita
+}
+
 export async function fetchHealth(): Promise<Health> {
   const response = await fetch('/api/health')
   // 503 still carries a Health body that says which part is down.

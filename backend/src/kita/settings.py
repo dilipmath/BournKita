@@ -44,3 +44,9 @@ class Settings(BaseSettings):
     # Where feedback from the app's pages is emailed; unset: to crash_report_email, and with
     # neither, feedback is only stored.
     feedback_email: str | None = None
+    # The Kita's own name (KITA_NAME), on the login page and in the header; unset: "Kita Kids
+    # Database".
+    name: str | None = None
+    # A PNG, JPEG or WebP picture on the server (KITA_LOGO) shown beside the name; unset or
+    # unusable: none.
+    logo: Path | None = None

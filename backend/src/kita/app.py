@@ -59,6 +59,7 @@ from kita.identity_api import (
 from kita.incidents import Incidents
 from kita.incidents_api import incidents_router
 from kita.jobs import run_regularly
+from kita.kita_api import kita_router
 from kita.mail import Mailer, mailer_from_settings
 from kita.overview import KitaOverview
 from kita.overview_api import overview_router
@@ -233,6 +234,8 @@ def create_app(
     @app.post("/api/crash-reports/backups", status_code=status.HTTP_202_ACCEPTED)
     def receive_backup_failure(report: BackupFailureReport) -> None:
         send_safely(crash_sink, report.to_crash_report(app_version, clock.now()))
+
+    app.include_router(kita_router(settings))
 
     @app.get("/api/health")
     def health(response: Response) -> Health:

@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { Session } from './api'
+import type { Kita, Session } from './api'
 import Icon from './Icon'
 import LoginForm from './LoginForm'
 
@@ -41,13 +41,14 @@ function Illustration() {
 
 /** What a tablet shows before anyone logs in: a friendly welcome, what the app is for, and the
  * login. */
-export default function LoginPage({ onLoggedIn }: { onLoggedIn: (session: Session) => void }) {
+export default function LoginPage({ kita, onLoggedIn }: { kita: Kita; onLoggedIn: (session: Session) => void }) {
   const { t } = useTranslation()
   const aboutId = useId()
   return (
     <div className="login-page">
       <section className="login-hero">
         <Illustration />
+        {kita.name && <p className="login-welcome">{t('welcomeTo', { name: kita.name })}</p>}
         <h2>{t(greeting())}</h2>
         <p className="login-tagline">{t('loginTagline')}</p>
         <p id={aboutId} className="visually-hidden">

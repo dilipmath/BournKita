@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link, useMatch } from 'react-router-dom'
-import { logOut, type Session } from './api'
+import { logOut, type Kita, type Session } from './api'
 import EmergencyListLink from './EmergencyListLink'
 import HeaderMenu from './HeaderMenu'
 import Icon from './Icon'
@@ -34,7 +34,9 @@ function useCurrentGroupId(): number | null {
 /** The top of every page: the app's name (back to the start page); once someone is logged in, the
  * Emergency button, their account menu (who it is, language, Log out), the pages their Role may
  * open and, inside a Group, the Group's pages. Before that, the language choice. */
-export default function AppHeader({ session, onLoggedOut }: { session: Session | null; onLoggedOut: () => void }) {
+type Props = { kita: Kita; session: Session | null; onLoggedOut: () => void }
+
+export default function AppHeader({ kita, session, onLoggedOut }: Props) {
   const { t } = useTranslation()
   const groupId = useCurrentGroupId()
   const isGuest = session?.role === 'guest'
@@ -44,7 +46,10 @@ export default function AppHeader({ session, onLoggedOut }: { session: Session |
     <>
       <header>
         <h1>
-          <Link to="/">{t('appName')}</Link>
+          <Link to="/">
+            {kita.hasLogo && kita.name && <img className="kita-logo" src="/api/kita/logo" alt={t('logoOf', { name: kita.name })} />}
+            {kita.name ?? t('appName')}
+          </Link>
         </h1>
         {session ? (
           <div className="header-actions">

@@ -65,3 +65,30 @@ describe('login page', () => {
     expect(screen.queryByRole('heading', { name: /Good/ })).toBeNull()
   })
 })
+
+describe('the Kita’s name', () => {
+  it('shows the Kita’s name and logo in the header and the welcome', async () => {
+    fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': loggedOut,
+      'GET /api/kita': { status: 200, body: { name: 'Kita Sonnenschein', hasLogo: true } },
+    })
+    renderAt('/', <App />)
+
+    expect(await screen.findByRole('heading', { level: 1, name: /Kita Sonnenschein/ })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Logo of Kita Sonnenschein' })).toHaveAttribute('src', '/api/kita/logo')
+    expect(screen.getByText('Welcome to Kita Sonnenschein')).toBeInTheDocument()
+  })
+
+  it('keeps the app’s own name without one', async () => {
+    fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': loggedOut,
+      'GET /api/kita': { status: 200, body: { name: null, hasLogo: false } },
+    })
+    renderAt('/', <App />)
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kita Kids Database' })).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /Logo/ })).toBeNull()
+  })
+})
