@@ -62,7 +62,7 @@ describe('login page', () => {
     await userEvent.click(within(form).getByRole('button', { name: 'Log in' }))
 
     expect(await screen.findByRole('button', { name: 'Menu for teacher@kita.example' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: /Good/ })).toBeNull()
+    expect(screen.queryByRole('form', { name: 'Log in' })).toBeNull()
   })
 })
 

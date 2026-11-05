@@ -19,7 +19,8 @@ describe('Kita overview', () => {
     fakeApi({ 'GET /api/health': health, 'GET /api/session': sessionAs('admin'), 'GET /api/overview': { status: 200, body: overview } })
     renderAt('/', <App />)
 
-    expect(await screen.findByRole('heading', { name: 'Today at the Kita, Monday, 4 January' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /, admin@kita.example$/ })).toBeInTheDocument()
+    expect(screen.getByText('Monday, 4 January')).toBeInTheDocument()
     const monkeys = screen.getByRole('link', { name: /Monkeys/ })
     expect(monkeys).toHaveAttribute('href', '/groups/2')
     expect(monkeys).toHaveTextContent('1 of 4 here · 1 gone home · 1 absent · 1 not here yet')

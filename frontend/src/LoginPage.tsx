@@ -1,19 +1,9 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Kita, Session } from './api'
+import { greeting } from './greeting'
 import Icon from './Icon'
 import LoginForm from './LoginForm'
-
-/** The hour at the Kita, whatever time zone the tablet is set to. */
-function kitaHour(): number {
-  return Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Berlin' }).format(new Date()))
-}
-
-function greeting(): 'goodMorning' | 'goodDay' | 'goodEvening' {
-  const hour = kitaHour()
-  if (hour < 12) return 'goodMorning'
-  return hour < 18 ? 'goodDay' : 'goodEvening'
-}
 
 const points = [
   { text: 'aboutToday', icon: 'children' },

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, Navigate } from 'react-router-dom'
 import { fetchOwnGroups, type GroupDay } from './api'
 import GroupLabel from './GroupLabel'
+import DayHeader, { StartPageSkeleton } from './DayHeader'
 import GroupDayTile from './GroupDayTile'
 import { useGroups } from './useGroups'
 
@@ -32,9 +33,9 @@ function AllGroups() {
 
 /** A Teacher's start page, where their day is: their one Group's Today view straight away, a tile
  * for each of their Groups, or every Group while they work in none. */
-export default function TeacherStartPage() {
+export default function TeacherStartPage({ name }: { name: string }) {
   const { t } = useTranslation()
-  const [own, setOwn] = useState<GroupDay[] | null | 'failed'>(null)
+  const [own, setOwn] = useState<{ day: string; groups: GroupDay[] } | null | 'failed'>(null)
 
   useEffect(() => {
     fetchOwnGroups()
@@ -43,18 +44,19 @@ export default function TeacherStartPage() {
   }, [])
 
   if (own === 'failed') return <p className="status status-problem">{t('somethingWentWrong')}</p>
-  if (own === null) return <p>{t('loading')}</p>
+  if (own === null) return <StartPageSkeleton />
+  const { day, groups } = own
   // Replaced, so Back leaves the app rather than coming back here and on again.
-  if (own.length === 1) return <Navigate to={`/groups/${own[0].id}`} replace />
+  if (groups.length === 1) return <Navigate to={`/groups/${groups[0].id}`} replace />
 
   return (
     <section className="page overview">
-      <h2>{t('myGroups')}</h2>
-      {own.length === 0 ? (
+      <DayHeader name={name} day={day} />
+      {groups.length === 0 ? (
         <AllGroups />
       ) : (
         <ul className="group-tiles">
-          {own.map((group) => (
+          {groups.map((group) => (
             <GroupDayTile key={group.id} group={group} />
           ))}
         </ul>

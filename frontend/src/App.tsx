@@ -71,6 +71,7 @@ export default function App() {
   }, [session, checkSession])
 
   const isAdmin = session?.role === 'admin'
+  const name = session ? (session.displayName ?? session.email) : ''
   const isGuest = session?.role === 'guest'
   const adminsOnly = (message: 'adminsOnly' | 'adminsOnlyAdministration' | 'adminsOnlyChildren' | 'adminsOnlyAuditLog' | 'adminsOnlyArchive' | 'adminsOnlyGroups' | 'adminsOnlyHolidays') => (
     <p className="status status-problem">{t(message)}</p>
@@ -120,7 +121,7 @@ export default function App() {
           <Route path="/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
           <Route path="/holidays" element={isAdmin ? <HolidaysPage /> : adminsOnly('adminsOnlyHolidays')} />
           <Route path="/incidents" element={<IncidentLogPage isAdmin={isAdmin} />} />
-          <Route path="/" element={isAdmin ? <KitaOverviewPage /> : <TeacherStartPage />} />
+          <Route path="/" element={isAdmin ? <KitaOverviewPage name={name} /> : <TeacherStartPage name={name} />} />
           <Route path="*" element={null} />
         </Routes>
       )}

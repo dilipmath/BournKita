@@ -733,8 +733,8 @@ main.with-navigation {
 /* Group tiles on the start page: each Group's day; one tap opens it. */
 .group-tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 16px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -743,9 +743,12 @@ main.with-navigation {
 .group-tile {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   min-height: 96px;
-  padding: 16px;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.04);
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
   color: var(--text);
   text-decoration: none;
   background: var(--surface);
@@ -765,6 +768,79 @@ main.with-navigation {
 .group-tile-alerts {
   color: var(--bad);
   font-weight: 600;
+}
+
+@media (min-width: 700px) {
+  .group-tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .group-tiles {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group-tile {
+    transition: none;
+  }
+}
+
+/* The start pages use the whole width: a header card, then tiles. */
+.page.overview {
+  max-width: none;
+  align-items: stretch;
+}
+
+/* The top card after login: greeting, date and the day of all Groups together. */
+.day-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px;
+  background: color-mix(in srgb, var(--accent) 9%, var(--bg));
+  border-radius: 24px;
+}
+
+.day-header h2 {
+  margin: 0;
+  color: var(--accent);
+}
+
+.day-header-date {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* While the numbers load: grey blocks the size of what comes. */
+.skeleton {
+  background: color-mix(in srgb, var(--border) 25%, var(--bg));
+  border-radius: 20px;
+}
+
+.skeleton-header {
+  height: 140px;
+}
+
+.skeleton-tile {
+  height: 150px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px;
+  border: 2px dashed var(--border);
+  border-radius: 20px;
+}
+
+.empty-state p {
+  margin: 0;
 }
 
 .kita-today p {
