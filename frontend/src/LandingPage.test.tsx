@@ -66,6 +66,64 @@ describe('login page', () => {
   })
 })
 
+describe('the top of the Landing page', () => {
+  afterEach(async () => {
+    await i18n.changeLanguage('en')
+  })
+
+  it('opens with the promise and a way to log in', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/', <App />)
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Less admin. More playtime.' })).toBeInTheDocument()
+    const logIns = screen.getAllByRole('link', { name: 'Log in' })
+    // In the top bar and in the hero, both to the login card.
+    expect(logIns).toHaveLength(2)
+    for (const link of logIns) expect(link).toHaveAttribute('href', '#login')
+    expect(screen.getByRole('form', { name: 'Log in' })).toHaveAttribute('id', 'login')
+  })
+
+  it('puts the cursor in the email field when Log in is tapped', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/', <App />)
+
+    await userEvent.click((await screen.findAllByRole('link', { name: 'Log in' }))[1])
+    expect(screen.getByLabelText('Email address')).toHaveFocus()
+  })
+
+  it('leads to each part of the page from the top bar', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/', <App />)
+
+    const sections = await screen.findByRole('navigation', { name: 'On this page' })
+    const links = within(sections).getAllByRole('link')
+    expect(links.map((link) => link.textContent)).toEqual(['Features', 'Why BournKita', 'How it works'])
+    for (const link of links) {
+      const target = document.getElementById(link.getAttribute('href')!.slice(1))
+      expect(target).toHaveRole('region')
+    }
+  })
+
+  it('in German too', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    await i18n.changeLanguage('de')
+    renderAt('/', <App />)
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Weniger Verwaltung. Mehr Zeit zum Spielen.' })).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: 'Anmelden' })).toHaveLength(2)
+    expect(screen.getByRole('navigation', { name: 'Auf dieser Seite' })).toBeInTheDocument()
+  })
+
+  it('keeps the pages opened from an email without it', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/forgot-password', <App />)
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'BournKita' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'On this page' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Log in' })).toBeNull()
+  })
+})
+
 describe('below the login', () => {
   afterEach(async () => {
     await i18n.changeLanguage('en')

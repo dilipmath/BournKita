@@ -4,6 +4,7 @@ import type { Kita, Session } from './api'
 import { greeting } from './greeting'
 import Icon from './Icon'
 import LoginForm from './LoginForm'
+import LoginLink, { loginFormId } from './LoginLink'
 
 const points = [
   { text: 'aboutToday', icon: 'children' },
@@ -21,9 +22,6 @@ const features = [
   { name: 'featureStaff', text: 'featureStaffText', icon: 'person' },
 ] as const
 
-// The login form's id, for the link back up to it from the end of the page.
-const loginFormId = 'login'
-
 const reasons = ['whyOwnServer', 'whyRoles', 'whyArchive', 'whyTablets'] as const
 
 const steps = [
@@ -32,38 +30,42 @@ const steps = [
   { name: 'stepToday', text: 'stepTodayText' },
 ] as const
 
-/** A sun over a little house with a path: the Kita, friendly but calm. Decoration only. */
-function Illustration() {
-  return (
-    <svg className="login-illustration" viewBox="0 0 240 150" aria-hidden="true" focusable="false">
-      <circle className="sun" cx="190" cy="38" r="20" />
-      <path className="hill" d="M0 130c40-30 90-38 130-26s70 6 110-12v58H0z" />
-      <path className="house" d="M62 70l34-28 34 28v40H62z" />
-      <path className="roof" d="M54 74l42-36 42 36" />
-      <rect className="door" x="88" y="86" width="16" height="24" rx="8" />
-      <rect className="window" x="70" y="80" width="12" height="12" rx="3" />
-      <rect className="window" x="110" y="80" width="12" height="12" rx="3" />
-      <circle className="flower" cx="30" cy="118" r="5" />
-      <circle className="flower" cx="160" cy="112" r="5" />
-      <circle className="flower" cx="210" cy="104" r="5" />
-    </svg>
-  )
-}
-
-/** What a tablet shows before anyone logs in: a friendly welcome and the login, then what the app
- * does, why the data is safe with it and how a Kita gets started. */
-export default function LoginPage({ kita, onLoggedIn }: { kita: Kita; onLoggedIn: (session: Session) => void }) {
+/** What anyone sees before logging in: BournKita's promise, the login card with a greeting, then
+ * what the app does, why the data is safe with it and how a Kita gets started. */
+export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLoggedIn: (session: Session) => void }) {
   const { t } = useTranslation()
   const aboutId = useId()
   const featuresId = useId()
   const startId = useId()
   const whyId = useId()
   const endId = useId()
+  const heroId = useId()
   return (
     <div className="landing">
+      <section className="landing-hero" aria-labelledby={heroId}>
+        <div className="landing-hero-text">
+          <p className="landing-eyebrow">{t('heroEyebrow')}</p>
+          <h2 id={heroId}>
+            {t('heroHeadlineFirst')}{' '}
+            <span className="landing-headline-line">
+              {t('heroHeadlineSecond')} <em>{t('heroHeadlineAccent')}</em>
+            </span>
+          </h2>
+          <p className="landing-hero-lead">{t('heroLead')}</p>
+          <div className="landing-actions">
+            <LoginLink className="button primary">{t('logIn')}</LoginLink>
+            <a className="button" href="#features">
+              {t('exploreFeatures')}
+            </a>
+          </div>
+          <p className="landing-trust">
+            <Icon name="children" className="landing-trust-icon" />
+            {t('heroTrust')}
+          </p>
+        </div>
+      </section>
       <div className="login-page">
         <section className="login-hero">
-          <Illustration />
           {(kita.name || kita.hasLogo) && (
             <p className="login-welcome">
               {kita.hasLogo && <img className="kita-logo" src="/api/kita/logo" alt={kita.name ? t('logoOf', { name: kita.name }) : t('kitaLogo')} />}
@@ -71,7 +73,6 @@ export default function LoginPage({ kita, onLoggedIn }: { kita: Kita; onLoggedIn
             </p>
           )}
           <h2>{t(greeting())}</h2>
-          <p className="landing-headline">{t('landingHeadline')}</p>
           <p className="login-tagline">{t('loginTagline')}</p>
           <p id={aboutId} className="visually-hidden">
             {t('whatYouFindHere')}
@@ -90,7 +91,7 @@ export default function LoginPage({ kita, onLoggedIn }: { kita: Kita; onLoggedIn
           <p className="login-help">{t('loginHelp')}</p>
         </div>
       </div>
-      <section className="landing-section" aria-labelledby={featuresId}>
+      <section id="features" className="landing-section" aria-labelledby={featuresId}>
         <h2 id={featuresId}>{t('landingFeatures')}</h2>
         <p className="landing-lead">{t('landingFeaturesLead')}</p>
         <ul className="landing-features">
@@ -103,7 +104,7 @@ export default function LoginPage({ kita, onLoggedIn }: { kita: Kita; onLoggedIn
           ))}
         </ul>
       </section>
-      <section className="landing-section landing-why" aria-labelledby={whyId}>
+      <section id="about" className="landing-section landing-why" aria-labelledby={whyId}>
         <div className="landing-why-mark" aria-hidden="true">
           <Icon name="privacy" className="landing-why-icon" />
         </div>
@@ -120,7 +121,7 @@ export default function LoginPage({ kita, onLoggedIn }: { kita: Kita; onLoggedIn
           </ul>
         </div>
       </section>
-      <section className="landing-section" aria-labelledby={startId}>
+      <section id="how" className="landing-section" aria-labelledby={startId}>
         <h2 id={startId}>{t('landingStart')}</h2>
         <p className="landing-lead">{t('landingStartLead')}</p>
         <ol className="landing-steps">
@@ -134,9 +135,7 @@ export default function LoginPage({ kita, onLoggedIn }: { kita: Kita; onLoggedIn
       </section>
       <section className="landing-end" aria-labelledby={endId}>
         <h2 id={endId}>{t('landingEnd')}</h2>
-        <a className="button" href={`#${loginFormId}`}>
-          {t('backToLogin')}
-        </a>
+        <LoginLink className="button">{t('backToLogin')}</LoginLink>
       </section>
       <p className="landing-footer">{t('landingFooter')}</p>
     </div>

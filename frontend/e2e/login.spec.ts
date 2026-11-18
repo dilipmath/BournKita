@@ -19,13 +19,24 @@ test('a Staff member logs in from the start page and logs out again', async ({ p
 test('the login page shows the Kita\'s name and lets the password be shown', async ({ page }) => {
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { level: 1, name: 'Kita Testhausen' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'BournKita' })).toBeVisible()
+  await expect(page.getByText('Kita Testhausen', { exact: true })).toBeVisible()
   await expect(page.getByText('Welcome to Kita Testhausen')).toBeVisible()
   const password = page.getByLabel('Password', { exact: true })
   await password.fill('secret words')
   await expect(password).toHaveAttribute('type', 'password')
   await page.getByRole('button', { name: 'Show password' }).tap()
   await expect(password).toHaveAttribute('type', 'text')
+})
+
+test('Log in at the top of the Landing page leads to the login, ready to type', async ({ page }) => {
+  await page.goto('/')
+
+  await expect(page.getByRole('heading', { level: 2, name: 'Less admin. More playtime.' })).toBeVisible()
+  await page.getByRole('link', { name: 'Log in' }).last().tap()
+
+  await expect(page.getByLabel('Email address')).toBeFocused()
+  await expect(page.getByLabel('Email address')).toBeInViewport()
 })
 
 test('wrong credentials show a clear message', async ({ page }) => {

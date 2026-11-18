@@ -17,6 +17,8 @@
   --tint-yellow: #ffe9a9;
   --tint-purple: #e7dcfa;
   --tint-strength: 55%;
+  /* The hero's highlighted word: lighter than the accent, still 3:1 as large text. */
+  --accent-soft: #4c8757;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   font-size: 20px;
   line-height: 1.5;
@@ -39,6 +41,7 @@
     --on-part: #17191c;
     /* Faint enough that the light text keeps its contrast. */
     --tint-strength: 14%;
+    --accent-soft: #a5d8ae;
   }
 }
 
@@ -315,43 +318,13 @@ button[aria-pressed='true'] {
   border-radius: 12px;
 }
 
-.login-illustration {
-  width: 100%;
-  max-width: 300px;
-  height: auto;
-}
 
-.login-illustration .sun {
-  fill: #f2c14e;
-}
 
-.login-illustration .hill {
-  fill: color-mix(in srgb, var(--accent) 30%, var(--bg));
-}
 
-.login-illustration .house {
-  fill: var(--surface);
-}
 
-.login-illustration .roof {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
 
-.login-illustration .door {
-  fill: var(--accent);
-}
 
-.login-illustration .window {
-  fill: #f2c14e;
-}
 
-.login-illustration .flower {
-  fill: #e8875b;
-}
 
 .login-side {
   display: flex;
@@ -410,7 +383,6 @@ button[aria-pressed='true'] {
 
 /* On a phone the login comes first: only the greeting and the tagline stay above it. */
 @media (max-width: 599px) {
-  .login-illustration,
   .login-points {
     display: none;
   }
@@ -427,6 +399,118 @@ button[aria-pressed='true'] {
 .login-help {
   margin: 0;
   padding: 0 8px;
+}
+
+/* The Landing page is as wide as its design; the app's other pages stay narrower. */
+main.on-landing {
+  max-width: 1160px;
+}
+
+/* In the top bar: the page's parts, then Log in. Gone on narrow screens, as in the design. */
+.landing-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.landing-links a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.landing-links a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+  .landing-links {
+    display: none;
+  }
+}
+
+/* The hero: the promise, large, with the way to log in. */
+.landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+  padding: 48px 0 56px;
+}
+
+@media (min-width: 900px) {
+  .landing-hero {
+    grid-template-columns: minmax(0, 1.03fr) minmax(0, 0.97fr);
+    padding: 64px 0 72px;
+  }
+}
+
+.landing-eyebrow {
+  display: inline-block;
+  margin: 0;
+  padding: 6px 14px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--tint-lime) var(--tint-strength), var(--surface));
+  border-radius: 99px;
+}
+
+.landing-hero h2 {
+  margin: 20px 0 16px;
+  font-size: clamp(2.1rem, 5.5vw, 3.3rem);
+  font-weight: 900;
+  line-height: 1.04;
+  letter-spacing: -0.05em;
+}
+
+.landing-headline-line {
+  display: block;
+}
+
+.landing-hero h2 em {
+  font-style: normal;
+  color: var(--accent-soft);
+}
+
+.landing-hero-lead {
+  max-width: 30rem;
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.8;
+}
+
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+@media (max-width: 430px) {
+  .landing-actions a.button {
+    flex: 1 1 100%;
+  }
+}
+
+.landing-trust {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 24px 0 0;
+  font-size: 0.65rem;
+}
+
+.landing-trust-icon {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  stroke: var(--accent);
+  background: color-mix(in srgb, var(--tint-peach) var(--tint-strength), var(--surface));
+  border-radius: 50%;
 }
 
 /* Below the login: what the app does, why the data is safe and how a Kita starts. */

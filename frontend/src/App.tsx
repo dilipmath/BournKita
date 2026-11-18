@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, useMatch } from 'react-router-dom'
 import { fetchCurrentSession, fetchHealth, fetchKita, noKitaName, type Kita, type Session } from './api'
 import AddParentPage from './AddParentPage'
 import AdministrationPage from './AdministrationPage'
@@ -21,7 +21,7 @@ import FeedbackButton from './FeedbackButton'
 import GroupsPage from './GroupsPage'
 import BacklogPage from './BacklogPage'
 import TaskBoardPage from './TaskBoardPage'
-import LoginPage from './LoginPage'
+import LandingPage from './LandingPage'
 import ResetPasswordPage from './ResetPasswordPage'
 import StaffPage from './StaffPage'
 import StatusBanner, { type ServerStatus } from './StatusBanner'
@@ -70,6 +70,9 @@ export default function App() {
     return () => window.clearTimeout(timer)
   }, [session, checkSession])
 
+  // The pages opened from an email have no Landing page around them.
+  const fromEmail = [useMatch('/verify-email'), useMatch('/forgot-password'), useMatch('/reset-password')].some(Boolean)
+  const onLanding = session === null && !fromEmail
   const isAdmin = session?.role === 'admin'
   const name = session ? (session.displayName ?? session.email) : ''
   const isGuest = session?.role === 'guest'
@@ -78,8 +81,8 @@ export default function App() {
   )
 
   return (
-    <main className={session ? 'with-navigation' : undefined}>
-      <AppHeader kita={kita} session={session ?? null} onLoggedOut={() => setSession(null)} />
+    <main className={session ? 'with-navigation' : onLanding ? 'on-landing' : undefined}>
+      <AppHeader kita={kita} session={session ?? null} onLanding={onLanding} onLoggedOut={() => setSession(null)} />
       <StatusBanner status={status} />
       <Routes>
         {/* Opened from an email by someone who has no password yet, so no login needed. */}
@@ -87,7 +90,7 @@ export default function App() {
         {/* For whoever cannot log in, so no login needed either. */}
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="*" element={session === null && <LoginPage kita={kita} onLoggedIn={setSession} />} />
+        <Route path="*" element={session === null && <LandingPage kita={kita} onLoggedIn={setSession} />} />
       </Routes>
       {session && isGuest && (
         <Routes>
