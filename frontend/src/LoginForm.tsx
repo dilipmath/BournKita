@@ -5,7 +5,7 @@ import { logIn, type Refusal, type Session } from './api'
 
 type Problem = Refusal | 'loginUnavailable' | null
 
-export default function LoginForm({ onLoggedIn }: { onLoggedIn: (session: Session) => void }) {
+export default function LoginForm({ id, onLoggedIn }: { id?: string; onLoggedIn: (session: Session) => void }) {
   const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -43,7 +43,7 @@ export default function LoginForm({ onLoggedIn }: { onLoggedIn: (session: Sessio
   }
 
   return (
-    <form className="login" aria-labelledby={headingId} onSubmit={(event) => void submit(event)}>
+    <form id={id} className="login" aria-labelledby={headingId} onSubmit={(event) => void submit(event)}>
       <h2 id={headingId}>{t('logIn')}</h2>
       <label>
         {t('emailAddress')}

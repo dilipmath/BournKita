@@ -11,6 +11,12 @@
   --part-gone: #6b665d;
   --part-absent: #b42318;
   --on-part: #ffffff;
+  /* The page before login: soft colours behind its cards, as strong as the theme allows. */
+  --tint-lime: #d8edb2;
+  --tint-peach: #ffdfcf;
+  --tint-yellow: #ffe9a9;
+  --tint-purple: #e7dcfa;
+  --tint-strength: 55%;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   font-size: 20px;
   line-height: 1.5;
@@ -31,6 +37,8 @@
     --part-gone: #9aa0a8;
     --part-absent: #ff8a7a;
     --on-part: #17191c;
+    /* Faint enough that the light text keeps its contrast. */
+    --tint-strength: 14%;
   }
 }
 
@@ -224,7 +232,7 @@ button[aria-pressed='true'] {
   flex-direction: column;
   gap: 12px;
   padding: 28px;
-  background: color-mix(in srgb, var(--accent) 9%, var(--bg));
+  background: color-mix(in srgb, var(--tint-lime) var(--tint-strength), var(--bg));
   border-radius: 24px;
 }
 
@@ -232,6 +240,14 @@ button[aria-pressed='true'] {
   margin: 0;
   font-size: 2rem;
   color: var(--accent);
+}
+
+/* The landing page's promise, large, under the greeting. */
+.landing-headline {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.15;
 }
 
 .login-tagline {
@@ -377,6 +393,201 @@ button[aria-pressed='true'] {
 .login-help {
   margin: 0;
   padding: 0 8px;
+}
+
+/* Below the login: what the app does, why the data is safe and how a Kita starts. */
+.landing-section {
+  margin: 56px 0;
+}
+
+.landing-section h2,
+.landing-end h2 {
+  margin: 0 0 8px;
+  font-size: 1.6rem;
+  line-height: 1.2;
+}
+
+.landing-lead {
+  max-width: 40rem;
+  margin: 0 0 24px;
+}
+
+.landing-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-features li {
+  --tint: var(--tint-lime);
+  padding: 24px;
+  background: color-mix(in srgb, var(--tint) var(--tint-strength), var(--surface));
+  border-radius: 20px;
+}
+
+.landing-features li:nth-child(4n + 2) {
+  --tint: var(--tint-peach);
+}
+
+.landing-features li:nth-child(4n + 3) {
+  --tint: var(--tint-purple);
+}
+
+.landing-features li:nth-child(4n + 4) {
+  --tint: var(--tint-yellow);
+}
+
+.landing-features h3,
+.landing-steps h3 {
+  margin: 12px 0 4px;
+  font-size: 1.1rem;
+}
+
+.landing-features p,
+.landing-steps p {
+  margin: 0;
+}
+
+.landing-icon {
+  width: 48px;
+  height: 48px;
+  padding: 10px;
+  stroke: var(--accent);
+  background: var(--surface);
+  border-radius: 14px;
+}
+
+/* The house with its lock beside the reasons; above them on narrow screens. */
+.landing-why {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+
+@media (min-width: 760px) {
+  .landing-why {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 40px;
+  }
+}
+
+.landing-why-mark {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  background: color-mix(in srgb, var(--tint-peach) var(--tint-strength), var(--surface));
+  border-radius: 28px;
+}
+
+/* Only decorates: left out on a phone, where it would just be more to scroll past. */
+@media (max-width: 599px) {
+  .landing-why-mark {
+    display: none;
+  }
+}
+
+.landing-why-icon {
+  width: 120px;
+  height: 120px;
+  stroke: var(--accent);
+}
+
+.landing-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.landing-check {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  stroke: var(--ok);
+}
+
+/* Numbered by the list itself, so the number is read out with each step. */
+.landing-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.landing-steps li {
+  padding: 8px 4px;
+  counter-increment: step;
+}
+
+.landing-steps li:nth-child(2) {
+  --tint: var(--tint-peach);
+}
+
+.landing-steps li:nth-child(3) {
+  --tint: var(--tint-purple);
+}
+
+.landing-steps li::before {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  content: counter(step, decimal-leading-zero);
+  font-weight: 800;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--tint, var(--tint-lime)) var(--tint-strength), var(--surface));
+  border-radius: 16px;
+}
+
+/* The end of the page: back up to the login. */
+.landing-end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin: 56px 0 24px;
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 24px;
+}
+
+.landing-end h2 {
+  margin: 0;
+}
+
+.landing-end a.button {
+  color: var(--accent);
+  background: var(--bg);
+  border-color: var(--bg);
+  font-weight: 600;
+}
+
+.landing-end a.button:focus-visible {
+  outline: 3px solid var(--bg);
+  outline-offset: 3px;
+}
+
+.landing-footer {
+  margin: 0 0 8px;
+  text-align: center;
+  color: color-mix(in srgb, var(--text) 72%, var(--bg));
 }
 
 .login h2 {

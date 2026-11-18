@@ -41,7 +41,7 @@ describe('app navigation', () => {
     renderAt('/staff', <App />)
 
     expect(await screen.findByRole('button', { name: 'Log in' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Staff accounts' })).toBeNull()
+    expect(screen.queryByRole('heading', { level: 2, name: 'Staff accounts' })).toBeNull()
   })
 
   it('opens the page for choosing a password from the email link without a login', async () => {

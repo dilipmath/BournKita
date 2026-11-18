@@ -66,6 +66,64 @@ describe('login page', () => {
   })
 })
 
+describe('below the login', () => {
+  afterEach(async () => {
+    await i18n.changeLanguage('en')
+  })
+
+  it('says what the app does for the Kita day', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/', <App />)
+
+    const features = await screen.findByRole('region', { name: 'Everything for the Kita day' })
+    expect(within(features).getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)).toEqual([
+      'Today',
+      'Child profiles',
+      'Groups and Task boards',
+      'Calendar',
+      'Incidents',
+      'Staff accounts',
+    ])
+  })
+
+  it('shows how a Kita gets started, step by step', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/', <App />)
+
+    const start = await screen.findByRole('region', { name: 'How a Kita gets started' })
+    const steps = within(within(start).getByRole('list')).getAllByRole('listitem')
+    expect(steps.map((step) => within(step).getByRole('heading', { level: 3 }).textContent)).toEqual([
+      'An Admin sets up the Kita',
+      'The children are added',
+      'Every morning, mark who is here',
+    ])
+  })
+
+  it('says why the Kita’s data is safe with it', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/', <App />)
+
+    const why = await screen.findByRole('region', { name: 'Made for the people who care for little people' })
+    expect(within(why).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'Runs on the Kita’s own server, in the local network only',
+      'Each Role sees only what it needs; the Audit log shows who viewed or changed a Child’s data',
+      'A deleted Child profile waits in the Archive, then is purged after the Retention period',
+      'On tablets and phones, in English and German',
+    ])
+  })
+
+  it('leads back up to the login from the end of the page, in German too', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    await i18n.changeLanguage('de')
+    renderAt('/', <App />)
+
+    expect(await screen.findByRole('region', { name: 'Alles für den Kita-Tag' })).toBeInTheDocument()
+    const back = screen.getByRole('link', { name: 'Zur Anmeldung' })
+    const form = screen.getByRole('form', { name: 'Anmelden' })
+    expect(back).toHaveAttribute('href', `#${form.id}`)
+  })
+})
+
 describe('the Kita’s name', () => {
   it('shows the Kita’s name and logo in the header and the welcome', async () => {
     fakeApi({
