@@ -23,6 +23,17 @@ describe('staff accounts page', () => {
     expect(row('erzieherin@kita.example')).toHaveTextContent(/Invited – email not verified yet/)
   })
 
+  it('keeps the table in a region of its own that scrolls on a narrow screen', async () => {
+    fakeApi({ 'GET /api/staff': { status: 200, body: [leitung, erzieherin] } })
+
+    renderAt('/staff', <StaffPage />)
+
+    const region = await screen.findByRole('region', { name: 'Staff accounts' })
+    expect(within(region).getByRole('table')).toBeInTheDocument()
+    // Reachable with the keyboard, so it can be scrolled without a mouse.
+    expect(region).toHaveAttribute('tabindex', '0')
+  })
+
   it('creates a Staff member, who appears as invited', async () => {
     const calls = fakeApi({
       'GET /api/staff': { status: 200, body: [leitung] },

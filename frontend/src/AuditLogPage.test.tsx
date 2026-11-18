@@ -43,6 +43,8 @@ describe('audit log', () => {
     expect(within(changeRow).getByRole('link', { name: 'Lena Müller' })).toHaveAttribute('href', '/children/7')
     expect(changeRow).toHaveTextContent('Food preferences, Languages spoken, Pick-up persons, Photo consent')
     expect(screen.getByRole('row', { name: /Deleted/ })).toHaveTextContent('Deleted Child (no. 5)')
+    const region = screen.getByRole('region', { name: 'Audit log' })
+    expect(within(region).getByRole('table')).toBeInTheDocument()
   })
 
   it('shows entries about a Parent whose data was deleted for good', async () => {

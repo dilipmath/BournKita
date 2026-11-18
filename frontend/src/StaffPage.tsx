@@ -16,6 +16,7 @@ import {
   type StaffAccount,
 } from './api'
 import GroupLabel from './GroupLabel'
+import TableRegion from './TableRegion'
 
 // What went wrong, as a translation key, with the account concerned where the message names it.
 type Problem = { key: Refusal | 'somethingWentWrong' | 'accountCreatedEmailNotSent'; email?: string } | null
@@ -152,99 +153,101 @@ export default function StaffPage() {
       {accounts === undefined ? (
         !problem && <p>{t('loading')}</p>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">{t('emailAddress')}</th>
-              <th scope="col">{t('displayName')}</th>
-              <th scope="col">{t('role')}</th>
-              <th scope="col">{t('status')}</th>
-              {groups.length > 0 && <th scope="col">{t('groups')}</th>}
-              <th scope="col">
-                <span className="visually-hidden">{t('actions')}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {accounts.map((account) => (
-              <tr key={account.id}>
-                <th scope="row">
-                  {account.displayName && <span className="staff-name">{account.displayName}</span>}
-                  {account.email}
+        <TableRegion label={t('staffAccounts')}>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">{t('emailAddress')}</th>
+                <th scope="col">{t('displayName')}</th>
+                <th scope="col">{t('role')}</th>
+                <th scope="col">{t('status')}</th>
+                {groups.length > 0 && <th scope="col">{t('groups')}</th>}
+                <th scope="col">
+                  <span className="visually-hidden">{t('actions')}</span>
                 </th>
-                <td>
-                  {/* Keyed by the saved name, so the field starts afresh after a save. */}
-                  <DisplayNameField
-                    key={account.displayName ?? ''}
-                    account={account}
-                    onSave={(name) => saveDisplayName(account, name)}
-                  />
-                </td>
-                <td>
-                  <select
-                    aria-label={t('role')}
-                    value={account.role}
-                    onChange={(event) =>
-                      void applyAccountChange(() => changeRole(account.id, event.target.value as Role))
-                    }
-                  >
-                    <RoleOptions />
-                  </select>
-                </td>
-                <td>
-                  {t(statusLabel[account.status])}
-                  {account.locked && <> · {t('lockedAfterFailedLogins')}</>}
-                </td>
-                {groups.length > 0 && (
-                  <td>
-                    <fieldset
-                      className="staff-groups"
-                      aria-label={t('groupsOf', { email: account.email })}
-                      disabled={savingGroupsOf === account.id}
-                    >
-                      {groups.map((group) => {
-                        const works = account.groupIds.includes(group.id)
-                        const groupIds = works
-                          ? account.groupIds.filter((id) => id !== group.id)
-                          : [...account.groupIds, group.id]
-                        return (
-                          <label key={group.id} className="checkbox">
-                            <input
-                              type="checkbox"
-                              checked={works}
-                              onChange={() => void saveGroups(account.id, groupIds)}
-                            />
-                            <GroupLabel group={group} />
-                          </label>
-                        )
-                      })}
-                    </fieldset>
-                  </td>
-                )}
-                <td className="actions">
-                  {account.locked && (
-                    <button type="button" onClick={() => void applyAccountChange(() => unlockAccount(account.id))}>
-                      {t('unlock')}
-                    </button>
-                  )}
-                  {account.status === 'invited' && (
-                    <button type="button" onClick={() => void resendLink(account)}>
-                      {t('sendNewLink')}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void applyAccountChange(() => setActive(account.id, account.status === 'deactivated'))
-                    }
-                  >
-                    {account.status === 'deactivated' ? t('reactivate') : t('deactivate')}
-                  </button>
-                </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {accounts.map((account) => (
+                <tr key={account.id}>
+                  <th scope="row">
+                    {account.displayName && <span className="staff-name">{account.displayName}</span>}
+                    {account.email}
+                  </th>
+                  <td>
+                    {/* Keyed by the saved name, so the field starts afresh after a save. */}
+                    <DisplayNameField
+                      key={account.displayName ?? ''}
+                      account={account}
+                      onSave={(name) => saveDisplayName(account, name)}
+                    />
+                  </td>
+                  <td>
+                    <select
+                      aria-label={t('role')}
+                      value={account.role}
+                      onChange={(event) =>
+                        void applyAccountChange(() => changeRole(account.id, event.target.value as Role))
+                      }
+                    >
+                      <RoleOptions />
+                    </select>
+                  </td>
+                  <td>
+                    {t(statusLabel[account.status])}
+                    {account.locked && <> · {t('lockedAfterFailedLogins')}</>}
+                  </td>
+                  {groups.length > 0 && (
+                    <td>
+                      <fieldset
+                        className="staff-groups"
+                        aria-label={t('groupsOf', { email: account.email })}
+                        disabled={savingGroupsOf === account.id}
+                      >
+                        {groups.map((group) => {
+                          const works = account.groupIds.includes(group.id)
+                          const groupIds = works
+                            ? account.groupIds.filter((id) => id !== group.id)
+                            : [...account.groupIds, group.id]
+                          return (
+                            <label key={group.id} className="checkbox">
+                              <input
+                                type="checkbox"
+                                checked={works}
+                                onChange={() => void saveGroups(account.id, groupIds)}
+                              />
+                              <GroupLabel group={group} />
+                            </label>
+                          )
+                        })}
+                      </fieldset>
+                    </td>
+                  )}
+                  <td className="actions">
+                    {account.locked && (
+                      <button type="button" onClick={() => void applyAccountChange(() => unlockAccount(account.id))}>
+                        {t('unlock')}
+                      </button>
+                    )}
+                    {account.status === 'invited' && (
+                      <button type="button" onClick={() => void resendLink(account)}>
+                        {t('sendNewLink')}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void applyAccountChange(() => setActive(account.id, account.status === 'deactivated'))
+                      }
+                    >
+                      {account.status === 'deactivated' ? t('reactivate') : t('deactivate')}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TableRegion>
       )}
       <form className="new-staff-member" onSubmit={(event) => void create(event)}>
         <h3>{t('newStaffMember')}</h3>

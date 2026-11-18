@@ -11,6 +11,7 @@ import {
   type Refusal,
 } from './api'
 import { localDate } from './dates'
+import TableRegion from './TableRegion'
 
 const actionLabel = {
   viewed: 'actionViewed',
@@ -141,36 +142,38 @@ export default function AuditLogPage() {
       ) : entries.length === 0 ? (
         <p>{t('noAuditEntries')}</p>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">{t('when')}</th>
-              <th scope="col">{t('staffMember')}</th>
-              <th scope="col">{t('action')}</th>
-              <th scope="col">{t('child')}</th>
-              <th scope="col">{t('whatChanged')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((entry) => (
-              <tr key={entry.id}>
-                <td>{time.format(new Date(entry.at))}</td>
-                <td className="email">{entry.staffEmail}</td>
-                <td>{t(actionLabel[entry.action])}</td>
-                <td>
-                  {entry.parentId ? (
-                    t('parentNumber', { id: entry.parentId })
-                  ) : entry.childName ? (
-                    <Link to={`/children/${entry.childId}`}>{entry.childName}</Link>
-                  ) : (
-                    t('deletedChild', { id: entry.childId })
-                  )}
-                </td>
-                <td>{entry.changedFields.map((field) => t(childFieldLabel[field as keyof typeof childFieldLabel] ?? field)).join(', ')}</td>
+        <TableRegion label={t('auditLog')}>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">{t('when')}</th>
+                <th scope="col">{t('staffMember')}</th>
+                <th scope="col">{t('action')}</th>
+                <th scope="col">{t('child')}</th>
+                <th scope="col">{t('whatChanged')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {entries.map((entry) => (
+                <tr key={entry.id}>
+                  <td>{time.format(new Date(entry.at))}</td>
+                  <td className="email">{entry.staffEmail}</td>
+                  <td>{t(actionLabel[entry.action])}</td>
+                  <td>
+                    {entry.parentId ? (
+                      t('parentNumber', { id: entry.parentId })
+                    ) : entry.childName ? (
+                      <Link to={`/children/${entry.childId}`}>{entry.childName}</Link>
+                    ) : (
+                      t('deletedChild', { id: entry.childId })
+                    )}
+                  </td>
+                  <td>{entry.changedFields.map((field) => t(childFieldLabel[field as keyof typeof childFieldLabel] ?? field)).join(', ')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TableRegion>
       )}
       {hasOlder && entries && (
         <button type="button" onClick={() => void showOlder(entries)}>
