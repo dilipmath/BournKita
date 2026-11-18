@@ -194,7 +194,7 @@ echo "alias dc='docker compose -f /opt/kita/compose.prod.yaml'" >> ~/.bashrc   #
 
 Drei Einstellungen machen die App zu der der Kita (alle freiwillig):
 
-- `KITA_NAME=Kita Sonnenschein`: der Name der Kita auf der Anmeldeseite und oben auf jeder Seite. Ohne ihn heißt die App „Kita Kids Database“.
+- `KITA_NAME=Kita Sonnenschein`: der Name der Kita, auf der Seite vor dem Anmelden und oben auf jeder Seite neben „BournKita“. Ohne ihn steht dort nur „BournKita“.
 - `KITA_LOGO=logo.png`: ein Logo neben dem Namen. Die Datei in `/opt/kita/branding/` legen. Sie muss ein PNG-, JPEG- oder WebP-Bild sein (kein SVG), am besten quadratisch oder breit, etwa 200 Pixel hoch. Ohne sie, oder bei einer anderen Dateiart, erscheint kein Logo.
 - `KITA_CLOSES_AT=16:30`: wann die Kita schließt, in der Zeit der Kita. Danach zeigt die Übersicht der Kita unter „Bitte beachten“ jedes Kind, das noch angemeldet ist. Ohne sie erscheint diese Liste nie.
 

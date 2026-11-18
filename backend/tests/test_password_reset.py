@@ -139,3 +139,13 @@ def test_deactivating_an_account_voids_its_reset_link(
     admin.put(f"/api/staff/{account_id}/active", json={"active": True})
 
     assert reset_password_status(new_client(), token) == 400
+
+
+def test_the_reset_email_names_bournkita(admin: TestClient, mailer: CapturingMailer) -> None:
+    admin.post("/api/password-resets", json={"email": ADMIN_EMAIL})
+
+    [*_, email] = [email for email in mailer.outbox if email.to == ADMIN_EMAIL]
+    assert email.subject == "BournKita: Neues Passwort / New password"
+    assert "Ihren Zugang zu BournKita" in email.body
+    assert "your BournKita account" in email.body
+    assert "Kita Kids Database" not in email.body

@@ -42,9 +42,9 @@ services:
       KITA_SMTP_SECURITY: ${KITA_SMTP_SECURITY:-starttls}
       KITA_SMTP_USERNAME: ${KITA_SMTP_USERNAME:-}
       KITA_SMTP_PASSWORD: ${KITA_SMTP_PASSWORD:-}
-      KITA_MAIL_FROM: ${KITA_MAIL_FROM:-Kita Kids Database <kita@localhost>}
+      KITA_MAIL_FROM: ${KITA_MAIL_FROM:-BournKita <kita@localhost>}
       KITA_PHOTO_FOLDER: /data/photos
-      # The Kita's name and logo on the login page and in the header (see docs/server). The logo is
+      # The Kita's name and logo on the Landing page and in the header (see docs/server). The logo is
       # a file in the branding folder, e.g. KITA_LOGO=logo.png; without one, none is shown.
       KITA_NAME: ${KITA_NAME:-}
       # After this time (the Kita's), Children still checked in need the Admins' attention.

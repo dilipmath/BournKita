@@ -1,4 +1,4 @@
-# BournKita — Kita Kids Database
+# BournKita
 
 Web application for Kita staff: Child profiles with safety data, groups, task board, calendar and attendance. Runs on a server inside the Kita's local network. See `AGENTS.md` and issue #1 for the Release 1 spec.
 
@@ -36,7 +36,7 @@ This stack sends all email to [Mailpit](https://mailpit.axllent.org/), which cat
 | `KITA_SMTP_PORT` | `1025` | Port (usually 587 for STARTTLS, 465 for TLS) |
 | `KITA_SMTP_SECURITY` | `none` | `starttls`, `tls` or `none` |
 | `KITA_SMTP_USERNAME`, `KITA_SMTP_PASSWORD` | empty | Login, if the server needs one |
-| `KITA_MAIL_FROM` | `Kita Kids Database <kita@localhost>` | Sender address |
+| `KITA_MAIL_FROM` | `BournKita <kita@localhost>` | Sender address |
 
 If an email cannot be sent, the action still completes (a new Staff member's account is still created) and the failure is filed as a crash report; the Admin can use "Send new link" later.
 

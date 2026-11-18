@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     smtp_security: SmtpSecurity = "starttls"
     smtp_username: str | None = None
     smtp_password: str | None = None
-    mail_from: str = "Kita Kids Database <kita@localhost>"
+    mail_from: str = "BournKita <kita@localhost>"
     # Encrypts sensitive fields; required to start. `kita-admin generate-key` makes one.
     encryption_key: SecretStr | None = None
     # Where photo files are kept (encrypted), e.g. on the Kita's network drive.
@@ -45,8 +45,8 @@ class Settings(BaseSettings):
     # Where feedback from the app's pages is emailed; unset: to crash_report_email, and with
     # neither, feedback is only stored.
     feedback_email: str | None = None
-    # The Kita's own name (KITA_NAME), on the login page and in the header; unset: "Kita Kids
-    # Database".
+    # The Kita's own name (KITA_NAME), on the Landing page and in the header beside BournKita;
+    # unset: BournKita alone.
     name: str | None = None
     # A PNG, JPEG or WebP picture on the server (KITA_LOGO) shown beside the name; unset or
     # unusable: none.

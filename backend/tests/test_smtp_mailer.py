@@ -110,7 +110,7 @@ def mailer(
     username: str | None = None,
     password: str | None = None,
     ssl_context: ssl.SSLContext | None = None,
-    sender: str = "Kita Kids Database <kita@kita.example>",
+    sender: str = "BournKita <kita@kita.example>",
 ) -> SmtpMailer:
     return SmtpMailer(
         host="127.0.0.1",
@@ -133,7 +133,7 @@ def test_sends_the_email_with_sender_recipient_subject_and_body(
     [envelope] = inbox.envelopes
     assert envelope.rcpt_tos == ["erzieherin@kita.example"]
     [message] = inbox.messages()
-    assert message["From"] == "Kita Kids Database <kita@kita.example>"
+    assert message["From"] == "BournKita <kita@kita.example>"
     assert message["To"] == "erzieherin@kita.example"
     assert message["Subject"] == "Bitte bestätigen / Please verify"
     body = message.get_content()  # type: ignore[attr-defined]

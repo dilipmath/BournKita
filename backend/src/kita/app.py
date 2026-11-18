@@ -128,7 +128,7 @@ def create_app(
                 await job
         engine.dispose()
 
-    app = FastAPI(title="Kita Kids Database", lifespan=lifespan)
+    app = FastAPI(title="BournKita", lifespan=lifespan)
     app.state.mailer = mailer
     identity = Identity.from_settings(
         engine,

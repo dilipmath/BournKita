@@ -30,7 +30,7 @@ services:
       KITA_SMTP_SECURITY: ${KITA_SMTP_SECURITY:-none}
       KITA_SMTP_USERNAME: ${KITA_SMTP_USERNAME:-}
       KITA_SMTP_PASSWORD: ${KITA_SMTP_PASSWORD:-}
-      KITA_MAIL_FROM: ${KITA_MAIL_FROM:-Kita Kids Database <kita@localhost>}
+      KITA_MAIL_FROM: ${KITA_MAIL_FROM:-BournKita <kita@localhost>}
       # Encrypts addresses, contact and health data. This default is for development only and
       # is public; the production stack (compose.prod.yaml) needs its own (`kita-admin generate-key`).
       KITA_ENCRYPTION_KEY: ${KITA_ENCRYPTION_KEY:-fdrh6GyPYGiTyjJtXojo6BBpfYqHzLJ9jiZhxclYbjA=}

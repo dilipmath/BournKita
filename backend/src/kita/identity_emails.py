@@ -9,7 +9,7 @@ def verification_email(to: str, link: str, valid_days: int) -> Email:
         [
             "Hallo,",
             "",
-            "für Sie wurde ein Zugang zur Kita Kids Database angelegt. Bitte bestätigen Sie",
+            "für Sie wurde ein Zugang zu BournKita angelegt. Bitte bestätigen Sie",
             f"Ihre E-Mail-Adresse und wählen Sie ein Passwort (Link {valid_days} Tage gültig):",
             "",
             link,
@@ -18,7 +18,7 @@ def verification_email(to: str, link: str, valid_days: int) -> Email:
             "",
             "Hello,",
             "",
-            "an account for the Kita Kids Database has been created for you. Please verify",
+            "an account for BournKita has been created for you. Please verify",
             f"your email address and choose a password (link valid for {valid_days} days):",
             "",
             link,
@@ -26,7 +26,7 @@ def verification_email(to: str, link: str, valid_days: int) -> Email:
     )
     return Email(
         to=to,
-        subject="Kita Kids Database: E-Mail-Adresse bestätigen / Verify your email address",
+        subject="BournKita: E-Mail-Adresse bestätigen / Verify your email address",
         body=body,
     )
 
@@ -36,7 +36,7 @@ def password_reset_email(to: str, link: str, valid_minutes: int) -> Email:
         [
             "Hallo,",
             "",
-            "jemand hat ein neues Passwort für Ihren Zugang zur Kita Kids Database angefordert.",
+            "jemand hat ein neues Passwort für Ihren Zugang zu BournKita angefordert.",
             f"Hier können Sie es wählen (Link {valid_minutes} Minuten gültig, nur einmal nutzbar):",
             "",
             link,
@@ -47,7 +47,7 @@ def password_reset_email(to: str, link: str, valid_minutes: int) -> Email:
             "",
             "Hello,",
             "",
-            "someone asked for a new password for your Kita Kids Database account.",
+            "someone asked for a new password for your BournKita account.",
             f"Choose it here (link valid for {valid_minutes} minutes, works once):",
             "",
             link,
@@ -57,6 +57,6 @@ def password_reset_email(to: str, link: str, valid_minutes: int) -> Email:
     )
     return Email(
         to=to,
-        subject="Kita Kids Database: Neues Passwort / New password",
+        subject="BournKita: Neues Passwort / New password",
         body=body,
     )

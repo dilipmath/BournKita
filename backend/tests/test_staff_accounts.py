@@ -256,3 +256,13 @@ def test_deactivating_an_invited_account_voids_its_link_even_after_reactivation(
     )
     assert response.status_code == 400
     assert admin.post(f"/api/staff/{account_id}/invitation").status_code == 204
+
+
+def test_the_verification_email_names_bournkita(admin: TestClient, mailer: CapturingMailer) -> None:
+    invite(admin)
+
+    [email] = [email for email in mailer.outbox if email.to == TEACHER_EMAIL]
+    assert email.subject == "BournKita: E-Mail-Adresse bestätigen / Verify your email address"
+    assert "Zugang zu BournKita angelegt" in email.body
+    assert "an account for BournKita has been created" in email.body
+    assert "Kita Kids Database" not in email.body

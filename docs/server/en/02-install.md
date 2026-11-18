@@ -194,7 +194,7 @@ Fill in `.env` as it explains: `KITA_HOSTNAME=kita.home.arpa`, `KITA_BACKUP_DIR=
 
 Three settings make the app the Kita's own (all optional):
 
-- `KITA_NAME=Kita Sonnenschein`: the Kita's name on the login page and at the top of every page. Without it the app says "Kita Kids Database".
+- `KITA_NAME=Kita Sonnenschein`: the Kita's name, on the Landing page and at the top of every page beside "BournKita". Without it the app shows only "BournKita".
 - `KITA_LOGO=logo.png`: a logo beside the name. Put the file in `/opt/kita/branding/`. It must be a PNG, JPEG or WebP picture (not SVG), ideally square or wide, about 200 pixels high. Without it, or with any other file type, no logo is shown.
 - `KITA_CLOSES_AT=16:30`: when the Kita closes, in the Kita's own time. After it, the Kita overview lists under "Needs attention" every Child still checked in. Without it, that list never shows.
 
