@@ -93,9 +93,12 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
           <p className="login-help">{t('loginHelp')}</p>
         </div>
       </div>
-      <section id="features" className="landing-section" aria-labelledby={featuresId}>
-        <h2 id={featuresId}>{t('landingFeatures')}</h2>
-        <p className="landing-lead">{t('landingFeaturesLead')}</p>
+      <section id="features" className="landing-section landing-band" aria-labelledby={featuresId}>
+        <div className="landing-center">
+          <p className="landing-eyebrow">{t('eyebrowFeatures')}</p>
+          <h2 id={featuresId}>{t('landingFeatures')}</h2>
+          <p className="landing-lead">{t('landingFeaturesLead')}</p>
+        </div>
         <ul className="landing-features">
           {features.map(({ name, text, icon }) => (
             <li key={name}>
@@ -108,9 +111,20 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
       </section>
       <section id="about" className="landing-section landing-why" aria-labelledby={whyId}>
         <div className="landing-why-mark" aria-hidden="true">
+          <span className="landing-bubble" />
+          <span className="landing-bubble landing-bubble-small" />
           <Icon name="privacy" className="landing-why-icon" />
+          <p className="landing-why-note landing-why-note-one">
+            <Icon name="here" />
+            {t('whyNoteOne')}
+          </p>
+          <p className="landing-why-note landing-why-note-two">
+            <Icon name="today" />
+            {t('whyNoteTwo')}
+          </p>
         </div>
         <div>
+          <p className="landing-eyebrow">{t('eyebrowWhy')}</p>
           <h2 id={whyId}>{t('landingWhy')}</h2>
           <p className="landing-lead">{t('landingWhyLead')}</p>
           <ul className="landing-checklist">
@@ -121,11 +135,17 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
               </li>
             ))}
           </ul>
+          <a className="button primary" href="#how">
+            {t('seeHowItWorks')}
+          </a>
         </div>
       </section>
-      <section id="how" className="landing-section" aria-labelledby={startId}>
-        <h2 id={startId}>{t('landingStart')}</h2>
-        <p className="landing-lead">{t('landingStartLead')}</p>
+      <section id="how" className="landing-section landing-band" aria-labelledby={startId}>
+        <div className="landing-center">
+          <p className="landing-eyebrow">{t('eyebrowHow')}</p>
+          <h2 id={startId}>{t('landingStart')}</h2>
+          <p className="landing-lead">{t('landingStartLead')}</p>
+        </div>
         <ol className="landing-steps">
           {steps.map(({ name, text }) => (
             <li key={name}>
@@ -136,10 +156,19 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
         </ol>
       </section>
       <section className="landing-end" aria-labelledby={endId}>
+        <Icon name="sprout" className="landing-end-icon" />
         <h2 id={endId}>{t('landingEnd')}</h2>
+        <p>{t('landingEndText')}</p>
         <LoginLink className="button">{t('backToLogin')}</LoginLink>
       </section>
-      <p className="landing-footer">{t('landingFooter')}</p>
+      <footer className="landing-footer">
+        <span className="landing-footer-name">
+          <Icon name="sprout" className="app-mark" />
+          {t('appName')}
+        </span>
+        <span>{t('landingFooter')}</span>
+        <span>{t('footerCopyright', { year: new Date().getFullYear() })}</span>
+      </footer>
     </div>
   )
 }

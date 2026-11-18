@@ -146,7 +146,7 @@ describe('below the login', () => {
     fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
     renderAt('/', <App />)
 
-    const features = await screen.findByRole('region', { name: 'Everything for the Kita day' })
+    const features = await screen.findByRole('region', { name: 'One platform. All your Kita.' })
     expect(within(features).getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)).toEqual([
       'Today',
       'Child profiles',
@@ -161,7 +161,7 @@ describe('below the login', () => {
     fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
     renderAt('/', <App />)
 
-    const start = await screen.findByRole('region', { name: 'How a Kita gets started' })
+    const start = await screen.findByRole('region', { name: 'Your Kita, organized in 3 steps.' })
     const steps = within(within(start).getByRole('list')).getAllByRole('listitem')
     expect(steps.map((step) => within(step).getByRole('heading', { level: 3 }).textContent)).toEqual([
       'An Admin sets up the Kita',
@@ -174,7 +174,7 @@ describe('below the login', () => {
     fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
     renderAt('/', <App />)
 
-    const why = await screen.findByRole('region', { name: 'Made for the people who care for little people' })
+    const why = await screen.findByRole('region', { name: 'Made for the people who care for little people.' })
     expect(within(why).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
       'Runs on the Kita’s own server, in the local network only',
       'Each Role sees only what it needs; the Audit log shows who viewed or changed a Child’s data',
@@ -188,10 +188,21 @@ describe('below the login', () => {
     await i18n.changeLanguage('de')
     renderAt('/', <App />)
 
-    expect(await screen.findByRole('region', { name: 'Alles für den Kita-Tag' })).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Eine Plattform. Ihre ganze Kita.' })).toBeInTheDocument()
     const back = screen.getByRole('link', { name: 'Zur Anmeldung' })
     const form = screen.getByRole('form', { name: 'Anmelden' })
     expect(back).toHaveAttribute('href', `#${form.id}`)
+  })
+
+  it('ends with BournKita and the current year', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2027-03-01T09:00:00Z'))
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/', <App />)
+
+    expect(await screen.findByText('© 2027 BournKita')).toBeInTheDocument()
+    expect(screen.getByText('Made with care for little big moments.')).toBeInTheDocument()
+    vi.useRealTimers()
   })
 })
 

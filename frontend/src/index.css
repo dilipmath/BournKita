@@ -16,6 +16,8 @@
   --tint-peach: #ffdfcf;
   --tint-yellow: #ffe9a9;
   --tint-purple: #e7dcfa;
+  --tint-teal: #d6ebe8;
+  --tint-rose: #f6dbe4;
   --tint-strength: 55%;
   /* The hero's highlighted word: lighter than the accent, still 3:1 as large text. */
   --accent-soft: #4c8757;
@@ -717,19 +719,46 @@ main.on-landing {
 
 /* Below the login: what the app does, why the data is safe and how a Kita starts. */
 .landing-section {
-  margin: 56px 0;
+  margin: 0;
+  padding: 72px 0;
+}
+
+/* The design's light bands behind every other section, across the whole width. */
+.landing-band {
+  box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--tint-yellow) 12%, var(--bg));
+  clip-path: inset(0 -100vmax);
+  background: color-mix(in srgb, var(--tint-yellow) 12%, var(--bg));
+}
+
+.landing-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.landing-center .landing-lead {
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.landing-section .landing-eyebrow {
+  margin-bottom: 12px;
 }
 
 .landing-section h2,
 .landing-end h2 {
-  margin: 0 0 8px;
-  font-size: 1.6rem;
-  line-height: 1.2;
+  margin: 0 0 12px;
+  font-size: clamp(1.5rem, 4vw, 2.15rem);
+  line-height: 1.13;
+  letter-spacing: -0.04em;
 }
 
 .landing-lead {
-  max-width: 40rem;
-  margin: 0 0 24px;
+  max-width: 30rem;
+  margin: 0 0 36px;
+  font-size: 0.75rem;
+  line-height: 1.8;
 }
 
 .landing-features {
@@ -743,21 +772,37 @@ main.on-landing {
 
 .landing-features li {
   --tint: var(--tint-lime);
-  padding: 24px;
+  min-height: 220px;
+  padding: 25px 23px;
   background: color-mix(in srgb, var(--tint) var(--tint-strength), var(--surface));
-  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--border) 15%, var(--surface));
+  border-radius: 19px;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.landing-features li:nth-child(4n + 2) {
+.landing-features li:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 35px rgb(45 82 48 / 0.08);
+}
+
+.landing-features li:nth-child(2) {
   --tint: var(--tint-peach);
 }
 
-.landing-features li:nth-child(4n + 3) {
+.landing-features li:nth-child(3) {
   --tint: var(--tint-purple);
 }
 
-.landing-features li:nth-child(4n + 4) {
+.landing-features li:nth-child(4) {
   --tint: var(--tint-yellow);
+}
+
+.landing-features li:nth-child(5) {
+  --tint: var(--tint-teal);
+}
+
+.landing-features li:nth-child(6) {
+  --tint: var(--tint-rose);
 }
 
 .landing-features h3,
@@ -769,12 +814,14 @@ main.on-landing {
 .landing-features p,
 .landing-steps p {
   margin: 0;
+  font-size: 0.65rem;
+  line-height: 1.75;
 }
 
 .landing-icon {
-  width: 48px;
-  height: 48px;
-  padding: 10px;
+  width: 52px;
+  height: 52px;
+  padding: 12px;
   stroke: var(--accent);
   background: var(--surface);
   border-radius: 14px;
@@ -784,23 +831,83 @@ main.on-landing {
 .landing-why {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
+  gap: 25px;
   align-items: center;
+}
+
+.landing-why .landing-lead {
+  margin-bottom: 22px;
 }
 
 @media (min-width: 760px) {
   .landing-why {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-    gap: 40px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 55px;
   }
 }
 
 .landing-why-mark {
+  position: relative;
   display: grid;
   place-items: center;
-  min-height: 220px;
-  background: color-mix(in srgb, var(--tint-peach) var(--tint-strength), var(--surface));
+  min-height: 310px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--tint-lime) var(--tint-strength), var(--surface));
   border-radius: 28px;
+}
+
+.landing-bubble {
+  position: absolute;
+  top: 25px;
+  left: 30px;
+  width: 90px;
+  height: 90px;
+  background: color-mix(in srgb, var(--tint-peach) calc(var(--tint-strength) + 30%), var(--surface));
+  border-radius: 50%;
+}
+
+.landing-bubble-small {
+  top: auto;
+  right: 35px;
+  bottom: 22px;
+  left: auto;
+  width: 65px;
+  height: 65px;
+  background: color-mix(in srgb, var(--tint-purple) calc(var(--tint-strength) + 30%), var(--surface));
+}
+
+.landing-why-icon {
+  position: relative;
+}
+
+.landing-why-note {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgb(37 74 53 / 0.09);
+}
+
+.landing-why-note svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--accent);
+}
+
+.landing-why-note-one {
+  bottom: 30px;
+  left: 28px;
+}
+
+.landing-why-note-two {
+  top: 30px;
+  right: 20px;
 }
 
 /* Only decorates: left out on a phone, where it would just be more to scroll past. */
@@ -819,8 +926,9 @@ main.on-landing {
 .landing-checklist {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin: 0;
+  gap: 15px;
+  margin: 0 0 24px;
+  font-size: 0.65rem;
   padding: 0;
   list-style: none;
 }
@@ -850,7 +958,8 @@ main.on-landing {
 }
 
 .landing-steps li {
-  padding: 8px 4px;
+  padding: 20px;
+  text-align: center;
   counter-increment: step;
 }
 
@@ -865,8 +974,9 @@ main.on-landing {
 .landing-steps li::before {
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
+  width: 49px;
+  height: 49px;
+  margin: 0 auto;
   content: counter(step, decimal-leading-zero);
   font-weight: 800;
   color: var(--accent);
@@ -876,20 +986,69 @@ main.on-landing {
 
 /* The end of the page: back up to the login. */
 .landing-end {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  margin: 56px 0 24px;
-  padding: 40px 24px;
+  gap: 12px;
+  margin: 72px 0 0;
+  padding: 56px 25px;
+  overflow: hidden;
   text-align: center;
   color: var(--bg);
   background: var(--accent);
   border-radius: 24px;
 }
 
+.landing-end::before,
+.landing-end::after {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  content: '';
+  background: rgb(255 255 255 / 0.07);
+  border-radius: 50%;
+}
+
+.landing-end::before {
+  top: -110px;
+  left: -50px;
+}
+
+.landing-end::after {
+  right: -40px;
+  bottom: -130px;
+}
+
 .landing-end h2 {
   margin: 0;
+}
+
+.landing-end p {
+  margin: 0 0 12px;
+  font-size: 0.65rem;
+}
+
+.landing-footer-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: var(--text);
+}
+
+.landing-footer .app-mark {
+  width: 30px;
+  height: 30px;
+  padding: 5px;
+}
+
+.landing-end-icon {
+  width: 40px;
+  height: 40px;
+  stroke: var(--bg);
 }
 
 .landing-end a.button {
@@ -905,8 +1064,13 @@ main.on-landing {
 }
 
 .landing-footer {
-  margin: 0 0 8px;
-  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 28px 0;
+  font-size: 0.55rem;
   color: color-mix(in srgb, var(--text) 72%, var(--bg));
 }
 
