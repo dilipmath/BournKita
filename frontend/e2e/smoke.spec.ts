@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('the login page is in English and German', async ({ page }) => {
+test('the Landing page is in English and German', async ({ page }) => {
   await page.goto('/')
 
   await expect(page.getByRole('button', { name: 'Log in' })).toBeVisible()

@@ -16,7 +16,7 @@ test('a Staff member logs in from the start page and logs out again', async ({ p
   await logOut(page)
 })
 
-test('the login page shows the Kita\'s name and lets the password be shown', async ({ page }) => {
+test('the Landing page shows the Kita\'s name and lets the password be shown', async ({ page }) => {
   await page.goto('/')
 
   await expect(page.getByRole('heading', { level: 1, name: 'BournKita' })).toBeVisible()

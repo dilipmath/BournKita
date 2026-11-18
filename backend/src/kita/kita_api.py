@@ -20,7 +20,7 @@ _LOGO_TYPES = {
 class KitaOut(BaseModel):
     model_config = CAMEL_CASE
 
-    # None: the app calls itself "Kita Kids Database".
+    # None: the app shows only its own name, BournKita.
     name: str | None
     has_logo: bool
 

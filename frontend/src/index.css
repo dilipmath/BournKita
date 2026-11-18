@@ -281,14 +281,6 @@ button[aria-pressed='true'] {
   color: var(--accent);
 }
 
-/* The landing page's promise, large, under the greeting. */
-.landing-headline {
-  margin: 0;
-  font-size: 1.6rem;
-  font-weight: 800;
-  line-height: 1.15;
-}
-
 .login-tagline {
   margin: 0;
   font-size: 1.15rem;
@@ -319,14 +311,6 @@ button[aria-pressed='true'] {
   background: var(--surface);
   border-radius: 12px;
 }
-
-
-
-
-
-
-
-
 
 .login-side {
   display: flex;
@@ -454,7 +438,8 @@ main.on-landing {
   padding: 48px 0 56px;
 }
 
-@media (min-width: 900px) {
+/* Side by side above the design's own breakpoint. */
+@media (min-width: 761px) {
   .landing-hero {
     grid-template-columns: minmax(0, 1.03fr) minmax(0, 0.97fr);
     padding: 64px 0 72px;
@@ -781,6 +766,17 @@ main.on-landing {
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
+/* The design's buttons lift a little under the pointer. */
+.landing a.button,
+.on-landing .header-actions a.button {
+  transition: transform 0.2s;
+}
+
+.landing a.button:hover,
+.on-landing .header-actions a.button:hover {
+  transform: translateY(-2px);
+}
+
 .landing-features li:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 35px rgb(45 82 48 / 0.08);
@@ -1075,8 +1071,15 @@ main.on-landing {
   color: color-mix(in srgb, var(--text) 72%, var(--bg));
 }
 
-.login h2 {
+.login h2,
+.login h3 {
   margin: 0;
+}
+
+/* The greeting at the top of the login card, above "Log in". */
+.login .login-greeting {
+  font-size: 1.6rem;
+  color: var(--accent);
 }
 
 .login label {
@@ -1395,7 +1398,6 @@ button.danger {
   border-radius: 12px;
 }
 
-
 .main-nav a.active {
   color: var(--accent);
   font-weight: 700;
@@ -1505,11 +1507,15 @@ main.with-navigation {
 
 @media (prefers-reduced-motion: reduce) {
   .group-tile,
-  .landing-features li {
+  .landing-features li,
+  .landing a.button,
+  .on-landing .header-actions a.button {
     transition: none;
   }
 
-  .landing-features li:hover {
+  .landing-features li:hover,
+  .landing a.button:hover,
+  .on-landing .header-actions a.button:hover {
     transform: none;
   }
 }
@@ -2009,7 +2015,6 @@ main.with-navigation {
   height: 28px;
   min-height: 0;
 }
-
 
 /* Groups: the Admins' page, the start page's drop-down and the dashboard. */
 .groups ul {
@@ -2539,7 +2544,6 @@ main.with-navigation {
   border-radius: 12px;
   font-weight: 600;
 }
-
 
 .today-list {
   display: grid;

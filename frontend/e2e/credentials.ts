@@ -2,8 +2,9 @@ import { expect, type Page } from '@playwright/test'
 
 export const e2eAdmin = { email: 'e2e-admin@kita.example', password: 'e2e admin password' }
 
-/** Fills in and sends the login form that is on screen. */
+/** Taps Log in at the top of the Landing page, then fills in and sends the login form. */
 export async function logIn(page: Page, email: string, password: string): Promise<void> {
+  await page.getByRole('link', { name: 'Log in' }).first().tap()
   await page.getByLabel('Email address').fill(email)
   await page.getByLabel('Password').fill(password)
   await page.getByRole('button', { name: 'Log in' }).tap()

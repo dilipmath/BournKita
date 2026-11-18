@@ -4,6 +4,7 @@ import { logOut, type Kita, type Session } from './api'
 import EmergencyListLink from './EmergencyListLink'
 import HeaderMenu from './HeaderMenu'
 import LoginLink from './LoginLink'
+import { landingSectionIds } from './landingSections'
 import Icon from './Icon'
 import { GroupNavigation, MainNavigation } from './MainNavigation'
 
@@ -35,7 +36,7 @@ function useCurrentGroupId(): number | null {
 /** The top of every page: BournKita (back to the start page) and the Kita's own name; once someone is logged in, the
  * Emergency button, their account menu (who it is, language, Log out), the pages their Role may
  * open and, inside a Group, the Group's pages. Before that, the language choice. */
-type Props = { kita: Kita; session: Session | null; onLanding?: boolean; onLoggedOut: () => void }
+type Props = { kita: Kita; session: Session | null; onLanding: boolean; onLoggedOut: () => void }
 
 /** On the Landing page: its parts, and the way to the login. */
 function LandingLinks() {
@@ -43,16 +44,16 @@ function LandingLinks() {
   return (
     <>
       <nav aria-label={t('onThisPage')} className="landing-links">
-        <a href="#features">{t('navFeatures')}</a>
-        <a href="#about">{t('navWhy')}</a>
-        <a href="#how">{t('navHow')}</a>
+        <a href={`#${landingSectionIds.features}`}>{t('navFeatures')}</a>
+        <a href={`#${landingSectionIds.why}`}>{t('navWhy')}</a>
+        <a href={`#${landingSectionIds.how}`}>{t('navHow')}</a>
       </nav>
       <LoginLink className="button primary">{t('logIn')}</LoginLink>
     </>
   )
 }
 
-export default function AppHeader({ kita, session, onLanding = false, onLoggedOut }: Props) {
+export default function AppHeader({ kita, session, onLanding, onLoggedOut }: Props) {
   const { t } = useTranslation()
   const groupId = useCurrentGroupId()
   const isGuest = session?.role === 'guest'

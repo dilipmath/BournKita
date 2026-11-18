@@ -1,11 +1,14 @@
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { logIn, type Refusal, type Session } from './api'
 
 type Problem = Refusal | 'loginUnavailable' | null
 
-export default function LoginForm({ id, onLoggedIn }: { id?: string; onLoggedIn: (session: Session) => void }) {
+type Props = { id?: string; greeting?: ReactNode; onLoggedIn: (session: Session) => void }
+
+/** The login card; a greeting, when given, opens it. */
+export default function LoginForm({ id, greeting, onLoggedIn }: Props) {
   const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -44,7 +47,8 @@ export default function LoginForm({ id, onLoggedIn }: { id?: string; onLoggedIn:
 
   return (
     <form id={id} className="login" aria-labelledby={headingId} onSubmit={(event) => void submit(event)}>
-      <h2 id={headingId}>{t('logIn')}</h2>
+      {greeting}
+      <h3 id={headingId}>{t('logIn')}</h3>
       <label>
         {t('emailAddress')}
         <input type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} />

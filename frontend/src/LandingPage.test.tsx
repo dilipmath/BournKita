@@ -8,7 +8,7 @@ import { fakeApi, health, renderAt, sessionAs } from './testing'
 
 const loggedOut = { status: 401, body: { detail: 'not_logged_in' } }
 
-describe('login page', () => {
+describe('the login card', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] })
   })

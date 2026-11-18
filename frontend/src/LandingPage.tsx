@@ -6,6 +6,7 @@ import Icon from './Icon'
 import LoginForm from './LoginForm'
 import LoginLink, { loginFormId } from './LoginLink'
 import SampleDay from './SampleDay'
+import { landingSectionIds } from './landingSections'
 
 const points = [
   { text: 'aboutToday', icon: 'children' },
@@ -41,6 +42,7 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
   const whyId = useId()
   const endId = useId()
   const heroId = useId()
+  const greetingId = useId()
   return (
     <div className="landing">
       <section className="landing-hero" aria-labelledby={heroId}>
@@ -55,7 +57,7 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
           <p className="landing-hero-lead">{t('heroLead')}</p>
           <div className="landing-actions">
             <LoginLink className="button primary">{t('logIn')}</LoginLink>
-            <a className="button" href="#features">
+            <a className="button" href={`#${landingSectionIds.features}`}>
               {t('exploreFeatures')}
             </a>
           </div>
@@ -66,15 +68,14 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
         </div>
         <SampleDay />
       </section>
-      <div className="login-page">
-        <section className="login-hero">
+      <section className="login-page" aria-labelledby={greetingId}>
+        <div className="login-hero">
           {(kita.name || kita.hasLogo) && (
             <p className="login-welcome">
               {kita.hasLogo && <img className="kita-logo" src="/api/kita/logo" alt={kita.name ? t('logoOf', { name: kita.name }) : t('kitaLogo')} />}
               {kita.name && t('welcomeTo', { name: kita.name })}
             </p>
           )}
-          <h2>{t(greeting())}</h2>
           <p className="login-tagline">{t('loginTagline')}</p>
           <p id={aboutId} className="visually-hidden">
             {t('whatYouFindHere')}
@@ -87,13 +88,21 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
               </li>
             ))}
           </ul>
-        </section>
+        </div>
         <div className="login-side">
-          <LoginForm id={loginFormId} onLoggedIn={onLoggedIn} />
+          <LoginForm
+            id={loginFormId}
+            greeting={
+              <h2 id={greetingId} className="login-greeting">
+                {t(greeting())}
+              </h2>
+            }
+            onLoggedIn={onLoggedIn}
+          />
           <p className="login-help">{t('loginHelp')}</p>
         </div>
-      </div>
-      <section id="features" className="landing-section landing-band" aria-labelledby={featuresId}>
+      </section>
+      <section id={landingSectionIds.features} className="landing-section landing-band" aria-labelledby={featuresId}>
         <div className="landing-center">
           <p className="landing-eyebrow">{t('eyebrowFeatures')}</p>
           <h2 id={featuresId}>{t('landingFeatures')}</h2>
@@ -109,7 +118,7 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
           ))}
         </ul>
       </section>
-      <section id="about" className="landing-section landing-why" aria-labelledby={whyId}>
+      <section id={landingSectionIds.why} className="landing-section landing-why" aria-labelledby={whyId}>
         <div className="landing-why-mark" aria-hidden="true">
           <span className="landing-bubble" />
           <span className="landing-bubble landing-bubble-small" />
@@ -135,12 +144,12 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
               </li>
             ))}
           </ul>
-          <a className="button primary" href="#how">
+          <a className="button primary" href={`#${landingSectionIds.how}`}>
             {t('seeHowItWorks')}
           </a>
         </div>
       </section>
-      <section id="how" className="landing-section landing-band" aria-labelledby={startId}>
+      <section id={landingSectionIds.how} className="landing-section landing-band" aria-labelledby={startId}>
         <div className="landing-center">
           <p className="landing-eyebrow">{t('eyebrowHow')}</p>
           <h2 id={startId}>{t('landingStart')}</h2>

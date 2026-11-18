@@ -1,6 +1,6 @@
 # BournKita
 
-Kita Kids Database: a web application for kindergarten staff (Python + TypeScript, local-network server). The development plan is in `Kita_Development_Plan.xlsx`.
+BournKita (formerly Kita Kids Database): a web application for kindergarten staff (Python + TypeScript, local-network server). The development plan is in `Kita_Development_Plan.xlsx`.
 
 ## Agent skills
 
