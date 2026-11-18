@@ -7,7 +7,7 @@ test('app can be installed on a tablet home screen', async ({ page }) => {
   expect(manifestHref).toBeTruthy()
 
   const manifest = await (await page.request.get(manifestHref!)).json()
-  expect(manifest.name).toBe('Kita Kids Database')
+  expect(manifest.name).toBe('BournKita')
   expect(manifest.display).toBe('standalone')
   expect(manifest.icons.map((icon: { sizes: string }) => icon.sizes)).toEqual(
     expect.arrayContaining(['192x192', '512x512']),

@@ -101,6 +101,14 @@ const paths = {
       <path d="M10.5 13v-1.2a1.5 1.5 0 0 1 3 0V13" />
     </>
   ),
+  // BournKita's mark: a sprout.
+  sprout: (
+    <>
+      <path d="M12 21v-9" />
+      <path d="M12 12c0-4 3-7 8-7 0 4-3 7-8 7z" />
+      <path d="M12 14c0-3.3-2.5-6-6.5-6 0 3.3 2.5 6 6.5 6z" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>
 
 export type IconName = keyof typeof paths

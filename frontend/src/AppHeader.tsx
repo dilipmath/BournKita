@@ -31,7 +31,7 @@ function useCurrentGroupId(): number | null {
   return Number.isInteger(id) && id > 0 ? id : null
 }
 
-/** The top of every page: the app's name (back to the start page); once someone is logged in, the
+/** The top of every page: BournKita (back to the start page) and the Kita's own name; once someone is logged in, the
  * Emergency button, their account menu (who it is, language, Log out), the pages their Role may
  * open and, inside a Group, the Group's pages. Before that, the language choice. */
 type Props = { kita: Kita; session: Session | null; onLoggedOut: () => void }
@@ -45,12 +45,21 @@ export default function AppHeader({ kita, session, onLoggedOut }: Props) {
   return (
     <>
       <header>
-        <h1>
-          <Link to="/">
-            {kita.hasLogo && <img className="kita-logo" src="/api/kita/logo" alt={kita.name ? t('logoOf', { name: kita.name }) : t('kitaLogo')} />}
-            {kita.name ?? t('appName')}
-          </Link>
-        </h1>
+        <div className="header-name">
+          <h1>
+            <Link to="/">
+              <Icon name="sprout" className="app-mark" />
+              {t('appName')}
+            </Link>
+          </h1>
+          {/* Whose server this is: the Kita's own name and logo, beside the app's. */}
+          {(kita.name || kita.hasLogo) && (
+            <p className="header-kita">
+              {kita.hasLogo && <img className="kita-logo" src="/api/kita/logo" alt={kita.name ? t('logoOf', { name: kita.name }) : t('kitaLogo')} />}
+              {kita.name}
+            </p>
+          )}
+        </div>
         {session ? (
           <div className="header-actions">
             {/* Guests never see personal data, so no emergency list. */}

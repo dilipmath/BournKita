@@ -101,6 +101,40 @@ h1 a {
   text-decoration: none;
 }
 
+/* BournKita, with the Kita's own name and logo beside it. */
+.header-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+}
+
+.header-name h1 a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* The sprout in a soft green tile, as in the landing design. */
+.app-mark {
+  width: 40px;
+  height: 40px;
+  padding: 7px;
+  stroke: var(--accent);
+  background: color-mix(in srgb, var(--tint-lime) var(--tint-strength), var(--surface));
+  border-radius: 13px;
+}
+
+.header-kita {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-weight: 600;
+}
+
 /* The Kita's own logo, beside its name. */
 .kita-logo {
   height: 44px;

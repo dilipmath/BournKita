@@ -1,4 +1,4 @@
-# Kita Kids Database
+# BournKita
 
 The language of a kindergarten (Kita) whose staff keep children's profiles, safety data, groups and daily operations in one local-network app.
 
@@ -113,6 +113,14 @@ A problem, change request or idea that anyone logged in (Guests too) sends from 
 _Avoid_: Ticket, bug report (Feedback is not only about bugs), Rückmeldung (in code and docs)
 
 ## Access
+
+**BournKita**:
+The app's name: what Staff members see in the header, the browser tab and the installed app. The Kita's own name, when it has one, appears beside it, never instead of it.
+_Avoid_: Kita Kids Database (the former name)
+
+**Landing page**:
+What anyone sees at the app's address before logging in: what BournKita is for, how a Kita gets started, and the login. It shows no Kita data, only invented examples.
+_Avoid_: Login page, home page, start page (that is what a Staff member sees after logging in)
 
 **Role**:
 What a Staff member may do: Admin, Teacher or Guest. A Staff member has exactly one Role.

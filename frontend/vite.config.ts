@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       workbox: { navigateFallbackDenylist: [/^\/api\//] },
       manifest: {
-        name: 'Kita Kids Database',
-        short_name: 'Kita',
+        name: 'BournKita',
+        short_name: 'BournKita',
         start_url: '/',
         display: 'standalone',
         background_color: '#fdfbf7',

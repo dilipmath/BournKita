@@ -4,7 +4,7 @@ import { initReactI18next } from 'react-i18next'
 export const resources = {
   en: {
     translation: {
-      appName: 'Kita Kids Database',
+      appName: 'BournKita',
       databaseUnavailable: 'Database not reachable',
       notReachable: 'System not reachable',
       language: 'Language',
@@ -512,7 +512,7 @@ export const resources = {
   },
   de: {
     translation: {
-      appName: 'Kita Kids Database',
+      appName: 'BournKita',
       databaseUnavailable: 'Datenbank nicht erreichbar',
       notReachable: 'System nicht erreichbar',
       language: 'Sprache',

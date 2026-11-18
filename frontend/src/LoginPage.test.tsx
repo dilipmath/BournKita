@@ -125,7 +125,7 @@ describe('below the login', () => {
 })
 
 describe('the Kita’s name', () => {
-  it('shows the Kita’s name and logo in the header and the welcome', async () => {
+  it('shows the Kita’s name and logo beside BournKita, and in the welcome', async () => {
     fakeApi({
       'GET /api/health': health,
       'GET /api/session': loggedOut,
@@ -133,14 +133,15 @@ describe('the Kita’s name', () => {
     })
     renderAt('/', <App />)
 
-    expect(await screen.findByRole('heading', { level: 1, name: /Kita Sonnenschein/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'BournKita' })).toBeInTheDocument()
+    expect(await screen.findByText('Kita Sonnenschein')).toBeInTheDocument()
     // In the header and in the welcome.
     const logos = screen.getAllByRole('img', { name: 'Logo of Kita Sonnenschein' })
     expect(logos.map((logo) => logo.getAttribute('src'))).toEqual(['/api/kita/logo', '/api/kita/logo'])
     expect(screen.getByText('Welcome to Kita Sonnenschein')).toBeInTheDocument()
   })
 
-  it('keeps the app’s own name without one', async () => {
+  it('shows BournKita alone without one', async () => {
     fakeApi({
       'GET /api/health': health,
       'GET /api/session': loggedOut,
@@ -148,7 +149,7 @@ describe('the Kita’s name', () => {
     })
     renderAt('/', <App />)
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Kita Kids Database' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'BournKita' })).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: /Logo/ })).toBeNull()
   })
 })
