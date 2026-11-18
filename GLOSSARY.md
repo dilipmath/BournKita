@@ -12,6 +12,10 @@ _Avoid_: Kid, pupil, student
 What the Kita records about one Child: name, date of birth, gender, languages spoken, food preferences, interests, Alerts and the other safety data below. Admins keep it; every Staff member can read it.
 _Avoid_: Record, file, Akte
 
+**Symbol**:
+The picture a Child is recognised by, as on their coat hook and name tag (e.g. a fox or a boat). An Admin gives each Child one; no two Children in a Group share a symbol. Lists and the Group's day show the symbol, not the Child's photo.
+_Avoid_: Avatar, icon (that is a Group's), Zeichen (in code and docs)
+
 **Parent**:
 A contact person recorded for one or more Children, with name, address and contact details; not someone who logs in. Siblings share one Parent record.
 _Avoid_: Guardian (unless the law requires the distinction), user, contact (for Parents)
@@ -37,8 +41,12 @@ A Child who shares at least one Parent with another Child of the Kita.
 _Avoid_: Brother/sister (as terms in code), family member
 
 **Group**:
-A set of Children cared for together, with a name and an icon (e.g. Monkeys). A Child is in at most one Group; a Staff member can work in several.
+A set of Children cared for together, with a name, an icon and a Group colour (e.g. Monkeys). A Child is in at most one Group; a Staff member can work in several.
 _Avoid_: Class, room, Gruppe (in code and docs)
+
+**Group colour**:
+The paper colour that marks what belongs to a Group, chosen by an Admin from a fixed set. It is always shown with the Group's name, never as the only sign.
+_Avoid_: Theme, Gruppenfarbe (in code and docs)
 
 **Group dashboard**:
 A Group's Today tab, also called the Today view; a Teacher who works in one Group lands on it after logging in: that Group's day at the Kita. Each Child's photo, Attendance or Absence, their Alerts, and today's Birthdays; Staff check Children in and out and record Absences here. Before a Child is checked out, it shows who may pick them up.
@@ -128,7 +136,7 @@ _Avoid_: Permission level, user type
 
 **Admin**:
 The Role that maintains Child profiles, groups and Staff accounts.
-_Avoid_: Administrator, manager, Leitung
+_Avoid_: Administrator, manager, Leitung (in code and docs; it is the Role's German name on screen)
 
 **Teacher**:
 The Role for everyday group work; can view Child profiles but not change them.

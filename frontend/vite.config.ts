@@ -18,8 +18,8 @@ export default defineConfig({
         short_name: 'BournKita',
         start_url: '/',
         display: 'standalone',
-        background_color: '#fdfbf7',
-        theme_color: '#2f6f4f',
+        background_color: '#f2f5f4',
+        theme_color: '#17323a',
         icons: [
           { src: '/pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },

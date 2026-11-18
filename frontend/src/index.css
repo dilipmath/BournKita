@@ -1,15 +1,38 @@
+/* BournKita's colours, from its design skill: chalk to work on, the chalkboard for the moments that
+   matter, blue for actions, raspberry only for allergies and errors. Every text pair is 4.5:1 or
+   more, every control's edge 3:1, in both themes. */
 :root {
-  --bg: #fdfbf7;
-  --text: #1f2328;
-  --accent: #2f6f4f;
-  --ok: #1f7a3a;
-  --bad: #b42318;
-  --surface: #ffffff;
-  --border: #8a8478;
-  /* The day bar: here, gone home, absent (and the text on them, all 4.5:1 or more). */
-  --part-here: #1f7a3a;
-  --part-gone: #6b665d;
-  --part-absent: #b42318;
+  --chalkboard: #17323a;
+  --chalkboard-2: #244650;
+  --chalkboard-3: #31586a;
+  --on-chalkboard: #f2f5f4;
+  --chalk: #f2f5f4;
+  --paper: #ffffff;
+  --ink: #17323a;
+  --text-2: #4b6168;
+  /* Panels and dividers (decoration), and the edges of controls (3:1). */
+  --line: #d5dedc;
+  --control-line: #6b7f84;
+  --blue: #3a47a5;
+  --on-blue: #ffffff;
+  --sun: #ffc93c;
+  --raspberry: #c2255c;
+  --green: #1f7a4d;
+  --warn: #8a5a00;
+  --warn-light: #fff0c7;
+  /* The names the app's rules use, pointing at the colours above. */
+  --bg: var(--chalk);
+  --text: var(--ink);
+  --accent: var(--blue);
+  --ok: var(--green);
+  --bad: var(--raspberry);
+  --surface: var(--paper);
+  --border: var(--control-line);
+  /* The day bar: here, gone home, absent (and the text on them, all 4.5:1 or more). Absent is
+     not raspberry: that is kept for allergies and errors. */
+  --part-here: var(--green);
+  --part-gone: var(--text-2);
+  --part-absent: var(--warn);
   --on-part: #ffffff;
   /* The page before login: soft colours behind its cards, as strong as the theme allows. */
   --tint-lime: #d8edb2;
@@ -21,8 +44,9 @@
   --tint-strength: 55%;
   /* The hero's highlighted word: lighter than the accent, still 3:1 as large text. */
   --accent-soft: #4c8757;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  font-size: 20px;
+  /* Made for legibility, and served with the app: no font service. */
+  font-family: 'Atkinson Hyperlegible', ui-rounded, 'Segoe UI', system-ui, sans-serif;
+  font-size: 17px;
   line-height: 1.5;
   color: var(--text);
   background: var(--bg);
@@ -30,17 +54,23 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #17191c;
-    --text: #eceae6;
-    --accent: #7cc49b;
-    --ok: #6fd18f;
-    --bad: #ff8a7a;
-    --surface: #22252a;
-    --border: #7a808a;
-    --part-here: #6fd18f;
-    --part-gone: #9aa0a8;
-    --part-absent: #ff8a7a;
-    --on-part: #17191c;
+    --chalkboard: #0a161a;
+    --chalkboard-2: #15282e;
+    --chalkboard-3: #24414b;
+    --on-chalkboard: #e6eeed;
+    --chalk: #0f1d22;
+    --paper: #172a31;
+    --ink: #e6eeed;
+    --text-2: #a9bcc0;
+    --line: #2c4148;
+    --control-line: #7f959c;
+    --blue: #a3acff;
+    --on-blue: #0f1d22;
+    --raspberry: #ff86b0;
+    --green: #72d7a0;
+    --warn: #f2c66b;
+    --warn-light: #3a2e10;
+    --on-part: #0f1d22;
     /* Faint enough that the light text keeps its contrast. */
     --tint-strength: 14%;
     --accent-soft: #a5d8ae;
@@ -69,7 +99,22 @@ header {
 h1 {
   margin: 0;
   font-size: 1.6rem;
-  color: var(--accent);
+  color: var(--ink);
+}
+
+/* Headings: heavy and a little tight, as in the design skill. */
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+/* Times and counts line up. */
+time,
+.count {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Interface icons: line drawings in the colour of the text beside them. */
@@ -1715,7 +1760,7 @@ main.with-navigation {
   align-items: flex-start;
   gap: 12px;
   padding: 12px 16px;
-  border-left: 6px solid var(--bad);
+  border-left: 6px solid var(--warn);
   border-radius: 12px;
   background: var(--bg);
 }
@@ -1725,7 +1770,7 @@ main.with-navigation {
   width: 1.4em;
   height: 1.4em;
   margin: 0.1em 0 0;
-  color: var(--bad);
+  color: var(--warn);
 }
 
 /* Good news, not a warning: the accent, not red. */
@@ -2282,7 +2327,7 @@ main.with-navigation {
 }
 
 .task-plan .overdue {
-  color: var(--bad);
+  color: var(--warn);
   font-weight: 600;
 }
 
@@ -2575,7 +2620,7 @@ main.with-navigation {
 }
 
 .today-child.absent {
-  border-left-color: var(--bad);
+  border-left-color: var(--part-absent);
 }
 
 .today-child.notYet {
@@ -2720,7 +2765,7 @@ button.big {
   gap: 6px;
   padding: 12px 16px;
   border: 2px solid var(--border);
-  border-left: 8px solid var(--bad);
+  border-left: 8px solid var(--warn);
   border-radius: 12px;
   background: var(--surface);
 }

@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BournKita – Kita-Alltag an einem Ort</title>
+<meta name="description" content="BournKita: Anwesenheit, Gruppen, Allergien und Termine für das Kita-Team. Läuft im Netz Ihrer Kita.">
+<meta name="referrer" content="no-referrer">
+<style>
+/* ===== BOURNKITA TOKENS (keep in sync with BOURNKITA-DESIGN-SKILL.md) ===== */
+:root{
+  --tafel:#17323A; --tafel-2:#244650; --tafel-3:#31586A;
+  --kreide:#F2F5F4; --papier:#FFFFFF; --linie:#D5DEDC;
+  --text:#17323A; --text-2:#4B6168; --auf-tafel:#EAF2EF; --auf-tafel-2:#B9CCC8;
+  --blau:#3A47A5; --blau-dunkel:#2B3685; --blau-hell:#E4E7F7;
+  --sonne:#FFC93C; --himbeere:#C2255C; --himbeere-hell:#FBE4EC;
+  --gruen:#1F7A4D; --gruen-hell:#DDF1E6;
+  --g-affen:#F6A14A; --g-affen-dk:#B85A00;
+  --g-schmetter:#B9A0EC; --g-schmetter-dk:#6B4BB8;
+  --g-kaefer:#7CC48A; --g-kaefer-dk:#2E8040;
+  --r-tag:18px; --r-ctl:12px; --r-pill:999px;
+  --font:"Atkinson Hyperlegible",ui-rounded,"SF Pro Rounded","Hiragino Maru Gothic ProN","Arial Rounded MT Bold","Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+}
+/* Uses Atkinson Hyperlegible only if installed on the device. To ship it with the app,
+   add url("fonts/….woff2") sources here (see README, "Fonts"). */
+@font-face{font-family:"Atkinson Hyperlegible";src:local("Atkinson Hyperlegible"),local("AtkinsonHyperlegible-Regular");font-weight:400;font-display:swap}
+@font-face{font-family:"Atkinson Hyperlegible";src:local("Atkinson Hyperlegible Bold"),local("AtkinsonHyperlegible-Bold");font-weight:700 800;font-display:swap}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--kreide);color:var(--text);font:400 1.0625rem/1.55 var(--font)}
+h1,h2,h3{margin:0;font-weight:800;letter-spacing:-.015em;line-height:1.12}
+p{margin:0}
+a{color:var(--blau)}
+:focus-visible{outline:3px solid var(--blau);outline-offset:3px;border-radius:6px}
+.on-tafel :focus-visible{outline-color:var(--sonne)}
+.skip{position:absolute;left:12px;top:-60px;background:var(--sonne);color:var(--tafel);padding:10px 16px;border-radius:var(--r-ctl);font-weight:700;z-index:50}
+.skip:focus{top:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{width:min(1120px,100% - 40px);margin-inline:auto}
+svg.i{width:1.25em;height:1.25em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+svg.sy{width:100%;height:100%;fill:currentColor}
+
+/* ===== Buttons ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 24px;border:0;border-radius:var(--r-ctl);font:inherit;font-weight:700;cursor:pointer;text-decoration:none;transition:background .15s,transform .1s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--blau);color:#fff}
+.btn-primary:hover{background:var(--blau-dunkel)}
+.btn-sun{background:var(--sonne);color:var(--tafel)}
+.btn-sun:hover{background:#FFD65F}
+.btn-block{width:100%}
+
+/* ===== Hero (chalkboard) ===== */
+.hero{background:var(--tafel);color:var(--auf-tafel);position:relative;padding-bottom:72px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0}
+.brand{display:flex;align-items:center;gap:12px;color:var(--auf-tafel);text-decoration:none;font-weight:800;font-size:1.4rem;letter-spacing:-.02em}
+.brand svg{width:40px;height:40px}
+.top nav{display:flex;align-items:center;gap:6px}
+.top nav a.link{color:var(--auf-tafel-2);text-decoration:none;padding:10px 14px;border-radius:var(--r-ctl);font-weight:700}
+.top nav a.link:hover{color:#fff;background:var(--tafel-2)}
+.lang{display:inline-flex;border:2px solid var(--tafel-3);border-radius:var(--r-pill);padding:2px;margin:0 8px}
+.lang button{border:0;background:none;color:var(--auf-tafel-2);font:inherit;font-weight:700;font-size:.9rem;padding:6px 12px;border-radius:var(--r-pill);cursor:pointer;min-height:36px}
+.lang button[aria-pressed="true"]{background:var(--auf-tafel);color:var(--tafel)}
+
+/* hanging name tags */
+.rail{position:relative;height:8px;border-radius:var(--r-pill);background:var(--tafel-3);margin-top:8px}
+.rail-tags{display:flex;justify-content:space-around;align-items:flex-start;padding:0 2%;margin-top:-4px;list-style:none;margin-bottom:0;padding-top:0}
+.tag{position:relative;width:96px;margin:0;padding:34px 8px 12px;border-radius:var(--r-tag);background:var(--c,var(--g-affen));color:var(--tafel);text-align:center;font-weight:800;font-size:.95rem;box-shadow:0 2px 0 rgba(0,0,0,.18);transform-origin:50% -18px}
+.tag::before{content:"";position:absolute;left:50%;top:-18px;width:3px;height:18px;margin-left:-1.5px;background:var(--auf-tafel-2)}
+.tag .hole{position:absolute;left:50%;top:10px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--tafel);box-shadow:inset 0 2px 0 rgba(0,0,0,.35)}
+.tag .sym{display:block;width:40px;height:40px;margin:0 auto 6px;color:var(--tafel)}
+.rail-tags li:nth-child(odd) .tag{margin-top:6px}
+.rail-tags li:nth-child(3n) .tag{margin-top:16px}
+.rail-tags .tag{animation:hang .9s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--i)*110ms)}
+@keyframes hang{0%{transform:rotate(-16deg) translateY(-10px);opacity:0}40%{opacity:1}100%{transform:rotate(0) translateY(0);opacity:1}}
+
+.hero-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:56px;align-items:start;margin-top:56px}
+.hero h1{font-size:clamp(2.2rem,4.6vw,3.6rem);color:#fff;max-width:15em}
+.hero .lead{margin-top:22px;font-size:1.2rem;color:var(--auf-tafel);max-width:34em}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin:28px 0 0;padding:0;list-style:none}
+.chips li{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-pill);background:var(--tafel-2);color:var(--auf-tafel);font-weight:700;font-size:.95rem}
+
+/* login tag */
+.login{position:relative;background:var(--papier);color:var(--text);border-radius:24px;padding:46px 28px 28px;box-shadow:0 14px 0 -6px rgba(0,0,0,.22),0 24px 40px -18px rgba(0,0,0,.5)}
+.login .hole{position:absolute;left:50%;top:14px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--tafel);box-shadow:inset 0 3px 0 rgba(0,0,0,.4)}
+.login h2{font-size:1.6rem}
+.roles{border:0;margin:18px 0 0;padding:0}
+.roles legend{padding:0;font-weight:700;color:var(--text-2);font-size:.95rem;margin-bottom:8px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--kreide);padding:5px;border-radius:var(--r-ctl)}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.seg span{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:9px;font-weight:700;text-align:center;line-height:1.2;padding:4px 6px;color:var(--text-2)}
+.seg input:checked + span{background:var(--tafel);color:#fff}
+.seg input:focus-visible + span{outline:3px solid var(--blau);outline-offset:2px}
+.field{margin-top:18px}
+.field label{display:block;font-weight:700;margin-bottom:6px}
+.field .hint{font-weight:400;color:var(--text-2);font-size:.92rem;margin-left:6px}
+.field input{width:100%;min-height:52px;padding:0 14px;border:2px solid var(--linie);border-radius:var(--r-ctl);font:inherit;background:#fff;color:var(--text)}
+.field input:hover{border-color:var(--tafel-3)}
+.field input:focus-visible{outline:3px solid var(--blau);outline-offset:1px;border-color:var(--blau)}
+.field input[aria-invalid="true"]{border-color:var(--himbeere)}
+.pw{position:relative}
+.pw input{padding-right:104px}
+.pw button{position:absolute;right:6px;top:6px;height:40px;padding:0 12px;border:0;border-radius:8px;background:var(--kreide);font:inherit;font-weight:700;color:var(--text);cursor:pointer}
+.msg{min-height:1.5em;margin-top:10px;color:var(--himbeere);font-weight:700;font-size:.95rem}
+.msg.ok{color:var(--text-2);font-weight:400}
+.login .btn{margin-top:8px}
+.guest-info{display:flex;gap:10px;margin-top:18px;padding:12px 14px;border-radius:var(--r-ctl);background:var(--blau-hell);font-size:.95rem}
+.login .links{margin-top:14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.95rem}
+.login .links button{border:0;background:none;padding:6px 0;font:inherit;color:var(--blau);text-decoration:underline;cursor:pointer;min-height:36px}
+.demo-note{margin-top:16px;padding-top:14px;border-top:2px dashed var(--linie);font-size:.88rem;color:var(--text-2)}
+
+/* ===== Sections ===== */
+section.s{padding:88px 0}
+section.s h2{font-size:clamp(1.8rem,3.4vw,2.6rem);max-width:18em}
+section.s .sub{margin-top:14px;color:var(--text-2);max-width:36em;font-size:1.1rem}
+
+.try{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:56px;align-items:start;margin-top:40px}
+.board{background:var(--tafel);border-radius:26px;padding:34px 24px 26px;color:var(--auf-tafel)}
+.board .rail{margin-top:0}
+.board ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:26px 14px;margin-top:0}
+.board .tag{width:100%;border:0;font:inherit;font-weight:800;cursor:pointer;display:block;margin-top:18px;transition:transform .15s,background .15s,opacity .15s;animation:none}
+.board .tag[aria-pressed="false"]{background:transparent;color:var(--auf-tafel);box-shadow:inset 0 0 0 3px var(--auf-tafel-2);border-style:none;opacity:.95}
+.board .tag[aria-pressed="false"] .sym{color:var(--auf-tafel-2)}
+.board .tag[aria-pressed="false"] .hole{background:var(--auf-tafel-2);box-shadow:none}
+.board .tag[aria-pressed="true"]{transform:translateY(4px)}
+.board .tag .state{display:block;font-weight:400;font-size:.82rem;margin-top:2px}
+.board .count{margin-top:26px;font-size:1.3rem;font-weight:800;color:#fff}
+.board .count small{display:block;font-size:.95rem;font-weight:400;color:var(--auf-tafel-2);margin-top:2px}
+.feat{list-style:none;margin:0;padding:0}
+.feat li{display:grid;grid-template-columns:44px 1fr;gap:16px;padding:20px 0;border-top:2px solid var(--linie)}
+.feat li:first-child{border-top:0;padding-top:0}
+.feat .ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--blau-hell);color:var(--blau)}
+.feat h3{font-size:1.15rem}
+.feat p{color:var(--text-2);margin-top:4px}
+.badge{display:inline-block;margin-left:8px;padding:2px 10px;border-radius:var(--r-pill);background:var(--sonne);color:var(--tafel);font-size:.8rem;font-weight:700;vertical-align:2px}
+
+/* day timeline */
+.day{background:var(--papier);border-block:2px solid var(--linie)}
+.timeline{list-style:none;margin:44px 0 0;padding:0;position:relative}
+.timeline::before{content:"";position:absolute;left:111px;top:8px;bottom:8px;width:4px;border-radius:2px;background:repeating-linear-gradient(to bottom,var(--linie) 0 10px,transparent 10px 18px)}
+.timeline li{display:grid;grid-template-columns:96px 36px 1fr;gap:0 16px;padding:14px 0;align-items:start}
+.timeline time{font-weight:800;font-size:1.5rem;text-align:right;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.timeline .dot{width:24px;height:24px;border-radius:50%;margin:6px 0 0 6px;background:var(--c);box-shadow:0 0 0 5px var(--papier)}
+.timeline h3{font-size:1.2rem}
+.timeline p{color:var(--text-2);margin-top:2px;max-width:40em}
+
+/* roles table */
+.tablewrap{position:relative;overflow-x:auto;margin-top:36px;border-radius:var(--r-tag);border:2px solid var(--linie);background:var(--papier)}
+table{border-collapse:collapse;width:100%;min-width:620px}
+caption{text-align:left;padding:0}
+th,td{padding:14px 18px;text-align:left;border-bottom:2px solid var(--linie)}
+tbody tr:last-child th,tbody tr:last-child td{border-bottom:0}
+thead th{background:var(--tafel);color:#fff;font-weight:800;border-bottom:0}
+tbody th{font-weight:400}
+td{font-weight:700}
+td.no{color:var(--text-2);font-weight:400}
+td.yes{color:var(--gruen)}
+td.part{color:var(--blau)}
+
+/* privacy */
+.priv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 56px;margin-top:36px}
+.priv div{padding:22px 0;border-top:2px solid var(--linie)}
+.priv h3{font-size:1.15rem;display:flex;align-items:center;gap:10px}
+.priv h3 svg{color:var(--gruen)}
+.priv p{color:var(--text-2);margin-top:6px}
+
+footer{background:var(--tafel);color:var(--auf-tafel-2);padding:40px 0}
+footer .row{display:flex;flex-wrap:wrap;gap:16px 32px;justify-content:space-between;align-items:center}
+footer a{color:var(--auf-tafel);padding:8px 0;display:inline-block}
+footer .brand{font-size:1.15rem}
+
+@media (max-width:900px){
+  .hero-grid,.try{grid-template-columns:1fr;gap:40px}
+  .priv{grid-template-columns:1fr}
+  .top nav a.link{display:none}
+  .rail-tags li:nth-child(n+6){display:none}
+  .timeline::before{left:15px}
+  .timeline li{grid-template-columns:36px 1fr;gap:4px 14px}
+  .timeline time{grid-column:2;text-align:left;font-size:1.25rem;order:2}
+  .timeline .dot{grid-row:1/3;grid-column:1;margin:4px 0 0 6px}
+  .timeline li>div{grid-column:2;order:3}
+}
+@media (max-width:520px){
+  .wrap{width:calc(100% - 32px)}
+  .tag{width:78px;font-size:.85rem;padding-top:30px}
+  .tag .sym{width:32px;height:32px}
+  .rail-tags li:nth-child(n+5){display:none}
+  .top nav>.btn{display:none}
+  .lang{margin:0}
+  .login{padding:44px 18px 22px}
+  .board ul{gap:20px 10px}
+  section.s{padding:64px 0}
+  .brand{font-size:1.2rem}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main" data-i18n="skip">Zum Inhalt springen</a>
+
+<!-- Icon and child-symbol sprite (shared with app.html) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="logo" viewBox="0 0 48 48"><rect x="4" y="9" width="40" height="35" rx="11" fill="#FFC93C"/><circle cx="24" cy="15.5" r="3.2" fill="#17323A"/><circle cx="24" cy="30" r="6" fill="#17323A"/><path d="M24 30V37M24 33.5l-3.5-3M24 33.5l3.5-3" stroke="#FFC93C" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="sy-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="sy-star" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></symbol>
+    <symbol id="sy-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></symbol>
+    <symbol id="sy-leaf" viewBox="0 0 24 24"><path d="M5 19C4 11 9 5 20 4c0 11-6 16-13 15z"/></symbol>
+    <symbol id="sy-heart" viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.6A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></symbol>
+    <symbol id="sy-drop" viewBox="0 0 24 24"><path d="M12 2.5s6.5 7 6.5 12a6.5 6.5 0 0 1-13 0c0-5 6.5-12 6.5-12z"/></symbol>
+    <symbol id="sy-cloud" viewBox="0 0 24 24"><path d="M7 19a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.8 9.5 4.8 4.8 0 0 1 17.5 19z"/></symbol>
+    <symbol id="sy-flower" viewBox="0 0 24 24"><circle cx="12" cy="6" r="3.2"/><circle cx="18" cy="11" r="3.2"/><circle cx="15.7" cy="18" r="3.2"/><circle cx="8.3" cy="18" r="3.2"/><circle cx="6" cy="11" r="3.2"/><circle cx="12" cy="12.5" r="2.4" fill="#fff"/></symbol>
+    <symbol id="sy-apple" viewBox="0 0 24 24"><path d="M12 7.5c-2-1.7-6-1.4-6.9 3.1-.8 4.2 1.6 10.4 4.4 10.4 1 0 1.5-.6 2.5-.6s1.5.6 2.5.6c2.8 0 5.2-6.2 4.4-10.4C17.9 6.1 14 5.8 12 7.5z"/><path d="M12 7c0-2 1-3.8 3-4.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="sy-fish" viewBox="0 0 24 24"><path d="M2 12c3-5 9-6.5 13-3l5-3.5v13L15 15c-4 3.5-10 2-13-3z"/><circle cx="7.5" cy="11" r="1.2" fill="#fff"/></symbol>
+    <symbol id="sy-house" viewBox="0 0 24 24"><path d="M3 11.5L12 3l9 8.5V21H3z"/><rect x="10" y="14" width="4" height="7" fill="#fff"/></symbol>
+    <symbol id="sy-kite" viewBox="0 0 24 24"><path d="M12 2l7 8-7 10L5 10z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.5-3 8-7.5 9.5-4.5-1.5-7.5-5-7.5-9.5V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4V3h6v1"/><path d="M8.5 13l2.5 2.5 4.5-5"/></symbol>
+    <symbol id="i-group" viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="17" cy="10" r="2.5"/><path d="M2.5 19c.5-3.2 2.8-5 5.5-5s5 1.8 5.5 5"/><path d="M15 14.3c.7-.2 1.3-.3 2-.3 2.2 0 3.9 1.4 4.5 4"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.2h.01"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-5 4v-4.2A2.5 2.5 0 0 1 4 13.5z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="12" cy="10" r="2.5"/><path d="M7.5 17c.6-2 2.2-3 4.5-3s3.9 1 4.5 3"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.01"/></symbol>
+    <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M11 17.5h2"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="6.5" rx="2"/><rect x="3.5" y="13.5" width="17" height="6.5" rx="2"/><path d="M7 7.2h.01M7 16.7h.01"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="5" rx="1.5"/><path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+  </defs>
+</svg>
+
+<header class="hero on-tafel">
+  <div class="wrap">
+    <div class="top">
+      <a class="brand" href="index.html" aria-label="BournKita"><svg aria-hidden="true"><use href="#logo"/></svg>BournKita</a>
+      <nav aria-label="Hauptmenü" data-i18n-attr="aria-label:nav.label">
+        <a class="link" href="#funktionen" data-i18n="nav.features">Funktionen</a>
+        <a class="link" href="#tagesablauf" data-i18n="nav.day">Tagesablauf</a>
+        <a class="link" href="#rollen" data-i18n="nav.roles">Rollen</a>
+        <a class="link" href="#datenschutz" data-i18n="nav.privacy">Datenschutz</a>
+        <div class="lang" role="group" aria-label="Sprache" data-i18n-attr="aria-label:lang.label">
+          <button type="button" data-lang="de" aria-pressed="true">DE</button>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <a class="btn btn-sun" href="#login" style="min-height:44px;padding:0 18px" data-i18n="nav.login">Anmelden</a>
+      </nav>
+    </div>
+
+    <div class="rail" aria-hidden="true"></div>
+    <ul class="rail-tags" aria-hidden="true">
+      <li><div class="tag" style="--i:0;--c:var(--g-affen)"><i class="hole"></i><span class="sym"><svg class="sy"><use href="#sy-apple"/></svg></span>Mia</div></li>
+      <li><div class="tag" style="--i:1;--c:var(--g-schmetter)"><i class="hole"></i><span class="sym"><svg class="sy"><use href="#sy-flower"/></svg></span>Sophie</div></li>
+      <li><div class="tag" style="--i:2;--c:var(--g-kaefer)"><i class="hole"></i><span class="sym"><svg class="sy"><use href="#sy-leaf"/></svg></span>Elias</div></li>
+      <li><div class="tag" style="--i:3;--c:var(--g-affen)"><i class="hole"></i><span class="sym"><svg class="sy"><use href="#sy-star"/></svg></span>Noah</div></li>
+      <li><div class="tag" style="--i:4;--c:var(--g-schmetter)"><i class="hole"></i><span class="sym"><svg class="sy"><use href="#sy-cloud"/></svg></span>Luca</div></li>
+      <li><div class="tag" style="--i:5;--c:var(--g-kaefer)"><i class="hole"></i><span class="sym"><svg class="sy"><use href="#sy-fish"/></svg></span>Mila</div></li>
+      <li><div class="tag" style="--i:6;--c:var(--g-affen)"><i class="hole"></i><span class="sym"><svg class="sy"><use href="#sy-sun"/></svg></span>Lina</div></li>
+    </ul>
+
+    <div class="hero-grid" id="main" tabindex="-1">
+      <div>
+        <h1 data-i18n="hero.h1">Alle Kinder im Blick, vom ersten Check-in bis zur Abholung.</h1>
+        <p class="lead" data-i18n="hero.p">BournKita zeigt Ihrem Team Anwesenheit, Allergien, Gruppen und Termine an einem Ort. Die Daten bleiben auf dem Server Ihrer Kita.</p>
+        <ul class="chips">
+          <li><svg class="i" aria-hidden="true"><use href="#i-server"/></svg><span data-i18n="chip.1">Läuft im Kita-Netz</span></li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-tablet"/></svg><span data-i18n="chip.2">Für Tablets gemacht</span></li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-globe"/></svg><span data-i18n="chip.3">Deutsch und Englisch</span></li>
+        </ul>
+      </div>
+
+      <form class="login" id="login" novalidate aria-labelledby="loginTitle">
+        <i class="hole" aria-hidden="true"></i>
+        <h2 id="loginTitle" data-i18n="login.title">Anmelden</h2>
+
+        <fieldset class="roles">
+          <legend data-i18n="login.role">Ich bin</legend>
+          <div class="seg">
+            <label><input type="radio" name="role" value="teacher" checked><span data-i18n="role.teacher">Erzieher*in</span></label>
+            <label><input type="radio" name="role" value="admin"><span data-i18n="role.admin">Leitung</span></label>
+            <label><input type="radio" name="role" value="guest"><span data-i18n="role.guest">Gast</span></label>
+          </div>
+        </fieldset>
+
+        <div id="creds">
+          <div class="field">
+            <label for="email"><span data-i18n="login.email">E-Mail-Adresse</span><span class="hint" data-i18n="login.emailHint">Gmail oder GMX</span></label>
+            <input id="email" name="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" required aria-describedby="loginMsg">
+          </div>
+          <div class="field">
+            <label for="password" data-i18n="login.password">Passwort</label>
+            <div class="pw">
+              <input id="password" name="password" type="password" autocomplete="current-password" required aria-describedby="loginMsg">
+              <button type="button" id="togglePw" aria-controls="password" data-i18n="login.show">Anzeigen</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="guest-info" id="guestInfo" hidden>
+          <svg class="i" aria-hidden="true"><use href="#i-eye"/></svg>
+          <span data-i18n="login.guestInfo">Gäste sehen nur die Gruppenübersicht, keine Kinderdaten.</span>
+        </div>
+
+        <p class="msg" id="loginMsg" role="status" aria-live="polite"></p>
+        <button class="btn btn-primary btn-block" type="submit" id="submitBtn" data-i18n="login.submit">Anmelden</button>
+
+        <div class="links" id="loginLinks">
+          <button type="button" id="forgot" data-i18n="login.forgot">Passwort vergessen?</button>
+        </div>
+        <p class="demo-note" data-i18n="login.demo">Demo-Modus: Zugangsdaten werden nicht gespeichert und nicht gesendet.</p>
+      </form>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="s" id="funktionen">
+    <div class="wrap">
+      <h2 data-i18n="feat.h2">Anwesenheit mit einem Tipp</h2>
+      <p class="sub" data-i18n="feat.sub">Jedes Kind hat sein Symbol, wie an der Garderobe. Ein Tipp hängt das Namensschild ein.</p>
+
+      <div class="try">
+        <div class="board on-tafel">
+          <div class="rail" aria-hidden="true"></div>
+          <ul id="demoTags"></ul>
+          <p class="count" aria-live="polite"><span id="demoCount"></span><small data-i18n="demo.hint">Tippen Sie auf ein Namensschild.</small></p>
+        </div>
+
+        <ul class="feat">
+          <li><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-group"/></svg></span><div><h3 data-i18n="f1.t">Eine Gruppe nach der anderen</h3><p data-i18n="f1.p">Wählen Sie Ihre Gruppe im Menü, zum Beispiel Affen oder Schmetterlinge. Der Bildschirm zeigt nur diese Gruppe.</p></div></li>
+          <li><span class="ic" style="background:var(--himbeere-hell);color:var(--himbeere)"><svg class="i" aria-hidden="true"><use href="#i-alert"/></svg></span><div><h3 data-i18n="f2.t">Allergien sofort sichtbar</h3><p data-i18n="f2.p">Unverträglichkeiten stehen als rote Leiste ganz oben, bevor das Mittagessen beginnt.</p></div></li>
+          <li><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span><div><h3 data-i18n="f3.t">Sichere Abholung</h3><p data-i18n="f3.p">Zur Abholung sind nur eingetragene Personen freigegeben, mit Foto.</p></div></li>
+          <li><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-cal"/></svg></span><div><h3><span data-i18n="f4.t">Kalender und Aufgaben</span><span class="badge" data-i18n="soon">bald</span></h3><p data-i18n="f4.p">Feiertage, Elternabende und ein Aufgabenboard für jede Gruppe.</p></div></li>
+          <li><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-msg"/></svg></span><div><h3 data-i18n="f5.t">Rückmeldung an uns</h3><p data-i18n="f5.p">Problem, Änderungswunsch oder Idee? Ein Knopf auf jeder Seite. Nach einem Absturz erhalten wir den Bericht automatisch.</p></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="s day" id="tagesablauf">
+    <div class="wrap">
+      <h2 data-i18n="day.h2">So läuft ein Tag</h2>
+      <p class="sub" data-i18n="day.sub">Vom Ankommen bis zur Abholung, ohne Papierlisten.</p>
+      <ol class="timeline">
+        <li style="--c:var(--g-affen)"><time datetime="07:30">07:30</time><span class="dot"></span><div><h3 data-i18n="d1.t">Ankunft</h3><p data-i18n="d1.p">Kinder per Tipp einchecken. Krankmeldungen von heute stehen schon in der Liste.</p></div></li>
+        <li style="--c:var(--g-schmetter)"><time datetime="09:00">09:00</time><span class="dot"></span><div><h3 data-i18n="d2.t">Morgenkreis</h3><p data-i18n="d2.p">Die Gruppenansicht zeigt, wer da ist, wer fehlt und wer heute Geburtstag hat.</p></div></li>
+        <li style="--c:var(--himbeere)"><time datetime="11:45">11:45</time><span class="dot"></span><div><h3 data-i18n="d3.t">Mittagessen</h3><p data-i18n="d3.p">Die rote Allergieleiste nennt Kind und Unverträglichkeit. Niemand muss suchen.</p></div></li>
+        <li style="--c:var(--g-kaefer)"><time datetime="14:00">14:00</time><span class="dot"></span><div><h3 data-i18n="d4.t">Kleiner Unfall</h3><p data-i18n="d4.p">Was ist passiert und wer wurde informiert? In wenigen Tippern erfasst.</p></div></li>
+        <li style="--c:var(--sonne)"><time datetime="15:30">15:30</time><span class="dot"></span><div><h3 data-i18n="d5.t">Abholung</h3><p data-i18n="d5.p">Das Team sieht, wer das Kind abholen darf, und hängt das Namensschild aus.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="s" id="rollen">
+    <div class="wrap">
+      <h2 data-i18n="roles.h2">Wer darf was</h2>
+      <p class="sub" data-i18n="roles.sub">Drei Zugänge. Nur die Leitung ändert Kinderprofile und verwaltet Benutzer.</p>
+      <div class="tablewrap">
+        <table>
+          <caption class="sr" data-i18n="roles.cap">Rechte nach Rolle</caption>
+          <thead><tr><th scope="col" data-i18n="roles.col0">Aufgabe</th><th scope="col" data-i18n="role.admin">Leitung</th><th scope="col" data-i18n="role.teacher">Erzieher*in</th><th scope="col" data-i18n="role.guest">Gast</th></tr></thead>
+          <tbody>
+            <tr><th scope="row" data-i18n="r1">Kinderprofile ansehen</th><td class="yes" data-i18n="yes">Ja</td><td class="yes" data-i18n="yes">Ja</td><td class="no" data-i18n="no">Nein</td></tr>
+            <tr><th scope="row" data-i18n="r2">Profile anlegen, ändern, archivieren</th><td class="yes" data-i18n="yes">Ja</td><td class="no" data-i18n="no">Nein</td><td class="no" data-i18n="no">Nein</td></tr>
+            <tr><th scope="row" data-i18n="r3">Anwesenheit erfassen</th><td class="yes" data-i18n="yes">Ja</td><td class="yes" data-i18n="yes">Ja</td><td class="no" data-i18n="no">Nein</td></tr>
+            <tr><th scope="row" data-i18n="r4">Aufgabenboard der Gruppe</th><td class="yes" data-i18n="yes">Ja</td><td class="yes" data-i18n="yes">Ja</td><td class="part" data-i18n="readonly">Nur lesen</td></tr>
+            <tr><th scope="row" data-i18n="r5">Kalender</th><td class="yes" data-i18n="yes">Ja</td><td class="part" data-i18n="r5t">Gruppentermine</td><td class="part" data-i18n="readonly">Nur lesen</td></tr>
+            <tr><th scope="row" data-i18n="r6">Benutzer und Rechte verwalten</th><td class="yes" data-i18n="yes">Ja</td><td class="no" data-i18n="no">Nein</td><td class="no" data-i18n="no">Nein</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="s" id="datenschutz" style="padding-top:0">
+    <div class="wrap">
+      <h2 data-i18n="priv.h2">Daten, die im Haus bleiben</h2>
+      <div class="priv">
+        <div><h3><svg class="i" aria-hidden="true"><use href="#i-server"/></svg><span data-i18n="p1.t">Eigener Server</span></h3><p data-i18n="p1.p">BournKita läuft auf einem Rechner in Ihrer Kita. Kinderdaten verlassen das Haus nicht.</p></div>
+        <div><h3><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg><span data-i18n="p2.t">Keine Tracker</span></h3><p data-i18n="p2.p">Keine Werbung, keine Analyse-Dienste und keine externen Schriften.</p></div>
+        <div><h3><svg class="i" aria-hidden="true"><use href="#i-archive"/></svg><span data-i18n="p3.t">Archiv mit Frist</span></h3><p data-i18n="p3.p">Gelöschte Profile wandern ins Archiv und werden nach der eingestellten Frist entfernt.</p></div>
+        <div><h3><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg><span data-i18n="p4.t">Nachvollziehbar</span></h3><p data-i18n="p4.p">Ein Protokoll zeigt, wer wann etwas angesehen oder geändert hat.</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="on-tafel">
+  <div class="wrap row">
+    <a class="brand" href="index.html" style="padding:0"><svg aria-hidden="true"><use href="#logo"/></svg>BournKita</a>
+    <nav style="display:flex;gap:24px;flex-wrap:wrap">
+      <a href="#" data-i18n="foot.help">Hilfe und Feedback</a>
+      <a href="#" data-i18n="foot.imprint">Impressum</a>
+      <a href="#" data-i18n="foot.privacy">Datenschutzerklärung</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var DICT = {
+    de:{
+      "skip":"Zum Inhalt springen","nav.label":"Hauptmenü","lang.label":"Sprache",
+      "nav.features":"Funktionen","nav.day":"Tagesablauf","nav.roles":"Rollen","nav.privacy":"Datenschutz","nav.login":"Anmelden",
+      "hero.h1":"Alle Kinder im Blick, vom ersten Check-in bis zur Abholung.",
+      "hero.p":"BournKita zeigt Ihrem Team Anwesenheit, Allergien, Gruppen und Termine an einem Ort. Die Daten bleiben auf dem Server Ihrer Kita.",
+      "chip.1":"Läuft im Kita-Netz","chip.2":"Für Tablets gemacht","chip.3":"Deutsch und Englisch",
+      "login.title":"Anmelden","login.role":"Ich bin","role.teacher":"Erzieher*in","role.admin":"Leitung","role.guest":"Gast",
+      "login.email":"E-Mail-Adresse","login.emailHint":"Gmail oder GMX","login.password":"Passwort",
+      "login.show":"Anzeigen","login.hide":"Verbergen","login.submit":"Anmelden","login.guestBtn":"Als Gast ansehen",
+      "login.guestInfo":"Gäste sehen nur die Gruppenübersicht, keine Kinderdaten.",
+      "login.forgot":"Passwort vergessen?","login.forgotMsg":"Bitte wenden Sie sich an Ihre Leitung. Sie setzt das Passwort zurück.",
+      "login.demo":"Demo-Modus: Zugangsdaten werden nicht gespeichert und nicht gesendet.",
+      "err.email":"Bitte geben Sie eine gültige E-Mail-Adresse ein, zum Beispiel name@gmx.de.","err.password":"Bitte geben Sie Ihr Passwort ein.",
+      "feat.h2":"Anwesenheit mit einem Tipp","feat.sub":"Jedes Kind hat sein Symbol, wie an der Garderobe. Ein Tipp hängt das Namensschild ein.",
+      "demo.hint":"Tippen Sie auf ein Namensschild.","demo.count":"{n} von {m} sind da","demo.in":"da","demo.out":"noch nicht da",
+      "f1.t":"Eine Gruppe nach der anderen","f1.p":"Wählen Sie Ihre Gruppe im Menü, zum Beispiel Affen oder Schmetterlinge. Der Bildschirm zeigt nur diese Gruppe.",
+      "f2.t":"Allergien sofort sichtbar","f2.p":"Unverträglichkeiten stehen als rote Leiste ganz oben, bevor das Mittagessen beginnt.",
+      "f3.t":"Sichere Abholung","f3.p":"Zur Abholung sind nur eingetragene Personen freigegeben, mit Foto.",
+      "f4.t":"Kalender und Aufgaben","f4.p":"Feiertage, Elternabende und ein Aufgabenboard für jede Gruppe.","soon":"bald",
+      "f5.t":"Rückmeldung an uns","f5.p":"Problem, Änderungswunsch oder Idee? Ein Knopf auf jeder Seite. Nach einem Absturz erhalten wir den Bericht automatisch.",
+      "day.h2":"So läuft ein Tag","day.sub":"Vom Ankommen bis zur Abholung, ohne Papierlisten.",
+      "d1.t":"Ankunft","d1.p":"Kinder per Tipp einchecken. Krankmeldungen von heute stehen schon in der Liste.",
+      "d2.t":"Morgenkreis","d2.p":"Die Gruppenansicht zeigt, wer da ist, wer fehlt und wer heute Geburtstag hat.",
+      "d3.t":"Mittagessen","d3.p":"Die rote Allergieleiste nennt Kind und Unverträglichkeit. Niemand muss suchen.",
+      "d4.t":"Kleiner Unfall","d4.p":"Was ist passiert und wer wurde informiert? In wenigen Tippern erfasst.",
+      "d5.t":"Abholung","d5.p":"Das Team sieht, wer das Kind abholen darf, und hängt das Namensschild aus.",
+      "roles.h2":"Wer darf was","roles.sub":"Drei Zugänge. Nur die Leitung ändert Kinderprofile und verwaltet Benutzer.","roles.cap":"Rechte nach Rolle","roles.col0":"Aufgabe",
+      "r1":"Kinderprofile ansehen","r2":"Profile anlegen, ändern, archivieren","r3":"Anwesenheit erfassen","r4":"Aufgabenboard der Gruppe","r5":"Kalender","r5t":"Gruppentermine","r6":"Benutzer und Rechte verwalten",
+      "yes":"Ja","no":"Nein","readonly":"Nur lesen",
+      "priv.h2":"Daten, die im Haus bleiben",
+      "p1.t":"Eigener Server","p1.p":"BournKita läuft auf einem Rechner in Ihrer Kita. Kinderdaten verlassen das Haus nicht.",
+      "p2.t":"Keine Tracker","p2.p":"Keine Werbung, keine Analyse-Dienste und keine externen Schriften.",
+      "p3.t":"Archiv mit Frist","p3.p":"Gelöschte Profile wandern ins Archiv und werden nach der eingestellten Frist entfernt.",
+      "p4.t":"Nachvollziehbar","p4.p":"Ein Protokoll zeigt, wer wann etwas angesehen oder geändert hat.",
+      "foot.help":"Hilfe und Feedback","foot.imprint":"Impressum","foot.privacy":"Datenschutzerklärung",
+      "title":"BournKita – Kita-Alltag an einem Ort"
+    },
+    en:{
+      "skip":"Skip to content","nav.label":"Main menu","lang.label":"Language",
+      "nav.features":"Features","nav.day":"A day","nav.roles":"Roles","nav.privacy":"Privacy","nav.login":"Sign in",
+      "hero.h1":"Every child in view, from first check-in to pick-up.",
+      "hero.p":"BournKita shows your team attendance, allergies, groups and events in one place. The data stays on your Kita's own server.",
+      "chip.1":"Runs on your Kita network","chip.2":"Made for tablets","chip.3":"German and English",
+      "login.title":"Sign in","login.role":"I am","role.teacher":"Educator","role.admin":"Admin","role.guest":"Guest",
+      "login.email":"Email address","login.emailHint":"Gmail or GMX","login.password":"Password",
+      "login.show":"Show","login.hide":"Hide","login.submit":"Sign in","login.guestBtn":"View as guest",
+      "login.guestInfo":"Guests see the group overview only, no child data.",
+      "login.forgot":"Forgot password?","login.forgotMsg":"Please ask your Kita admin. They can reset your password.",
+      "login.demo":"Demo mode: credentials are not stored and not sent.",
+      "err.email":"Enter a valid email address, for example name@gmx.de.","err.password":"Enter your password.",
+      "feat.h2":"Attendance in one tap","feat.sub":"Every child has a symbol, like on the cloakroom hook. One tap hangs up the name tag.",
+      "demo.hint":"Tap a name tag.","demo.count":"{n} of {m} are here","demo.in":"here","demo.out":"not here yet",
+      "f1.t":"One group at a time","f1.p":"Pick your group from the menu, for example Monkeys or Butterflies. The screen shows only that group.",
+      "f2.t":"Allergies you can't miss","f2.p":"Intolerances appear as a red bar at the top, before lunch starts.",
+      "f3.t":"Safe pick-up","f3.p":"Only registered people are cleared for pick-up, shown with a photo.",
+      "f4.t":"Calendar and tasks","f4.p":"Holidays, parents' evenings and a task board for each group.","soon":"soon",
+      "f5.t":"Tell us what you think","f5.p":"A problem, a change request or an idea? One button on every page. After a crash, we receive the report automatically.",
+      "day.h2":"How a day runs","day.sub":"From arrival to pick-up, without paper lists.",
+      "d1.t":"Arrival","d1.p":"Check children in with a tap. Today's sick notes are already on the list.",
+      "d2.t":"Morning circle","d2.p":"The group view shows who is here, who is away and whose birthday it is.",
+      "d3.t":"Lunch","d3.p":"The red allergy bar names the child and the intolerance. Nobody has to look it up.",
+      "d4.t":"Minor accident","d4.p":"What happened and who was told? Logged in a few taps.",
+      "d5.t":"Pick-up","d5.p":"The team sees who may collect the child and hangs the name tag back up.",
+      "roles.h2":"Who can do what","roles.sub":"Three kinds of access. Only admins change child profiles and manage users.","roles.cap":"Permissions by role","roles.col0":"Task",
+      "r1":"View child profiles","r2":"Create, edit, archive profiles","r3":"Record attendance","r4":"Group task board","r5":"Calendar","r5t":"Group events","r6":"Manage users and permissions",
+      "yes":"Yes","no":"No","readonly":"View only",
+      "priv.h2":"Data that stays in the building",
+      "p1.t":"Your own server","p1.p":"BournKita runs on a computer in your Kita. Child data does not leave the building.",
+      "p2.t":"No trackers","p2.p":"No ads, no analytics services and no external fonts.",
+      "p3.t":"Archive with a time limit","p3.p":"Deleted profiles move to the archive and are removed after the retention period you set.",
+      "p4.t":"Traceable","p4.p":"A log shows who viewed or changed something, and when.",
+      "foot.help":"Help and feedback","foot.imprint":"Imprint","foot.privacy":"Privacy policy",
+      "title":"BournKita – Your Kita day in one place"
+    }
+  };
+  var lang = "de";
+  try{ lang = localStorage.getItem("bk-lang") || ((navigator.language||"de").toLowerCase().indexOf("de")===0 ? "de" : "en"); }catch(e){ lang = (navigator.language||"de").toLowerCase().indexOf("de")===0 ? "de":"en"; }
+  function t(k,v){ var s=(DICT[lang]&&DICT[lang][k])||DICT.de[k]||k; if(v){ for(var x in v){ s=s.replace("{"+x+"}",v[x]); } } return s; }
+
+  var $ = function(s,r){ return (r||document).querySelector(s); };
+  var $$ = function(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
+
+  function apply(){
+    document.documentElement.lang = lang;
+    document.title = t("title");
+    $$("[data-i18n]").forEach(function(el){ el.textContent = t(el.getAttribute("data-i18n")); });
+    $$("[data-i18n-attr]").forEach(function(el){
+      el.getAttribute("data-i18n-attr").split(";").forEach(function(p){ var kv=p.split(":"); el.setAttribute(kv[0],t(kv[1])); });
+    });
+    $$(".lang button").forEach(function(b){ b.setAttribute("aria-pressed", String(b.dataset.lang===lang)); });
+    updateRole(); updatePwLabel(); renderCount();
+  }
+  $$(".lang button").forEach(function(b){
+    b.addEventListener("click",function(){ lang=b.dataset.lang; try{localStorage.setItem("bk-lang",lang);}catch(e){} apply(); });
+  });
+
+  /* ----- login form (demo: no network call) ----- */
+  var form=$("#login"), emailEl=$("#email"), pwEl=$("#password"), msg=$("#loginMsg");
+  function role(){ return $('input[name="role"]:checked').value; }
+  function updateRole(){
+    var guest = role()==="guest";
+    $("#creds").hidden = guest; $("#guestInfo").hidden = !guest; $("#loginLinks").hidden = guest;
+    emailEl.required = pwEl.required = !guest;
+    $("#submitBtn").textContent = guest ? t("login.guestBtn") : t("login.submit");
+    msg.textContent="";
+  }
+  $$('input[name="role"]').forEach(function(r){ r.addEventListener("change", updateRole); });
+
+  function updatePwLabel(){ $("#togglePw").textContent = pwEl.type==="password" ? t("login.show") : t("login.hide"); }
+  $("#togglePw").addEventListener("click",function(){ pwEl.type = pwEl.type==="password" ? "text":"password"; updatePwLabel(); pwEl.focus(); });
+
+  $("#forgot").addEventListener("click",function(){ msg.className="msg ok"; msg.textContent=t("login.forgotMsg"); });
+
+  form.addEventListener("submit",function(e){
+    e.preventDefault();
+    msg.className="msg"; emailEl.removeAttribute("aria-invalid"); pwEl.removeAttribute("aria-invalid");
+    var r=role();
+    if(r!=="guest"){
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim())){ emailEl.setAttribute("aria-invalid","true"); msg.textContent=t("err.email"); emailEl.focus(); return; }
+      if(!pwEl.value){ pwEl.setAttribute("aria-invalid","true"); msg.textContent=t("err.password"); pwEl.focus(); return; }
+    }
+    /* TODO (README, step "Connect login"): replace with POST /api/auth/login and use the role returned by the server. */
+    try{ sessionStorage.setItem("bk-role", r); }catch(e){}
+    window.location.href = "app.html?role=" + encodeURIComponent(r);
+  });
+
+  /* ----- name-tag demo ----- */
+  var kids=[
+    {n:"Mia",s:"apple",c:"var(--g-affen)",on:true},{n:"Sophie",s:"flower",c:"var(--g-schmetter)",on:true},{n:"Elias",s:"leaf",c:"var(--g-kaefer)",on:false},
+    {n:"Noah",s:"star",c:"var(--g-affen)",on:false},{n:"Luca",s:"cloud",c:"var(--g-schmetter)",on:true},{n:"Mila",s:"fish",c:"var(--g-kaefer)",on:false}
+  ];
+  var list=$("#demoTags");
+  kids.forEach(function(k,i){
+    var li=document.createElement("li"), b=document.createElement("button");
+    b.type="button"; b.className="tag"; b.style.setProperty("--c",k.c); b.setAttribute("aria-pressed",String(k.on));
+    b.innerHTML='<i class="hole"></i><span class="sym"><svg class="sy" aria-hidden="true"><use href="#sy-'+k.s+'"/></svg></span>'+k.n+'<span class="state"></span>';
+    b.addEventListener("click",function(){ k.on=!k.on; b.setAttribute("aria-pressed",String(k.on)); renderCount(); });
+    k.el=b; li.appendChild(b); list.appendChild(li);
+  });
+  function renderCount(){
+    var n=kids.filter(function(k){return k.on;}).length;
+    $("#demoCount").textContent=t("demo.count",{n:n,m:kids.length});
+    kids.forEach(function(k){ $(".state",k.el).textContent = k.on ? t("demo.in") : t("demo.out"); });
+  }
+  apply();
+})();
+</script>
+</body>
+</html>
