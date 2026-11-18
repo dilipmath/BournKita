@@ -424,6 +424,19 @@ main.on-landing {
   text-decoration: underline;
 }
 
+/* One row on a tablet: the top bar's buttons a little smaller than the app's, still 44px to tap. */
+.on-landing .header-actions {
+  align-items: center;
+  gap: 16px;
+}
+
+.on-landing .header-actions a.button,
+.on-landing .languages button {
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 0.75rem;
+}
+
 @media (max-width: 760px) {
   .landing-links {
     display: none;
@@ -511,6 +524,195 @@ main.on-landing {
   stroke: var(--accent);
   background: color-mix(in srgb, var(--tint-peach) var(--tint-strength), var(--surface));
   border-radius: 50%;
+}
+
+/* The sample day beside the hero: a tilted card on a soft blob, with two notes floating over it. */
+.sample-day {
+  position: relative;
+  min-width: 0;
+  padding: 18px 0 22px 15px;
+  font-size: 0.5rem;
+}
+
+.sample-blob {
+  position: absolute;
+  top: 3%;
+  left: 5%;
+  width: 90%;
+  height: 90%;
+  background: color-mix(in srgb, var(--tint-lime) var(--tint-strength), var(--bg));
+  border-radius: 48% 52% 55% 45%;
+  transform: rotate(-8deg);
+}
+
+.sample-board {
+  position: relative;
+  padding: 19px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--border) 25%, var(--surface));
+  border-radius: 20px;
+  box-shadow: 0 20px 65px rgb(49 85 59 / 0.11);
+  transform: rotate(1deg);
+}
+
+.sample-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 17px;
+  font-size: 0.75rem;
+}
+
+.sample-example {
+  padding: 6px 10px;
+  font-size: 0.5rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--tint-yellow) var(--tint-strength), var(--surface));
+  border-radius: 8px;
+}
+
+.sample-stats,
+.sample-groups {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.sample-stats div,
+.sample-groups div {
+  --tint: var(--tint-lime);
+  padding: 12px 9px;
+  background: color-mix(in srgb, var(--tint) var(--tint-strength), var(--surface));
+  border-radius: 12px;
+}
+
+.sample-stats div:nth-child(2),
+.sample-groups div:nth-child(1) {
+  --tint: var(--tint-peach);
+}
+
+.sample-stats div:nth-child(3),
+.sample-groups div:nth-child(3) {
+  --tint: var(--tint-purple);
+}
+
+.sample-stats small,
+.sample-stats em,
+.sample-groups small {
+  display: block;
+  font-style: normal;
+}
+
+.sample-stats b {
+  display: block;
+  margin: 4px 0;
+  font-size: 1.15rem;
+}
+
+.sample-stats em {
+  color: var(--accent);
+}
+
+.sample-groups div {
+  text-align: center;
+}
+
+.sample-group-icon {
+  font-size: 1.1rem;
+}
+
+.sample-groups b {
+  display: block;
+  margin-top: 4px;
+}
+
+.sample-label {
+  margin: 19px 0 10px;
+  font-size: 0.55rem;
+  font-weight: 800;
+}
+
+.sample-person {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 20%, var(--surface));
+}
+
+.sample-person:last-child {
+  border-bottom: 0;
+}
+
+.sample-person > span:nth-child(2) {
+  flex: 1;
+}
+
+.sample-person small {
+  display: block;
+}
+
+.sample-face {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  background: color-mix(in srgb, var(--tint-peach) var(--tint-strength), var(--surface));
+  border-radius: 9px;
+}
+
+.sample-face svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--accent);
+}
+
+.sample-status {
+  padding: 5px 8px;
+  color: var(--ok);
+  background: color-mix(in srgb, var(--tint-lime) var(--tint-strength), var(--surface));
+  border-radius: 99px;
+}
+
+.sample-note {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 11px 14px;
+  font-weight: 750;
+  background: var(--surface);
+  border-radius: 13px;
+  box-shadow: 0 8px 28px rgb(36 63 50 / 0.11);
+}
+
+.sample-note svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--accent);
+}
+
+.sample-note-top {
+  top: 3px;
+  right: -12px;
+}
+
+.sample-note-bottom {
+  bottom: 1px;
+  left: -8px;
+}
+
+@media (max-width: 760px) {
+  .sample-day {
+    margin: 0 12px;
+  }
+
+  .sample-note-top {
+    right: 0;
+  }
 }
 
 /* Below the login: what the app does, why the data is safe and how a Kita starts. */

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { screen, within } from '@testing-library/react'
+import { isInaccessible, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
@@ -112,6 +112,19 @@ describe('the top of the Landing page', () => {
     expect(await screen.findByRole('heading', { level: 2, name: 'Weniger Verwaltung. Mehr Zeit zum Spielen.' })).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: 'Anmelden' })).toHaveLength(2)
     expect(screen.getByRole('navigation', { name: 'Auf dieser Seite' })).toBeInTheDocument()
+  })
+
+  it('shows a sample day beside the promise, marked as an example and skipped by screen readers', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/', <App />)
+
+    const sample = await screen.findByText('Good morning, team!')
+    expect(screen.getByText('Example')).toBeVisible()
+    // Invented Groups and Staff, never this Kita's.
+    expect(screen.getByText('Bears')).toBeInTheDocument()
+    expect(screen.getByText('Teacher A')).toBeInTheDocument()
+    expect(isInaccessible(sample)).toBe(true)
+    expect(isInaccessible(screen.getByText('Teacher A'))).toBe(true)
   })
 
   it('keeps the pages opened from an email without it', async () => {

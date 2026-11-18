@@ -5,6 +5,7 @@ import { greeting } from './greeting'
 import Icon from './Icon'
 import LoginForm from './LoginForm'
 import LoginLink, { loginFormId } from './LoginLink'
+import SampleDay from './SampleDay'
 
 const points = [
   { text: 'aboutToday', icon: 'children' },
@@ -63,6 +64,7 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
             {t('heroTrust')}
           </p>
         </div>
+        <SampleDay />
       </section>
       <div className="login-page">
         <section className="login-hero">
