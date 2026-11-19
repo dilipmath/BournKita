@@ -426,6 +426,55 @@ button[aria-pressed='true'] {
   color: var(--text-2);
 }
 
+/* The toast: what just happened, at the bottom centre, above the navigation bar. */
+.toast-region {
+  position: fixed;
+  inset: auto 0 calc(96px + env(safe-area-inset-bottom)) 0;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  padding: 0 14px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 34rem;
+  padding: 10px 10px 10px 20px;
+  color: var(--on-chalkboard);
+  background: var(--chalkboard);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
+  pointer-events: auto;
+  animation: toast-in 0.2s ease-out;
+}
+
+.toast button {
+  color: var(--chalkboard);
+  background: var(--sun);
+  border-color: var(--sun);
+  font-weight: 700;
+}
+
+.toast button:focus-visible {
+  outline-color: var(--sun);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}
+
 /* The password with its Show/Hide button beside it. */
 .password-field {
   display: flex;

@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Kita, Session } from './api'
 import { greeting } from './greeting'
@@ -42,6 +42,8 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
   const whyId = useId()
   const endId = useId()
   const heroId = useId()
+  // Read once: the year on the footer doesn't change while the page is open.
+  const [year] = useState(() => new Date().getFullYear())
   const greetingId = useId()
   return (
     <div className="landing">
@@ -176,7 +178,7 @@ export default function LandingPage({ kita, onLoggedIn }: { kita: Kita; onLogged
           {t('appName')}
         </span>
         <span>{t('landingFooter')}</span>
-        <span>{t('footerCopyright', { year: new Date().getFullYear() })}</span>
+        <span>{t('footerCopyright', { year })}</span>
       </footer>
     </div>
   )

@@ -22,7 +22,10 @@ describe('Feedback', () => {
     await userEvent.type(within(form).getByLabelText('What would you like to tell us?'), 'Sort by last name, please.')
     await userEvent.click(within(form).getByRole('button', { name: 'Send feedback' }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Thank you! Your feedback was sent.')
+    // A toast for the whole page, not a line left behind in the Feedback panel.
+    const thanks = await screen.findByText('Thank you! Your feedback was sent.')
+    expect(thanks.closest('[aria-live="polite"]')).not.toBeNull()
+    expect(within(screen.getByRole('complementary')).queryByText('Thank you! Your feedback was sent.')).toBeNull()
     expect(calls).toContainEqual({
       route: 'POST /api/feedback',
       body: { kind: 'changeRequest', text: 'Sort by last name, please.', page: '/children' },

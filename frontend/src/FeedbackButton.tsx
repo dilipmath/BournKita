@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { sendFeedback, type FeedbackKind } from './api'
 import ProblemAlert from './ProblemAlert'
 import type { Problem } from './profileChange'
+import { useToast } from './toastContext'
 
 const kinds: { kind: FeedbackKind; label: 'feedbackProblem' | 'feedbackChangeRequest' | 'feedbackIdea' }[] = [
   { kind: 'problem', label: 'feedbackProblem' },
@@ -22,7 +23,7 @@ export default function FeedbackButton() {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [problem, setProblem] = useState<Problem>(null)
-  const [sent, setSent] = useState(false)
+  const toast = useToast()
   const form = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function FeedbackButton() {
     try {
       const result = await sendFeedback(kind, text, pathname)
       if (result === true) {
-        setSent(true)
+        toast(t('feedbackSent'))
         setOpen(false)
         setText('')
       } else setProblem(result)
@@ -50,11 +51,6 @@ export default function FeedbackButton() {
 
   return (
     <aside className="feedback">
-      {sent && (
-        <p className="status status-ok" role="status">
-          {t('feedbackSent')}
-        </p>
-      )}
       {open ? (
         <form aria-labelledby={headingId} tabIndex={-1} ref={form} onSubmit={(event) => void submit(event)}>
           <h2 id={headingId}>{t('feedback')}</h2>
@@ -87,7 +83,6 @@ export default function FeedbackButton() {
         <button
           type="button"
           onClick={() => {
-            setSent(false)
             setOpen(true)
           }}
         >
