@@ -194,6 +194,18 @@ h1 a {
   font-weight: 600;
 }
 
+/* The Group being worked with, in the top bar: its label beside the drop-down. */
+.group-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.group-choice select {
+  min-width: 10rem;
+}
+
 /* Emergency and the account menu, top right. */
 .header-actions {
   display: flex;

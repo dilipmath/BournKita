@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useMatch } from 'react-router-dom'
 import { logOut, type Kita, type Session } from './api'
 import EmergencyListLink from './EmergencyListLink'
+import GroupChoice from './GroupChoice'
 import HeaderMenu from './HeaderMenu'
 import LoginLink from './LoginLink'
 import { landingSectionIds } from './landingSections'
@@ -79,6 +80,7 @@ export default function AppHeader({ kita, session, onLanding, onLoggedOut }: Pro
         </div>
         {session ? (
           <div className="header-actions">
+            {!isGuest && <GroupChoice role={session.role} openGroupId={groupId} />}
             {/* Guests never see personal data, so no emergency list. */}
             {!isGuest && (
               <HeaderMenu
