@@ -136,13 +136,6 @@ time,
   margin: 0;
 }
 
-@media (min-width: 1100px) and (hover: hover) and (pointer: fine) {
-  .main-nav .nav-icon {
-    width: 1.3rem;
-    height: 1.3rem;
-  }
-}
-
 h1 a {
   display: inline-flex;
   align-items: center;
@@ -1476,24 +1469,49 @@ button.danger {
 
 /* The main navigation: a tab bar at the bottom of a tablet or phone, in reach of a thumb; down the
    left of a wide screen. Icons with labels, never icons alone. */
+/* On a phone: a tab bar along the bottom, icon and label, scrolling sideways if it must. Its part
+   headings and who is logged in are for the sidebar; the account menu shows the name here. */
 .main-nav {
   position: fixed;
   inset: auto 0 0 0;
   z-index: 15;
   display: flex;
   gap: 0;
-  justify-content: space-around;
   padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+  overflow-x: auto;
   background: var(--surface);
   border-top: 2px solid var(--border);
 }
 
+.main-nav .nav-part,
+.main-nav ul,
+.main-nav li {
+  display: contents;
+}
+
+.main-nav ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.main-nav .nav-part-title,
+.main-nav .nav-who {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .main-nav a {
   display: flex;
-  flex: 1;
+  flex: 1 0 auto;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-width: 72px;
   min-height: 56px;
   padding: 4px;
   color: var(--text);
@@ -1514,37 +1532,133 @@ main.with-navigation {
   padding-bottom: 96px;
 }
 
-/* Only screens used with a mouse: a tablet keeps the tab bar, also held sideways. */
-@media (min-width: 1100px) and (hover: hover) and (pointer: fine) {
+/* On a tablet and wider: the chalkboard sidebar, in parts, with who is logged in at its foot. */
+@media (min-width: 820px) {
   .main-nav {
     inset: 0 auto 0 0;
     flex-direction: column;
-    justify-content: flex-start;
-    gap: 4px;
-    width: 200px;
-    padding: 96px 12px 12px;
+    gap: 20px;
+    box-sizing: border-box;
+    width: 248px;
+    padding: 28px 16px 20px;
+    overflow: auto;
+    color: var(--on-chalkboard);
+    background: var(--chalkboard);
     border-top: none;
-    border-right: 2px solid var(--border);
+  }
+
+  .main-nav .nav-part {
+    display: block;
+  }
+
+  .main-nav ul {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .main-nav li {
+    display: block;
+  }
+
+  .main-nav .nav-part-title {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0 0 8px 12px;
+    overflow: visible;
+    clip-path: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: color-mix(in srgb, var(--on-chalkboard) 75%, var(--chalkboard));
   }
 
   .main-nav a {
-    flex: none;
     flex-direction: row;
     justify-content: flex-start;
-    gap: 8px;
+    gap: 12px;
+    min-height: 48px;
     padding: 0 12px;
+    color: var(--on-chalkboard);
     font-size: 1rem;
   }
 
+  .main-nav a:hover {
+    background: var(--chalkboard-2);
+  }
+
   .main-nav a.active {
-    box-shadow: inset 4px 0 0 var(--accent);
+    color: var(--on-chalkboard);
+    background: var(--chalkboard-3);
+    box-shadow: inset 4px 0 0 var(--sun);
+  }
+
+  .main-nav a:focus-visible {
+    outline: 3px solid var(--sun);
+    outline-offset: 2px;
+  }
+
+  .main-nav .nav-icon {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+
+  .main-nav .nav-who {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    height: auto;
+    margin: auto 0 0;
+    padding: 16px 12px 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    border-top: 1px solid var(--chalkboard-3);
+  }
+
+  .nav-who-name {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .nav-who-role {
+    font-size: 0.9rem;
+    color: color-mix(in srgb, var(--on-chalkboard) 75%, var(--chalkboard));
+  }
+
+  /* No tab bar under it here. */
+  .toast-region {
+    bottom: 24px;
+    padding-left: 262px;
   }
 
   main.with-navigation {
-    max-width: calc(960px + 216px);
+    max-width: calc(1240px + 276px);
     padding-bottom: 24px;
-    padding-left: 216px;
+    padding-left: 276px;
   }
+}
+
+/* Hidden until a keyboard reaches it: the first stop, straight to the page itself. */
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 40;
+  padding: 12px 16px;
+  color: var(--on-blue);
+  background: var(--blue);
+  border-radius: 12px;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+#content:focus {
+  outline: none;
 }
 
 /* A Group's own pages, as tabs above its content. */

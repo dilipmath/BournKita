@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
 import type { Role } from './api'
@@ -21,25 +22,61 @@ function Links({ entries }: { entries: Entry[] }) {
   })
 }
 
-/** The pages a Role may open: Home and the Kita-wide pages, plus Administration for Admins. At the
- * bottom of a tablet or phone, down the left of a wide screen. A Guest has the Calendar only. */
-export function MainNavigation({ role }: { role: Role }) {
+/** One part of the navigation: a heading and its pages, as a list named by the heading. */
+function Part({ title, entries }: { title: string; entries: Entry[] }) {
+  const titleId = useId()
+  return (
+    <div className="nav-part">
+      <h2 id={titleId} className="nav-part-title">
+        {title}
+      </h2>
+      <ul aria-labelledby={titleId}>
+        {Links({ entries }).map((link) => (
+          <li key={link.key}>{link}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+const roleLabels = { admin: 'roleAdmin', teacher: 'roleTeacher', guest: 'roleGuest' } as const
+
+/** The pages a Role may open, in parts: Daily, Planning and, for Admins, Administration. Down the
+ * left on a tablet, along the bottom on a phone; who is logged in, with their Role, at its end. A
+ * Guest has the Calendar only. */
+export function MainNavigation({ role, name }: { role: Role; name: string }) {
   const { t } = useTranslation()
-  const entries: Entry[] =
+  const parts: { title: string; entries: Entry[] }[] =
     role === 'guest'
-      ? [{ to: '/calendar', icon: 'calendar', label: t('calendar') }]
+      ? [{ title: t('navPlanning'), entries: [{ to: '/calendar', icon: 'calendar', label: t('calendar') }] }]
       : [
-          { to: '/', icon: 'home', label: t('home'), end: true },
-          { to: '/children', icon: 'children', label: t('children'), also: (path) => path.startsWith('/parents/') },
-          { to: '/calendar', icon: 'calendar', label: t('calendar'), end: true },
-          { to: '/incidents', icon: 'incidents', label: t('incidents') },
+          {
+            title: t('navDaily'),
+            entries: [
+              { to: '/', icon: 'home', label: t('home'), end: true },
+              { to: '/children', icon: 'children', label: t('children'), also: (path) => path.startsWith('/parents/') },
+              { to: '/incidents', icon: 'incidents', label: t('incidents') },
+            ],
+          },
+          { title: t('navPlanning'), entries: [{ to: '/calendar', icon: 'calendar', label: t('calendar'), end: true }] },
           ...(role === 'admin'
-            ? [{ to: '/administration', icon: 'administration', label: t('administration'), also: (path: string) => adminPages.includes(path) } satisfies Entry]
+            ? [
+                {
+                  title: t('administration'),
+                  entries: [{ to: '/administration', icon: 'administration', label: t('administration'), also: (path: string) => adminPages.includes(path) } satisfies Entry],
+                },
+              ]
             : []),
         ]
   return (
     <nav className="main-nav" aria-label={t('mainNavigation')}>
-      <Links entries={entries} />
+      {parts.map((part) => (
+        <Part key={part.title} {...part} />
+      ))}
+      <p className="nav-who">
+        <span className="nav-who-name">{name}</span>
+        <span className="nav-who-role">{t(roleLabels[role])}</span>
+      </p>
     </nav>
   )
 }

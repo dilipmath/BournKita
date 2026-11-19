@@ -1,8 +1,9 @@
 // @vitest-environment happy-dom
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import App from './App'
+import i18n from './i18n'
 import { fakeApi, health, renderAt, sessionAs } from './testing'
 
 const monkeys = { id: 2, name: 'Monkeys', icon: 'monkey' }
@@ -15,13 +16,59 @@ function links(name: string) {
 }
 
 describe('navigation', () => {
+  afterEach(async () => {
+    await i18n.changeLanguage('en')
+  })
+
   it('offers Teachers the daily pages only', async () => {
     fakeApi({ 'GET /api/health': health, 'GET /api/session': sessionAs('teacher'), 'GET /api/groups': { status: 200, body: [] } })
     renderAt('/', <App />)
 
     await screen.findByRole('navigation', { name: 'Main navigation' })
 
-    expect(links('Main navigation')).toEqual(['Home', 'Children', 'Calendar', 'Incidents'])
+    expect(links('Main navigation')).toEqual(['Home', 'Children', 'Incidents', 'Calendar'])
+  })
+
+  it('groups the pages into Daily and Planning, and Administration for Admins', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': sessionAs('admin'), 'GET /api/groups': { status: 200, body: [] } })
+    renderAt('/', <App />)
+
+    const nav = await screen.findByRole('navigation', { name: 'Main navigation' })
+    const part = (name: string) =>
+      within(within(nav).getByRole('list', { name }))
+        .getAllByRole('link')
+        .map((link) => link.textContent?.replace(/^\W+/u, ''))
+    expect(part('Daily')).toEqual(['Home', 'Children', 'Incidents'])
+    expect(part('Planning')).toEqual(['Calendar'])
+    expect(part('Administration')).toEqual(['Administration'])
+  })
+
+  it('shows who is logged in, and their Role, at the end of the navigation', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': sessionAs('admin'), 'GET /api/groups': { status: 200, body: [] } })
+    renderAt('/', <App />)
+
+    const nav = await screen.findByRole('navigation', { name: 'Main navigation' })
+    expect(nav).toHaveTextContent('admin@kita.example')
+    expect(nav).toHaveTextContent('Admin')
+  })
+
+  it('calls the Admin Role Leitung in German', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': sessionAs('admin'), 'GET /api/groups': { status: 200, body: [] } })
+    await i18n.changeLanguage('de')
+    renderAt('/', <App />)
+
+    expect(await screen.findByRole('navigation', { name: 'Hauptnavigation' })).toHaveTextContent('Leitung')
+  })
+
+  it('lets keyboard users skip to the page’s content first', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': sessionAs('teacher'), 'GET /api/groups': { status: 200, body: [] } })
+    renderAt('/', <App />)
+    await screen.findByRole('navigation', { name: 'Main navigation' })
+
+    await userEvent.tab()
+    const skip = screen.getByRole('link', { name: 'Skip to content' })
+    expect(skip).toHaveFocus()
+    expect(document.getElementById(skip.getAttribute('href')!.slice(1))).not.toBeNull()
   })
 
   it('offers Admins the Administration page, which lists the Admin pages', async () => {
@@ -29,7 +76,7 @@ describe('navigation', () => {
     renderAt('/', <App />)
 
     await screen.findByRole('navigation', { name: 'Main navigation' })
-    expect(links('Main navigation')).toEqual(['Home', 'Children', 'Calendar', 'Incidents', 'Administration'])
+    expect(links('Main navigation')).toEqual(['Home', 'Children', 'Incidents', 'Calendar', 'Administration'])
     await userEvent.click(within(screen.getByRole('navigation', { name: 'Main navigation' })).getByRole('link', { name: /Administration/ }))
 
     const page = await screen.findByRole('region', { name: 'Administration' })

@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import App from './App'
-import { fakeApi, health, renderAt, sessionAs } from './testing'
+import { fakeApi, health, pageContent, renderAt, sessionAs } from './testing'
 
 const lena = { id: 7, firstName: 'Lena', lastName: 'Müller', archivedAt: '2027-01-04T08:00:00Z', purgeOn: '2028-01-04' }
 
@@ -23,7 +23,8 @@ describe('Archive', () => {
 
     await userEvent.click(await screen.findByRole('link', { name: 'Administration' }))
     await userEvent.click(await screen.findByRole('link', { name: 'Archive' }))
-    const entry = await screen.findByRole('listitem')
+    await screen.findByText(/Lena Müller/)
+    const entry = pageContent().getByRole('listitem')
     expect(entry).toHaveTextContent('Lena Müller')
     // At the Kita's time; how Intl joins day and time varies between ICU versions.
     expect(entry).toHaveTextContent(/Deleted 4 January 2027(,| at) 09:00\. Purged on 4 January 2028\./)

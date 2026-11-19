@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react'
+import { render, within } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { vi } from 'vitest'
@@ -32,6 +32,11 @@ export function fakeApi(routes: Record<string, Reply | Handler>) {
     }),
   )
   return calls
+}
+
+/** The page's own content, without the header and the navigation around it. */
+export function pageContent() {
+  return within(document.getElementById('content')!)
 }
 
 export function renderAt(path: string, ui: ReactNode) {

@@ -110,7 +110,7 @@ export default function AppHeader({ kita, session, onLanding, onLoggedOut }: Pro
           </div>
         )}
       </header>
-      {session && <MainNavigation role={session.role} />}
+      {session && <MainNavigation role={session.role} name={name} />}
       {session && !isGuest && groupId !== null && <GroupNavigation groupId={groupId} />}
     </>
   )

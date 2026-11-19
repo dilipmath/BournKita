@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { fakeApi, health, noProfileLists, renderAt, sessionAs } from './testing'
+import { fakeApi, health, noProfileLists, pageContent, renderAt, sessionAs } from './testing'
 
 const monkeys = { id: 2, name: 'Monkeys', icon: 'monkey' }
 const peanuts = { id: 21, kind: 'allergy', name: 'Peanuts', note: '' }
@@ -215,9 +215,9 @@ describe('Today tiles', () => {
     await userEvent.click(filter)
 
     expect(filter).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getAllByRole('listitem').map((item) => item.getAttribute('aria-label'))).toEqual(['Lena Müller'])
+    expect(pageContent().getAllByRole('listitem').map((item) => item.getAttribute('aria-label'))).toEqual(['Lena Müller'])
     await userEvent.click(filter)
-    expect(screen.getAllByRole('listitem')).toHaveLength(4)
+    expect(pageContent().getAllByRole('listitem')).toHaveLength(4)
   })
 })
 

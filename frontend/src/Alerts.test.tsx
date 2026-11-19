@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import App from './App'
-import { fakeApi, health, noProfileLists, renderAt, sessionAs } from './testing'
+import { fakeApi, health, noProfileLists, pageContent, renderAt, sessionAs } from './testing'
 
 const lena = { id: 7, firstName: 'Lena', lastName: 'Müller', gender: null, languages: '', foodPreferences: 'Vegetarian', interests: '' }
 const peanuts = { id: 21, kind: 'allergy', name: 'Peanuts', note: 'EpiPen in the red bag' }
@@ -129,7 +129,8 @@ describe('Allergy and medical alerts', () => {
     })
     renderAt('/groups/2', <App />)
 
-    const [lenaItem, miaItem] = await screen.findAllByRole('listitem')
+    await screen.findByRole('link', { name: 'Lena Müller' })
+    const [lenaItem, miaItem] = pageContent().getAllByRole('listitem')
     expect(within(lenaItem).getByRole('link', { name: 'Lena Müller' })).toBeInTheDocument()
     expect(lenaItem).toHaveTextContent('Alerts: Peanuts, Asthma')
     expect(miaItem).not.toHaveTextContent('Alerts')

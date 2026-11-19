@@ -84,54 +84,60 @@ export default function App() {
   return (
     <ToastProvider>
       <main className={session ? 'with-navigation' : onLanding ? 'on-landing' : undefined}>
+        {/* The first stop for keyboard users: past the header and navigation, to the page itself. */}
+        <a className="skip-link" href="#content">
+          {t('skipToContent')}
+        </a>
         <AppHeader kita={kita} session={session ?? null} onLanding={onLanding} onLoggedOut={() => setSession(null)} />
-        <StatusBanner status={status} />
-        <Routes>
-          {/* Opened from an email by someone who has no password yet, so no login needed. */}
-          <Route path="/verify-email" element={<VerifyEmailPage />} />
-          {/* For whoever cannot log in, so no login needed either. */}
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="*" element={session === null && <LandingPage kita={kita} onLoggedIn={setSession} />} />
-        </Routes>
-        {session && isGuest && (
+        <div id="content" tabIndex={-1}>
+          <StatusBanner status={status} />
           <Routes>
-            {/* A Guest sees the Kita-wide calendar only, read-only, whatever the address. */}
-            <Route path="*" element={<CalendarPage canImportHolidays={false} readOnly />} />
+            {/* Opened from an email by someone who has no password yet, so no login needed. */}
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
+            {/* For whoever cannot log in, so no login needed either. */}
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="*" element={session === null && <LandingPage kita={kita} onLoggedIn={setSession} />} />
           </Routes>
-        )}
-        {session && !isGuest && (
-          <Routes>
-            <Route
-              path="/staff"
-              element={
-                isAdmin ? <StaffPage /> : adminsOnly('adminsOnly')
-              }
-            />
-            <Route path="/administration" element={isAdmin ? <AdministrationPage /> : adminsOnly('adminsOnlyAdministration')} />
-            <Route path="/children" element={<ChildrenPage canEdit={isAdmin} />} />
-            <Route path="/children/new" element={isAdmin ? <ChildForm /> : adminsOnly('adminsOnlyChildren')} />
-            <Route path="/children/:id" element={<ChildProfilePage canEdit={isAdmin} />} />
-            <Route path="/children/:id/edit" element={isAdmin ? <ChildEditPage /> : adminsOnly('adminsOnlyChildren')} />
-            <Route path="/children/:id/parents/add" element={isAdmin ? <AddParentPage /> : adminsOnly('adminsOnlyChildren')} />
-            <Route path="/parents/:id" element={<ParentPage canEdit={isAdmin} />} />
-            <Route path="/parents/:id/edit" element={isAdmin ? <ParentEditPage /> : adminsOnly('adminsOnlyChildren')} />
-            <Route path="/audit-log" element={isAdmin ? <AuditLogPage /> : adminsOnly('adminsOnlyAuditLog')} />
-            <Route path="/archive" element={isAdmin ? <ArchivePage /> : adminsOnly('adminsOnlyArchive')} />
-            <Route path="/groups" element={isAdmin ? <GroupsPage /> : adminsOnly('adminsOnlyGroups')} />
-            <Route path="/groups/:id" element={<GroupDashboard />} />
-            <Route path="/groups/:id/board" element={<TaskBoardPage />} />
-            <Route path="/groups/:id/backlog" element={<BacklogPage />} />
-            <Route path="/groups/:id/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
-            <Route path="/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
-            <Route path="/holidays" element={isAdmin ? <HolidaysPage /> : adminsOnly('adminsOnlyHolidays')} />
-            <Route path="/incidents" element={<IncidentLogPage isAdmin={isAdmin} />} />
-            <Route path="/" element={isAdmin ? <KitaOverviewPage name={name} /> : <TeacherStartPage name={name} />} />
-            <Route path="*" element={null} />
-          </Routes>
-        )}
-        {/* On every page, for everyone logged in (Guests too). */}
-        {session && <FeedbackButton />}
+          {session && isGuest && (
+            <Routes>
+              {/* A Guest sees the Kita-wide calendar only, read-only, whatever the address. */}
+              <Route path="*" element={<CalendarPage canImportHolidays={false} readOnly />} />
+            </Routes>
+          )}
+          {session && !isGuest && (
+            <Routes>
+              <Route
+                path="/staff"
+                element={
+                  isAdmin ? <StaffPage /> : adminsOnly('adminsOnly')
+                }
+              />
+              <Route path="/administration" element={isAdmin ? <AdministrationPage /> : adminsOnly('adminsOnlyAdministration')} />
+              <Route path="/children" element={<ChildrenPage canEdit={isAdmin} />} />
+              <Route path="/children/new" element={isAdmin ? <ChildForm /> : adminsOnly('adminsOnlyChildren')} />
+              <Route path="/children/:id" element={<ChildProfilePage canEdit={isAdmin} />} />
+              <Route path="/children/:id/edit" element={isAdmin ? <ChildEditPage /> : adminsOnly('adminsOnlyChildren')} />
+              <Route path="/children/:id/parents/add" element={isAdmin ? <AddParentPage /> : adminsOnly('adminsOnlyChildren')} />
+              <Route path="/parents/:id" element={<ParentPage canEdit={isAdmin} />} />
+              <Route path="/parents/:id/edit" element={isAdmin ? <ParentEditPage /> : adminsOnly('adminsOnlyChildren')} />
+              <Route path="/audit-log" element={isAdmin ? <AuditLogPage /> : adminsOnly('adminsOnlyAuditLog')} />
+              <Route path="/archive" element={isAdmin ? <ArchivePage /> : adminsOnly('adminsOnlyArchive')} />
+              <Route path="/groups" element={isAdmin ? <GroupsPage /> : adminsOnly('adminsOnlyGroups')} />
+              <Route path="/groups/:id" element={<GroupDashboard />} />
+              <Route path="/groups/:id/board" element={<TaskBoardPage />} />
+              <Route path="/groups/:id/backlog" element={<BacklogPage />} />
+              <Route path="/groups/:id/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
+              <Route path="/calendar" element={<CalendarPage canImportHolidays={isAdmin} />} />
+              <Route path="/holidays" element={isAdmin ? <HolidaysPage /> : adminsOnly('adminsOnlyHolidays')} />
+              <Route path="/incidents" element={<IncidentLogPage isAdmin={isAdmin} />} />
+              <Route path="/" element={isAdmin ? <KitaOverviewPage name={name} /> : <TeacherStartPage name={name} />} />
+              <Route path="*" element={null} />
+            </Routes>
+          )}
+          {/* On every page, for everyone logged in (Guests too). */}
+          {session && <FeedbackButton />}
+        </div>
       </main>
     </ToastProvider>
   )
