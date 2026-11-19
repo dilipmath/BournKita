@@ -20,6 +20,11 @@
   --green: #1f7a4d;
   --warn: #8a5a00;
   --warn-light: #fff0c7;
+  /* Quieter text on the chalkboard (headings in the sidebar, the Role). */
+  --on-chalkboard-muted: #bbc4c1;
+  /* The shell: the sidebar's width, and the room kept below content for the phone's tab bar. */
+  --sidebar-width: 248px;
+  --tab-bar-room: 96px;
   /* The names the app's rules use, pointing at the colours above. */
   --bg: var(--chalk);
   --text: var(--ink);
@@ -45,7 +50,7 @@
   /* The hero's highlighted word: lighter than the accent, still 3:1 as large text. */
   --accent-soft: #4c8757;
   /* Made for legibility, and served with the app: no font service. */
-  font-family: 'Atkinson Hyperlegible', ui-rounded, 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Atkinson Hyperlegible', ui-rounded, 'SF Pro Rounded', 'Arial Rounded MT Bold', 'Segoe UI', system-ui, sans-serif;
   font-size: 17px;
   line-height: 1.5;
   color: var(--text);
@@ -70,6 +75,7 @@
     --green: #72d7a0;
     --warn: #f2c66b;
     --warn-light: #3a2e10;
+    --on-chalkboard-muted: #b3c1c3;
     --on-part: #0f1d22;
     /* Faint enough that the light text keeps its contrast. */
     --tint-strength: 14%;
@@ -85,7 +91,14 @@ body {
 main {
   max-width: 960px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 28px;
+}
+
+/* A phone keeps more of its width for the content. */
+@media (max-width: 519px) {
+  main {
+    padding: 14px;
+  }
 }
 
 header {
@@ -209,6 +222,7 @@ h1 a {
 /* Emergency and the account menu, top right. */
 .header-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -434,7 +448,7 @@ button[aria-pressed='true'] {
 /* The toast: what just happened, at the bottom centre, above the navigation bar. */
 .toast-region {
   position: fixed;
-  inset: auto 0 calc(96px + env(safe-area-inset-bottom)) 0;
+  inset: auto 0 calc(var(--tab-bar-room) + env(safe-area-inset-bottom)) 0;
   z-index: 30;
   display: flex;
   justify-content: center;
@@ -450,6 +464,8 @@ button[aria-pressed='true'] {
   padding: 10px 10px 10px 20px;
   color: var(--on-chalkboard);
   background: var(--chalkboard);
+  /* Its edge, for dark mode, where the bar and the page are both dark. */
+  border: 1px solid var(--chalkboard-3);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
   pointer-events: auto;
@@ -1541,7 +1557,7 @@ button.danger {
 
 /* Room below the content for the tab bar. */
 main.with-navigation {
-  padding-bottom: 96px;
+  padding-bottom: var(--tab-bar-room);
 }
 
 /* On a tablet and wider: the chalkboard sidebar, in parts, with who is logged in at its foot. */
@@ -1551,7 +1567,7 @@ main.with-navigation {
     flex-direction: column;
     gap: 20px;
     box-sizing: border-box;
-    width: 248px;
+    width: var(--sidebar-width);
     padding: 28px 16px 20px;
     overflow: auto;
     color: var(--on-chalkboard);
@@ -1582,7 +1598,7 @@ main.with-navigation {
     clip-path: none;
     font-size: 0.85rem;
     font-weight: 700;
-    color: color-mix(in srgb, var(--on-chalkboard) 75%, var(--chalkboard));
+    color: var(--on-chalkboard-muted);
   }
 
   .main-nav a {
@@ -1636,19 +1652,19 @@ main.with-navigation {
 
   .nav-who-role {
     font-size: 0.9rem;
-    color: color-mix(in srgb, var(--on-chalkboard) 75%, var(--chalkboard));
+    color: var(--on-chalkboard-muted);
   }
 
   /* No tab bar under it here. */
   .toast-region {
     bottom: 24px;
-    padding-left: 262px;
+    padding-left: calc(var(--sidebar-width) + 14px);
   }
 
   main.with-navigation {
-    max-width: calc(1240px + 276px);
+    max-width: calc(1240px + var(--sidebar-width) + 28px);
     padding-bottom: 24px;
-    padding-left: 276px;
+    padding-left: calc(var(--sidebar-width) + 28px);
   }
 }
 
@@ -2694,7 +2710,7 @@ main.with-navigation {
   }
 
   .month .event-chip {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
   }
 }
 

@@ -8,6 +8,8 @@ type Toast = { message: string; undo?: () => void; id: number }
 export function ToastProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
   const [toast, setToast] = useState<Toast | null>(null)
+  // Held while the pointer or the keyboard is on it, so Undo never vanishes under a finger.
+  const [held, setHeld] = useState(false)
   const next = useRef(0)
 
   const show = useCallback<ShowToast>((message, undo) => {
@@ -16,10 +18,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (!toast) return
+    if (!toast || held) return
     const timer = window.setTimeout(() => setToast(null), toast.undo ? 7000 : 4500)
     return () => window.clearTimeout(timer)
-  }, [toast])
+  }, [toast, held])
 
   return (
     <ToastContext.Provider value={show}>
@@ -28,13 +30,21 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           which belongs to the page's own messages. */}
       <div className="toast-region" aria-live="polite">
         {toast && (
-          <div key={toast.id} className="toast">
+          <div
+            key={toast.id}
+            className="toast"
+            onPointerEnter={() => setHeld(true)}
+            onPointerLeave={() => setHeld(false)}
+            onFocus={() => setHeld(true)}
+            onBlur={() => setHeld(false)}
+          >
             <span>{toast.message}</span>
             {toast.undo && (
               <button
                 type="button"
                 onClick={() => {
                   toast.undo?.()
+                  setHeld(false)
                   setToast(null)
                 }}
               >

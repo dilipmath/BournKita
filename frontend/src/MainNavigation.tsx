@@ -9,16 +9,18 @@ type Entry = { to: string; icon: IconName; label: string; end?: boolean; also?: 
 
 const adminPages = ['/groups', '/staff', '/holidays', '/audit-log', '/archive']
 
-function Links({ entries }: { entries: Entry[] }) {
+/** The entries' links, the open page marked; each in a list item when they make up a list. */
+function Links({ entries, listItems = false }: { entries: Entry[]; listItems?: boolean }) {
   const { pathname } = useLocation()
   return entries.map(({ to, icon, label, end, also }) => {
     const current = (end ? pathname === to : pathname === to || pathname.startsWith(`${to}/`)) || (also?.(pathname) ?? false)
-    return (
+    const link = (
       <Link key={to} to={to} className={current ? 'active' : undefined} aria-current={current ? 'page' : undefined}>
         <Icon name={icon} className="nav-icon" />
         {label}
       </Link>
     )
+    return listItems ? <li key={to}>{link}</li> : link
   })
 }
 
@@ -31,9 +33,7 @@ function Part({ title, entries }: { title: string; entries: Entry[] }) {
         {title}
       </h2>
       <ul aria-labelledby={titleId}>
-        {Links({ entries }).map((link) => (
-          <li key={link.key}>{link}</li>
-        ))}
+        <Links entries={entries} listItems />
       </ul>
     </div>
   )

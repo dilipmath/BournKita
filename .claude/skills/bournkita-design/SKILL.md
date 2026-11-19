@@ -29,6 +29,15 @@ differently. Where this skill and the list below disagree, the list wins.
   paper, line, text-2, blue, sun, raspberry, green, warn); each has a dark-mode value checked to
   the same contrast.
 - **Headings** use weight 700 (the typeface has no 800).
+- **The Group drop-down** in the top bar is labelled "Current Group" ("Aktuelle Gruppe"), not
+  "Group": pages already have fields named Group (the Children filter, a Child's Group), and two
+  controls of one name confuse screen readers. It gets the Group colour on its edge once Groups
+  have colours.
+- **Navigation parts** follow the app's pages: Daily (Home, Children, Incidents), Planning
+  (Calendar), Administration (Admins). A Group's Today, Tasks and Calendar are tabs inside the
+  Group, reached from Home or the drop-down, so they are not in the sidebar.
+- **Feedback** stays at the foot of each page for now; moving it into the top bar (as a dialog)
+  is still to do.
 - **The prototypes** are reference only: build pages in the React app, with its translation
   files, never by copying the prototypes' markup or sample data.
 

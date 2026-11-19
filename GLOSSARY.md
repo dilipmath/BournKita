@@ -49,7 +49,7 @@ The paper colour that marks what belongs to a Group, chosen by an Admin from a f
 _Avoid_: Theme, Gruppenfarbe (in code and docs)
 
 **Group dashboard**:
-A Group's Today tab, also called the Today view; a Teacher who works in one Group lands on it after logging in: that Group's day at the Kita. Each Child's photo, Attendance or Absence, their Alerts, and today's Birthdays; Staff check Children in and out and record Absences here. Before a Child is checked out, it shows who may pick them up.
+A Group's Today tab, also called the Today view; a Teacher who works in one Group lands on it after logging in: that Group's day at the Kita. Each Child's Symbol and name, Attendance or Absence, their Alerts, and today's Birthdays; Staff check Children in and out and record Absences here. Before a Child is checked out, it shows who may pick them up.
 _Avoid_: Group page, overview
 
 **Kita overview**:

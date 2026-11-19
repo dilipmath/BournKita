@@ -37,7 +37,25 @@ describe('the toast', () => {
     expect(screen.queryByText('Mia is here (07:48)')).toBeNull()
   })
 
-  it('offers Undo for 7 seconds, and Undo takes the step back', async () => {
+  it('stays while Undo has the keyboard', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    render(
+      <ToastProvider>
+        <Checker onUndo={() => undefined} />
+      </ToastProvider>,
+    )
+
+    act(() => screen.getByRole('button', { name: 'Check in' }).click())
+    act(() => screen.getByRole('button', { name: 'Undo' }).focus())
+    act(() => vi.advanceTimersByTime(8000))
+    expect(screen.getByText('Mia is here (07:48)')).toBeInTheDocument()
+
+    act(() => screen.getByRole('button', { name: 'Check in' }).focus())
+    act(() => vi.advanceTimersByTime(7100))
+    expect(screen.queryByText('Mia is here (07:48)')).toBeNull()
+  })
+
+  it('offers Undo, and Undo takes the step back', async () => {
     const undo = vi.fn()
     render(
       <ToastProvider>
