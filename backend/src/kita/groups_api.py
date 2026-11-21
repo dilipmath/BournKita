@@ -18,7 +18,7 @@ from kita.audit_api import (
     note_children,
 )
 from kita.birthdays import Birthdays
-from kita.children import ChildSummary, NameRequired, TooLong
+from kita.children import ChildSummary, ChildSymbol, NameRequired, TooLong
 from kita.groups import (
     Group,
     GroupColour,
@@ -83,7 +83,7 @@ class GroupChildOut(BaseModel):
     absence: AbsenceOut | None
     birthday_today: bool
     # Shown instead of a photo: a shared tablet shows no Child's face.
-    symbol: str
+    symbol: ChildSymbol
 
     @classmethod
     def of(

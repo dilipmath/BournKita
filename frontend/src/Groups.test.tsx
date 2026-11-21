@@ -118,6 +118,7 @@ describe('Groups', () => {
     await userEvent.selectOptions(choice, '6')
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Another Child in this Group has this symbol. Please choose another.')
+    expect(screen.getByRole('link', { name: 'Choose another symbol' })).toHaveAttribute('href', '/children/7/edit')
   })
 
   it('shows Teachers a Child’s Group without changing it', async () => {

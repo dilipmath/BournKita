@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from kita.api_support import CAMEL_CASE
 from kita.children_api import ChildSummaryOut
+from kita.groups import GroupColour
 from kita.identity import Identity
 from kita.identity_api import role_dependency, staff_member_dependency, staff_member_of
 from kita.overview import GroupDay, KitaDay, KitaOverview, LateChild
@@ -18,7 +19,7 @@ class GroupDayOut(BaseModel):
     id: int
     name: str
     icon: str
-    colour: str
+    colour: GroupColour
     mine: bool
     expected: int
     here: int

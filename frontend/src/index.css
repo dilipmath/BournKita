@@ -22,9 +22,8 @@
   --warn-light: #fff0c7;
   /* Quieter text on the chalkboard (headings in the sidebar, the Role). */
   --on-chalkboard-muted: #bbc4c1;
-  /* The shell: the sidebar's width, and the room kept below content for the phone's tab bar. */
-  /* Group colours: a paper fill (chalkboard text on it, 4.5:1 or more) and an accent for edges
-     and dots on the page (3:1 or more). Every Group colour is shown with the Group's name. */
+  /* Group colours: a paper fill (ink text on it, 4.5:1 or more in both themes) and an accent for
+     edges and dots on the page (3:1 or more). Every Group colour is shown with the Group's name. */
   --g-orange: #f6a14a;
   --g-orange-accent: #b85a00;
   --g-lilac: #b9a0ec;
@@ -41,6 +40,7 @@
   --g-teal-accent: #1f7a72;
   --g-sand: #d9c29a;
   --g-sand-accent: #7a6230;
+  /* The shell: the sidebar's width, and the room kept below content for the phone's tab bar. */
   --sidebar-width: 248px;
   --tab-bar-room: 96px;
   /* The names the app's rules use, pointing at the colours above. */
@@ -252,7 +252,23 @@ h1 a {
 .group-colour-teal { --group-fill: var(--g-teal); --group-accent: var(--g-teal-accent); }
 .group-colour-sand { --group-fill: var(--g-sand); --group-accent: var(--g-sand-accent); }
 
-/* Choosing a Child's Symbol: a grid of pictures, the chosen one framed. */
+/* A Group's colour as a dot before its name. */
+.group-dot {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-right: 0.4em;
+  vertical-align: 0.05em;
+  background: var(--group-accent);
+  border-radius: 50%;
+}
+
+/* Choosing a Child's Symbol: a grid of pictures, the chosen one framed, taken ones faded. */
+.symbols label.taken {
+  opacity: 0.45;
+  border-style: dashed;
+}
+
 .symbols {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));

@@ -11,6 +11,7 @@ from kita.db import metadata, migrate
 from kita.encryption import new_key
 from kita.settings import Settings
 from tests.accounts import create_admin, log_in, onboard
+from tests.children import reset_symbols
 from tests.fakes import FixedClock, MemoryFileStore, OutageMailer, RecordingCrashSink
 
 
@@ -46,6 +47,12 @@ def empty_database(settings: Settings) -> None:
         if tables:
             connection.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
     engine.dispose()
+
+
+@pytest.fixture(autouse=True)
+def symbols_in_turn() -> None:
+    """Each test's Children get the Symbols in the same turn, whatever ran before."""
+    reset_symbols()
 
 
 @pytest.fixture

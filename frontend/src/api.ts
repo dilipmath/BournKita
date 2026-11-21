@@ -204,10 +204,10 @@ export async function resetPassword(token: string, password: string): Promise<tr
 export type Gender = 'girl' | 'boy' | 'diverse'
 // Each Gender's translation key.
 export const genderLabel = { girl: 'genderGirl', boy: 'genderBoy', diverse: 'genderDiverse' } as const
-// A Child as the list shows it: the name only.
 // The Symbols a Child can have, as on their coat hook; no two Children in a Group share one.
 export const childSymbols = ['apple', 'cloud', 'drop', 'fish', 'flower', 'heart', 'house', 'kite', 'leaf', 'moon', 'star', 'sun', 'boat', 'tree', 'car', 'bell', 'ball', 'bird', 'butterfly', 'snail', 'mushroom', 'umbrella', 'rainbow', 'key', 'drum', 'train', 'cherry', 'carrot', 'cat', 'shell'] as const
 export type ChildSymbol = (typeof childSymbols)[number]
+// A Child as a list shows it: the name and the Symbol.
 export type ChildSummary = { id: number; firstName: string; lastName: string; symbol: ChildSymbol }
 // What an Admin enters for a Child profile; gender is null when not stated.
 export type ChildDetails = {
@@ -292,7 +292,6 @@ export async function fetchArchive(): Promise<ArchivedChild[] | Refusal> {
   return (await response.json()) as ArchivedChild[]
 }
 
-/** Makes an archived Child current again, with all its data. Admins only. Resolves to true once restored. */
 /** Restores an archived Child; `symbol` gives them another Symbol, when theirs was taken in their
  * Group meanwhile. */
 export async function restoreChild(id: number, symbol?: ChildSymbol): Promise<true | Refusal> {

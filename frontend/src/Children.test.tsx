@@ -202,6 +202,22 @@ describe('child profiles', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Please enter a first and a last name.')
   })
 
+  it('marks the symbols other Children in the Group already have', async () => {
+    const monkeys = { id: 5, name: 'Monkeys', icon: 'monkey', colour: 'orange' }
+    fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': sessionAs('admin'),
+      'GET /api/children/7': { status: 200, body: { ...lena, ...noProfileLists, group: monkeys } },
+      'GET /api/children?search=&groupId=5': { status: 200, body: [lenaSummary, { ...mia, symbol: 'boat' }] },
+    })
+    renderAt('/children/7/edit', <App />)
+
+    const symbols = await screen.findByRole('radiogroup', { name: 'Symbol' })
+    expect(await within(symbols).findByRole('radio', { name: 'Boat (taken in this Group)' })).toBeInTheDocument()
+    // The Child's own is not taken.
+    expect(within(symbols).getByRole('radio', { name: 'Kite' })).toBeChecked()
+  })
+
   it('says when another Child in the Group already has the chosen symbol', async () => {
     fakeApi({
       'GET /api/health': health,

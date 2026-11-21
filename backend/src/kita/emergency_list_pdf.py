@@ -7,6 +7,7 @@ from typing import Literal, NoReturn
 from weasyprint import HTML
 
 from kita.alerts import Alert
+from kita.children import ChildSymbol
 from kita.clock import KITA_TIME_ZONE
 from kita.emergency_list import Caller, EmergencyList, GroupOnList, PresentChild
 
@@ -142,7 +143,7 @@ def _caller(caller: Caller, words: dict[str, str]) -> str:
 
 
 # Each Symbol's name, as the app shows it: the printed list names the picture on the coat hook.
-_SYMBOL_NAMES: dict[Language, dict[str, str]] = {
+_SYMBOL_NAMES: dict[Language, dict[ChildSymbol, str]] = {
     "en": {
         "apple": "Apple",
         "cloud": "Cloud",

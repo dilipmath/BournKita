@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
-import { genderLabel, saveChild, type Child, type ChildDetails, type Gender, type Refusal } from './api'
+import { fetchChildren, genderLabel, saveChild, type ChildDetails, type ChildProfile, type ChildSymbol, type Gender, type Refusal } from './api'
 import { kitaToday } from './dates'
 import SymbolPicker from './SymbolPicker'
 
@@ -10,7 +10,7 @@ type Problem = Refusal | 'somethingWentWrong' | null
 const empty: ChildDetails = { firstName: '', lastName: '', gender: null, languages: '', foodPreferences: '', interests: '', dateOfBirth: null, symbol: 'apple' }
 
 /** Creates a Child profile, or edits `child`. Admins only; shows the profile once saved. */
-export default function ChildForm({ child }: { child?: Child }) {
+export default function ChildForm({ child }: { child?: ChildProfile }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [details, setDetails] = useState<ChildDetails>(() => {
@@ -20,6 +20,15 @@ export default function ChildForm({ child }: { child?: Child }) {
     return { firstName, lastName, gender, languages, foodPreferences, interests, dateOfBirth, symbol }
   })
   const [problem, setProblem] = useState<Problem>(null)
+  // The Symbols the other Children in this Child's Group have; a new Child is in no Group yet.
+  const [taken, setTaken] = useState<ReadonlySet<ChildSymbol>>(new Set())
+  const groupId = child?.group?.id ?? null
+  useEffect(() => {
+    if (groupId === null) return
+    fetchChildren('', groupId)
+      .then((others) => setTaken(new Set(others.filter((other) => other.id !== child?.id).map((other) => other.symbol))))
+      .catch(() => undefined)
+  }, [groupId, child?.id])
   const [submitting, setSubmitting] = useState(false)
 
   function field(name: Exclude<keyof ChildDetails, 'gender' | 'dateOfBirth' | 'symbol'>) {
@@ -78,7 +87,7 @@ export default function ChildForm({ child }: { child?: Child }) {
           onChange={(event) => setDetails({ ...details, dateOfBirth: event.target.value || null })}
         />
       </label>
-      <SymbolPicker value={details.symbol} onChange={(symbol) => setDetails({ ...details, symbol })} />
+      <SymbolPicker value={details.symbol} taken={taken} onChange={(symbol) => setDetails({ ...details, symbol })} />
       <label>
         {t('languagesSpoken')}
         <input maxLength={200} {...field('languages')} />

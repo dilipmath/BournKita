@@ -47,6 +47,7 @@ export default function ChildGroup({ child, canEdit, reload }: Props) {
           <GroupOptions groups={groups ?? (child.group ? [child.group] : [])} />
         </select>
         <ProblemAlert problem={problem} />
+        {problem === 'symbolTaken' && <Link to={`/children/${child.id}/edit`}>{t('chooseAnotherSymbol')}</Link>}
       </dd>
     </>
   )
