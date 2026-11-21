@@ -276,12 +276,14 @@ class Groups:
             if not _exists(connection, group_id):
                 raise GroupNotFound
             rows = connection.execute(
-                select(children.c.id, children.c.first_name, children.c.last_name)
+                select(
+                    children.c.id, children.c.first_name, children.c.last_name, children.c.symbol
+                )
                 .join(child_groups, child_groups.c.child_id == children.c.id)
                 .where(child_groups.c.group_id == group_id, CURRENT)
                 .order_by(children.c.first_name, children.c.last_name, children.c.id)
             ).all()
-        return [ChildSummary(row.id, row.first_name, row.last_name) for row in rows]
+        return [ChildSummary(row.id, row.first_name, row.last_name, row.symbol) for row in rows]
 
     def groups_of_children(self, child_ids: Sequence[int]) -> dict[int, int]:
         """The Group of each of these Children who is in one, by Child ID."""
@@ -297,12 +299,14 @@ class Groups:
         """The Children in no Group, by first name: for an Admin to place."""
         with transaction(self._engine) as connection:
             rows = connection.execute(
-                select(children.c.id, children.c.first_name, children.c.last_name)
+                select(
+                    children.c.id, children.c.first_name, children.c.last_name, children.c.symbol
+                )
                 .outerjoin(child_groups, child_groups.c.child_id == children.c.id)
                 .where(child_groups.c.child_id.is_(None), CURRENT)
                 .order_by(children.c.first_name, children.c.last_name, children.c.id)
             ).all()
-        return [ChildSummary(row.id, row.first_name, row.last_name) for row in rows]
+        return [ChildSummary(row.id, row.first_name, row.last_name, row.symbol) for row in rows]
 
     def set_staff_groups(self, account_id: int, group_ids: Sequence[int]) -> list[int]:
         """Says which Groups the Staff member works in, instead of any before; returns them by

@@ -109,11 +109,12 @@ class ChildProfile(ChildDetails):
 
 @dataclass(frozen=True)
 class ChildSummary:
-    """A Child as the list shows it: the name only."""
+    """A Child as a list shows it: the name and the Symbol."""
 
     id: int
     first_name: str
     last_name: str
+    symbol: ChildSymbol
 
 
 @dataclass(frozen=True)
@@ -216,7 +217,7 @@ class Children:
         """All Children, by first name. `search` keeps those whose first, last or full name
         contains it, ignoring case."""
         query = (
-            select(children.c.id, children.c.first_name, children.c.last_name)
+            select(children.c.id, children.c.first_name, children.c.last_name, children.c.symbol)
             .where(CURRENT)
             .order_by(children.c.first_name, children.c.last_name, children.c.id)
         )

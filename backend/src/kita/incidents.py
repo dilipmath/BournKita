@@ -309,6 +309,7 @@ class Incidents:
                 incidents,
                 children.c.first_name,
                 children.c.last_name,
+                children.c.symbol,
                 reporters.c.email.label("reporter_email"),
             )
             .join(children, children.c.id == incidents.c.child_id)
@@ -334,7 +335,7 @@ class Incidents:
             description=self._decrypt("description", row.description, row.id),
             informed=self._decrypt("informed", row.informed, row.id),
             id=row.id,
-            child=ChildSummary(row.child_id, row.first_name, row.last_name),
+            child=ChildSummary(row.child_id, row.first_name, row.last_name, row.symbol),
             reported_by=row.reporter_email,
             reported_at=row.reported_at,
             follow_ups=tuple(follow_ups),

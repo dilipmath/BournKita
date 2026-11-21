@@ -73,3 +73,15 @@ def test_only_the_apps_symbols_can_be_chosen(admin: TestClient) -> None:
     response = admin.post("/api/children", json={**LENA, "symbol": "dragon"})
 
     assert response.status_code == 422
+
+
+def test_the_children_list_shows_each_childs_symbol(admin: TestClient, teacher: TestClient) -> None:
+    create_child(admin, symbol="kite")
+    create_child(admin, firstName="Mia", symbol="boat")
+
+    listed = teacher.get("/api/children").json()
+
+    assert [(child["firstName"], child["symbol"]) for child in listed] == [
+        ("Lena", "kite"),
+        ("Mia", "boat"),
+    ]

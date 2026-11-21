@@ -69,6 +69,7 @@ class ChildSummaryOut(BaseModel):
     id: int
     first_name: str
     last_name: str
+    symbol: ChildSymbol
 
     @classmethod
     def of(cls, summary: ChildSummary) -> "ChildSummaryOut":

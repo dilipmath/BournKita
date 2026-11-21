@@ -194,7 +194,7 @@ def create_app(
     app.include_router(audit_router(identity, audit, children))
     birthdays = Birthdays(engine)
     app.include_router(
-        groups_router(identity, groups, alerts, attendance, birthdays, photos, audited_route_class)
+        groups_router(identity, groups, alerts, attendance, birthdays, audited_route_class)
     )
     overview = KitaOverview(
         groups, children, attendance, alerts, birthdays, incidents, clock, settings.closes_at

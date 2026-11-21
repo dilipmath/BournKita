@@ -205,10 +205,10 @@ export type Gender = 'girl' | 'boy' | 'diverse'
 // Each Gender's translation key.
 export const genderLabel = { girl: 'genderGirl', boy: 'genderBoy', diverse: 'genderDiverse' } as const
 // A Child as the list shows it: the name only.
-export type ChildSummary = { id: number; firstName: string; lastName: string }
 // The Symbols a Child can have, as on their coat hook; no two Children in a Group share one.
 export const childSymbols = ['apple', 'cloud', 'drop', 'fish', 'flower', 'heart', 'house', 'kite', 'leaf', 'moon', 'star', 'sun', 'boat', 'tree', 'car', 'bell', 'ball', 'bird', 'butterfly', 'snail', 'mushroom', 'umbrella', 'rainbow', 'key', 'drum', 'train', 'cherry', 'carrot', 'cat', 'shell'] as const
 export type ChildSymbol = (typeof childSymbols)[number]
+export type ChildSummary = { id: number; firstName: string; lastName: string; symbol: ChildSymbol }
 // What an Admin enters for a Child profile; gender is null when not stated.
 export type ChildDetails = {
   firstName: string
@@ -597,14 +597,12 @@ export type AbsenceReason = 'sick' | 'holiday' | 'other'
 export const absenceReasonLabel = { sick: 'absenceSick', holiday: 'absenceHoliday', other: 'absenceOther' } as const
 // Days a Child will not come (YYYY-MM-DD, both included), and why.
 export type Absence = { id: number; startsOn: string; endsOn: string; reason: AbsenceReason }
-// One of a Group's Children today.
-// photoId: their newest photo, for their tile; null without one or without photo Consent.
+// One of a Group's Children today, shown by their Symbol: no photos on a shared tablet.
 export type GroupChild = ChildSummary & {
   alerts: Alert[]
   attendance: AttendanceDay | null
   absence: Absence | null
   birthdayToday: boolean
-  photoId: number | null
 }
 // The Group dashboard, the Today view: the Group, the day at the Kita, its Children by first name.
 export type GroupDashboard = Group & { day: string; children: GroupChild[] }

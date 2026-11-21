@@ -311,7 +311,7 @@ class Parents:
     @staticmethod
     def _children(connection: Connection, parent_id: int) -> list[ChildSummary]:
         rows = connection.execute(
-            select(children.c.id, children.c.first_name, children.c.last_name)
+            select(children.c.id, children.c.first_name, children.c.last_name, children.c.symbol)
             .join(child_parents, child_parents.c.child_id == children.c.id)
             .where(child_parents.c.parent_id == parent_id, CURRENT)
             .order_by(children.c.first_name, children.c.last_name, children.c.id)

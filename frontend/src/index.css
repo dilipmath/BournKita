@@ -2989,22 +2989,29 @@ main.with-navigation {
   margin: 0;
 }
 
-/* Each Child's face, so they are recognised at a glance; initials without a photo. */
-.today-photo {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  object-fit: cover;
+/* Each Child's Symbol, as on their coat hook, so they are recognised at a glance. */
+.today-symbol {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  color: var(--ink);
+  background: var(--chalk);
+  border: 2px solid var(--line);
+  border-radius: 18px;
 }
 
-.today-photo.placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--border);
-  color: var(--text);
-  font-size: 2rem;
-  font-weight: 700;
+.today-symbol .child-symbol {
+  width: 46px;
+  height: 46px;
+}
+
+/* In a list, the Symbol before the name. */
+.children-list .child-symbol {
+  width: 28px;
+  height: 28px;
+  margin-right: 10px;
+  vertical-align: middle;
 }
 
 /* Before checking out: who may pick up, with their photos. */

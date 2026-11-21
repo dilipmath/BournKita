@@ -106,7 +106,7 @@ def test_every_staff_member_lists_the_children_by_first_name(
     assert response.status_code == 200
     assert names(response) == ["Lena Becker", "Lena Weber", "Mia Schmidt"]
     # The list shows names only; the rest of the profile is on its own page.
-    assert set(response.json()[0]) == {"id", "firstName", "lastName"}
+    assert set(response.json()[0]) == {"id", "firstName", "lastName", "symbol"}
 
 
 def test_the_list_is_searched_by_first_last_or_full_name_ignoring_case(admin: TestClient) -> None:

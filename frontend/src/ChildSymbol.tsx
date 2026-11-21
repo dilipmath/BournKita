@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { ChildSymbol as SymbolName } from './api'
 
 // The Symbols a Child can have, as line pictures on a 24×24 grid, drawn in the colour of the text
@@ -166,16 +167,18 @@ const pictures: Record<SymbolName, ReactNode> = {
   ),
 }
 
-/** A Child's Symbol, as on their coat hook. Decoration beside the Child's name, so hidden from
- * screen readers; a `label` names it where the Symbol itself is what is being chosen. */
-export default function ChildSymbol({ symbol, className = '', label }: { symbol: SymbolName; className?: string; label?: string }) {
+/** A Child's Symbol, as on their coat hook, named by its picture. Beside the Child's name it is
+ * hidden from screen readers (the name says who it is); `announced` reads it out where the Symbol
+ * itself matters. */
+export default function ChildSymbol({ symbol, className = '', announced = false }: { symbol: SymbolName; className?: string; announced?: boolean }) {
+  const { t } = useTranslation()
   return (
     <svg
       className={`child-symbol ${className}`.trim()}
       viewBox="0 0 24 24"
-      role={label ? 'img' : undefined}
-      aria-label={label}
-      aria-hidden={label ? undefined : true}
+      role="img"
+      aria-label={t(`symbol_${symbol}`)}
+      aria-hidden={announced ? undefined : true}
       focusable="false"
     >
       {pictures[symbol]}

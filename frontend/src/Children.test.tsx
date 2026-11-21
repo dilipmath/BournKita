@@ -16,8 +16,8 @@ const lena = {
   dateOfBirth: null,
   symbol: 'kite',
 }
-const lenaSummary = { id: 7, firstName: 'Lena', lastName: 'Müller' }
-const mia = { id: 8, firstName: 'Mia', lastName: 'Schmidt' }
+const lenaSummary = { id: 7, firstName: 'Lena', lastName: 'Müller', symbol: 'kite' }
+const mia = { id: 8, firstName: 'Mia', lastName: 'Schmidt', symbol: 'boat' }
 
 describe('child profiles', () => {
   it('lists the Children and searches them by name', async () => {
@@ -30,7 +30,9 @@ describe('child profiles', () => {
     renderAt('/', <App />)
 
     await userEvent.click(await screen.findByRole('link', { name: 'Children' }))
-    expect(await screen.findByRole('link', { name: 'Mia Schmidt' })).toBeInTheDocument()
+    // Each by their Symbol and name; the Symbol is not read out before the name.
+    const miaLink = await screen.findByRole('link', { name: 'Mia Schmidt' })
+    expect(within(miaLink).getByLabelText('Boat')).toHaveAttribute('aria-hidden', 'true')
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search by name' }), 'lena')
 
     expect(await screen.findByRole('link', { name: 'Lena Müller' })).toBeInTheDocument()

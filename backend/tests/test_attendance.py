@@ -267,20 +267,18 @@ def test_an_absence_cannot_cover_a_day_the_child_was_here(
     assert refused.json() == {"detail": "present_then"}
 
 
-def test_the_today_view_shows_each_childs_newest_photo_only_with_photo_consent(
+def test_the_today_view_shows_each_childs_symbol_never_their_photo(
     admin: TestClient, teacher: TestClient
 ) -> None:
     monkeys = create_group(admin)
-    lena = create_child(admin)
-    mia = create_child(admin, firstName="Mia")
+    lena = create_child(admin, symbol="kite")
+    mia = create_child(admin, firstName="Mia", symbol="boat")
     for child in (lena, mia):
         put_in_group(admin, child, monkeys)
+    # Even with photo Consent and a photo, a shared tablet shows the Symbol.
     give_photo_consent(admin, lena)
     upload(admin, f"/api/children/{lena}/photos", jpeg())
-    newest = upload(admin, f"/api/children/{lena}/photos", jpeg()).json()["id"]
 
-    assert child_today(teacher, monkeys, lena)["photoId"] == newest
-    assert child_today(teacher, monkeys, mia)["photoId"] is None
-
-    admin.post(f"/api/children/{lena}/consents/photo/withdrawn", json={"withdrawnOn": "2026-12-01"})
-    assert child_today(teacher, monkeys, lena)["photoId"] is None
+    assert child_today(teacher, monkeys, lena)["symbol"] == "kite"
+    assert child_today(teacher, monkeys, mia)["symbol"] == "boat"
+    assert "photoId" not in child_today(teacher, monkeys, lena)

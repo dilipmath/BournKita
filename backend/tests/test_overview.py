@@ -23,11 +23,11 @@ def test_the_kita_overview_counts_each_groups_day_and_the_whole_kitas(
 ) -> None:
     monkeys = create_group(admin, "Monkeys", "monkey")
     create_group(admin, "Bears", "bear")
-    lena = create_child(admin, firstName="Lena", dateOfBirth="2022-01-04")
+    lena = create_child(admin, firstName="Lena", dateOfBirth="2022-01-04", symbol="sun")
     mia = create_child(admin, firstName="Mia")
     ida = create_child(admin, firstName="Ida")
     emil = create_child(admin, firstName="Emil")
-    paul = create_child(admin, firstName="Paul")
+    paul = create_child(admin, firstName="Paul", symbol="star")
     for child in (lena, mia, ida, emil):
         put_in_group(admin, child, monkeys)
     admin.post(
@@ -83,11 +83,13 @@ def test_the_kita_overview_counts_each_groups_day_and_the_whole_kitas(
     [bears, monkeys_today] = body["groups"]
     # Emil's Asthma counts only once he is here.
     assert monkeys_today["alertsHere"] == 1
-    assert monkeys_today["birthdays"] == [{"id": lena, "firstName": "Lena", "lastName": "Müller"}]
+    assert monkeys_today["birthdays"] == [
+        {"id": lena, "firstName": "Lena", "lastName": "Müller", "symbol": "sun"}
+    ]
     assert bears["birthdays"] == []
     assert body["kita"] == {
         "stillCheckedIn": 2,
-        "withoutGroup": [{"id": paul, "firstName": "Paul", "lastName": "Müller"}],
+        "withoutGroup": [{"id": paul, "firstName": "Paul", "lastName": "Müller", "symbol": "star"}],
         "incidentsToday": 1,
         # No closing time set: nobody is late.
         "closesAt": None,

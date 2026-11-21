@@ -2,11 +2,11 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import AlertMarker from './AlertMarker'
+import ChildSymbol from './ChildSymbol'
 import {
   absenceReasonLabel,
   addAbsence,
   attendanceStep,
-  childPhotoUrl,
   fetchChild,
   fetchGroupDashboard,
   pickUpPhotoUrl,
@@ -120,14 +120,9 @@ function ChildToday({ child, day, reload }: ChildProps) {
 
   return (
     <li className={`today-child ${status}`} aria-label={name}>
-      {child.photoId === null ? (
-        <div className="today-photo placeholder" aria-hidden="true">
-          {child.firstName.charAt(0)}
-          {child.lastName.charAt(0)}
-        </div>
-      ) : (
-        <img className="today-photo" src={childPhotoUrl(child.id, child.photoId, 'thumbnail')} alt={t('photoOf', { name })} />
-      )}
+      <span className="today-symbol">
+        <ChildSymbol symbol={child.symbol} />
+      </span>
       <div className="today-name">
         <Link to={`/children/${child.id}`}>{name}</Link> <AlertMarker label={t('alertsMarker')} alerts={child.alerts} />
       </div>

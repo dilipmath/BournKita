@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
 import { fetchChildren, type ChildSummary } from './api'
+import ChildSymbol from './ChildSymbol'
 import { useGroups } from './useGroups'
 
 /** The list of Children, searchable by name and filtered by Group. Admins also get the way to a new profile. */
@@ -83,6 +84,7 @@ export default function ChildrenPage({ canEdit }: { canEdit: boolean }) {
           {children.map((child) => (
             <li key={child.id}>
               <Link to={`/children/${child.id}`}>
+                <ChildSymbol symbol={child.symbol} />
                 {child.firstName} {child.lastName}
               </Link>
             </li>

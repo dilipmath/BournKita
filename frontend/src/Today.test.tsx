@@ -174,15 +174,15 @@ describe('Today view', () => {
 })
 
 describe('Today tiles', () => {
-  it('shows each Child’s photo, or a placeholder without one', async () => {
-    todayApi([{ ...lena, photoId: 41 }, { ...mia, photoId: null }])
+  it('shows each Child’s Symbol, never a photo', async () => {
+    todayApi([{ ...lena, symbol: 'kite' }, { ...mia, symbol: 'boat' }])
     renderAt('/groups/2', <App />)
 
-    expect(await within(await screen.findByRole('listitem', { name: 'Lena Müller' })).findByRole('img', { name: 'Photo of Lena Müller' })).toHaveAttribute(
-      'src',
-      '/api/children/7/photos/41/thumbnail',
-    )
-    expect(within(card('Mia Müller')).queryByRole('img', { name: 'Photo of Mia Müller' })).toBeNull()
+    const lenaCard = await screen.findByRole('listitem', { name: 'Lena Müller' })
+    // Beside the name, so not read out again.
+    expect(within(lenaCard).getByLabelText('Kite')).toHaveAttribute('aria-hidden', 'true')
+    expect(within(card('Mia Müller')).getByLabelText('Boat')).toBeInTheDocument()
+    expect(within(lenaCard).queryByRole('img', { name: /Photo/ })).toBeNull()
   })
 
   it('shows who may pick the Child up before checking them out', async () => {
