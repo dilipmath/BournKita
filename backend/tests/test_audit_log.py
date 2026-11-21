@@ -10,7 +10,7 @@ from kita.audit import Audit
 from kita.audit_api import UnauditableRoute, audited_route, not_about_one_child
 from kita.settings import Settings
 from tests.accounts import ADMIN_EMAIL, TEACHER_EMAIL, log_in
-from tests.children import LENA, create_child
+from tests.children import LENA, child_fields, create_child
 from tests.fakes import FixedClock
 
 
@@ -41,7 +41,10 @@ def test_changing_a_child_profile_records_which_fields_changed_but_not_their_val
 ) -> None:
     child_id = create_child(admin)
 
-    admin.put(f"/api/children/{child_id}", json={**LENA, "interests": "Fußball", "gender": None})
+    admin.put(
+        f"/api/children/{child_id}",
+        json={**child_fields(child_id), "interests": "Fußball", "gender": None},
+    )
 
     [changed, created] = admin.get("/api/audit-log").json()
     assert (changed["action"], changed["staffEmail"]) == ("changed", ADMIN_EMAIL)
@@ -82,7 +85,7 @@ def test_refused_requests_and_the_list_of_names_create_no_entries(
 ) -> None:
     child_id = create_child(admin)
 
-    teacher.put(f"/api/children/{child_id}", json={**LENA, "firstName": "Lea"})
+    teacher.put(f"/api/children/{child_id}", json={**LENA, "symbol": "apple", "firstName": "Lea"})
     teacher.delete(f"/api/children/{child_id}")
     admin.get("/api/children/999")
     teacher.get("/api/children")
@@ -156,7 +159,7 @@ def test_the_audit_log_comes_in_pages_of_the_newest_entries(
 def test_saving_a_child_profile_unchanged_creates_no_entry(admin: TestClient) -> None:
     child_id = create_child(admin)
 
-    admin.put(f"/api/children/{child_id}", json=LENA)
+    admin.put(f"/api/children/{child_id}", json=child_fields(child_id))
 
     assert [entry["action"] for entry in admin.get("/api/audit-log").json()] == ["created"]
 
@@ -214,9 +217,11 @@ def test_a_change_whose_audit_entry_cannot_be_written_is_not_saved(
     child_id = create_child(admin)
     audit_log_down(True)
 
-    changed = admin.put(f"/api/children/{child_id}", json={**LENA, "interests": "Fußball"})
+    changed = admin.put(
+        f"/api/children/{child_id}", json={**child_fields(child_id), "interests": "Fußball"}
+    )
     deleted = admin.delete(f"/api/children/{child_id}")
-    created = admin.post("/api/children", json={**LENA, "firstName": "Mia"})
+    created = admin.post("/api/children", json={**LENA, "symbol": "boat", "firstName": "Mia"})
     viewed = admin.get(f"/api/children/{child_id}")
 
     assert [r.status_code for r in (changed, deleted, created, viewed)] == [500, 500, 500, 500]

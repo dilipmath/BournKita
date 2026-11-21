@@ -7,7 +7,7 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 from tests.accounts import ADMIN_EMAIL, TEACHER_EMAIL
-from tests.children import LENA, create_child
+from tests.children import child_fields, create_child
 from tests.contacts import OMA, add_contact
 from tests.fakes import FixedClock, MemoryFileStore
 from tests.groups import create_group, put_in_group
@@ -211,7 +211,7 @@ def test_the_export_says_who_viewed_or_changed_the_childs_data_and_when(
     link(admin, lena, anna)
     teacher.get(f"/api/children/{lena}")
     clock.now_value += timedelta(minutes=10)
-    admin.put(f"/api/children/{lena}", json={**LENA, "interests": "Malen"})
+    admin.put(f"/api/children/{lena}", json={**child_fields(lena), "interests": "Malen"})
     admin.put(f"/api/parents/{anna}", json={**ANNA, "phone": "0171 555"})
 
     data, files = export(admin, anna)

@@ -37,8 +37,10 @@ from kita.children import (
     ChildProfile,
     Children,
     ChildSummary,
+    ChildSymbol,
     Gender,
     NameRequired,
+    SymbolTaken,
     TooLong,
 )
 from kita.consents import (
@@ -83,6 +85,7 @@ class ChildIn(BaseModel):
     food_preferences: str = ""
     interests: str = ""
     date_of_birth: date | None = None
+    symbol: ChildSymbol
 
     def details(self) -> ChildDetails:
         return ChildDetails(**self.model_dump(by_alias=False))
@@ -251,6 +254,7 @@ _REFUSALS: Refusals = {
     NotGiven: (status.HTTP_409_CONFLICT, "not_given"),
     InFuture: (status.HTTP_422_UNPROCESSABLE_CONTENT, "in_future"),
     BornInFuture: (status.HTTP_422_UNPROCESSABLE_CONTENT, "in_future"),
+    SymbolTaken: (status.HTTP_409_CONFLICT, "symbol_taken"),
     OutOfOrder: (status.HTTP_422_UNPROCESSABLE_CONTENT, "out_of_order"),
     **ATTENDANCE_REFUSALS,
 }

@@ -3,17 +3,21 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from tests.children import LENA, create_child, own_fields
+from tests.children import LENA, child_fields, create_child, own_fields
 from tests.groups import create_group, put_in_group
 
 
 def test_an_admin_creates_a_child_profile_and_reads_it_back(admin: TestClient) -> None:
-    response = admin.post("/api/children", json=LENA)
+    response = admin.post("/api/children", json={**LENA, "symbol": "apple"})
 
     assert response.status_code == 201
     child_id = response.json()["id"]
-    assert response.json() == {"id": child_id, **LENA}
-    assert own_fields(admin.get(f"/api/children/{child_id}").json()) == {"id": child_id, **LENA}
+    assert response.json() == {"id": child_id, **LENA, "symbol": "apple"}
+    assert own_fields(admin.get(f"/api/children/{child_id}").json()) == {
+        "id": child_id,
+        **LENA,
+        "symbol": "apple",
+    }
 
 
 def test_a_teacher_views_a_child_profile_but_cannot_create_one(
@@ -22,9 +26,9 @@ def test_a_teacher_views_a_child_profile_but_cannot_create_one(
     child_id = create_child(admin)
 
     viewed = teacher.get(f"/api/children/{child_id}")
-    created = teacher.post("/api/children", json=LENA)
+    created = teacher.post("/api/children", json={**LENA, "symbol": "apple"})
 
-    assert own_fields(viewed.json()) == {"id": child_id, **LENA}
+    assert own_fields(viewed.json()) == {"id": child_id, **child_fields(child_id)}
     assert created.status_code == 403
     assert created.json() == {"detail": "admins_only"}
 
@@ -39,7 +43,12 @@ def test_child_profiles_need_a_login(
 
 def test_an_admin_edits_a_child_profile(admin: TestClient) -> None:
     child_id = create_child(admin)
-    changed = {**LENA, "lastName": "Müller-Yılmaz", "gender": None, "interests": "Fußball"}
+    changed = {
+        **child_fields(child_id),
+        "lastName": "Müller-Yılmaz",
+        "gender": None,
+        "interests": "Fußball",
+    }
 
     response = admin.put(f"/api/children/{child_id}", json=changed)
 
@@ -50,7 +59,9 @@ def test_an_admin_edits_a_child_profile(admin: TestClient) -> None:
 def test_a_teacher_cannot_edit_a_child_profile(admin: TestClient, teacher: TestClient) -> None:
     child_id = create_child(admin)
 
-    response = teacher.put(f"/api/children/{child_id}", json={**LENA, "firstName": "Lea"})
+    response = teacher.put(
+        f"/api/children/{child_id}", json={**LENA, "symbol": "apple", "firstName": "Lea"}
+    )
 
     assert response.status_code == 403
     assert admin.get(f"/api/children/{child_id}").json()["firstName"] == "Lena"
@@ -115,7 +126,7 @@ def test_the_list_is_searched_by_first_last_or_full_name_ignoring_case(admin: Te
 
 def test_a_child_profile_needs_a_first_and_last_name(admin: TestClient) -> None:
     for blank in ({"firstName": "  "}, {"lastName": ""}):
-        response = admin.post("/api/children", json={**LENA, **blank})
+        response = admin.post("/api/children", json={**LENA, "symbol": "apple", **blank})
 
         assert response.status_code == 422
         assert response.json() == {"detail": "name_required"}
@@ -136,7 +147,9 @@ def test_names_and_texts_are_stored_trimmed(admin: TestClient) -> None:
 
 
 def test_overlong_entries_are_refused(admin: TestClient) -> None:
-    response = admin.post("/api/children", json={**LENA, "interests": "x" * 2001})
+    response = admin.post(
+        "/api/children", json={**LENA, "symbol": "apple", "interests": "x" * 2001}
+    )
 
     assert response.status_code == 422
     assert response.json() == {"detail": "too_long"}

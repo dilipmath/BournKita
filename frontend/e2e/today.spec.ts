@@ -14,10 +14,12 @@ test('at the door, a Child is checked in and out by tap, and another marked abse
   await newGroup.getByRole('radio', { name: 'Hedgehog' }).check()
   await newGroup.getByRole('button', { name: 'Create Group' }).tap()
   await expect(page.getByRole('heading', { name: groupName })).toBeVisible()
-  for (const firstName of ['Lena', 'Mia']) {
+  // Each with a Symbol of their own: two Children in a Group never share one.
+  for (const [firstName, symbol] of [['Lena', 'Kite'], ['Mia', 'Boat']]) {
     await page.goto('/children/new')
     await page.getByLabel('First name').fill(firstName)
     await page.getByLabel('Last name').fill(lastName)
+    await page.getByRole('radiogroup', { name: 'Symbol' }).getByRole('radio', { name: symbol }).check()
     await page.getByRole('button', { name: 'Save' }).tap()
     const group = page.getByLabel('Group', { exact: true })
     await group.selectOption({ label: `🦔 ${groupName}` })

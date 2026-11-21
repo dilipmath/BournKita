@@ -23,6 +23,40 @@ from kita.clock import Clock, today
 from kita.db import metadata, transaction
 
 Gender = Literal["girl", "boy", "diverse"]
+# The pictures a Child can be recognised by, as on their coat hook; the app draws each.
+ChildSymbol = Literal[
+    "apple",
+    "cloud",
+    "drop",
+    "fish",
+    "flower",
+    "heart",
+    "house",
+    "kite",
+    "leaf",
+    "moon",
+    "star",
+    "sun",
+    "boat",
+    "tree",
+    "car",
+    "bell",
+    "ball",
+    "bird",
+    "butterfly",
+    "snail",
+    "mushroom",
+    "umbrella",
+    "rainbow",
+    "key",
+    "drum",
+    "train",
+    "cherry",
+    "carrot",
+    "cat",
+    "shell",
+]
+CHILD_SYMBOLS: tuple[ChildSymbol, ...] = get_args(ChildSymbol)
 
 children = Table(
     "children",
@@ -34,6 +68,7 @@ children = Table(
     Column("languages", String(200), nullable=False),
     Column("food_preferences", String(2000), nullable=False),
     Column("interests", String(2000), nullable=False),
+    Column("symbol", String(20), nullable=False),
     # Known to the Kita, or None.
     Column("date_of_birth", Date),
     Column("created_at", DateTime(timezone=True), nullable=False),
@@ -42,6 +77,7 @@ children = Table(
     # Children.
     Column("archived_at", DateTime(timezone=True), index=True),
     CheckConstraint(f"gender IN {get_args(Gender)}", name="gender"),
+    CheckConstraint(f"symbol IN {CHILD_SYMBOLS}", name="symbol"),
 )
 
 # Keeps the current Children, not the archived ones: every query for Children in current views
@@ -62,6 +98,8 @@ class ChildDetails:
     interests: str
     # None when not recorded.
     date_of_birth: date | None
+    # No two Children in a Group share one.
+    symbol: ChildSymbol
 
 
 @dataclass(frozen=True)
@@ -105,6 +143,10 @@ class TooLong(Exception):
     """An entry is longer than its column allows."""
 
 
+class SymbolTaken(Exception):
+    """Another Child in the Group has this Symbol."""
+
+
 _PROFILE_COLUMNS = (
     children.c.id,
     children.c.first_name,
@@ -114,6 +156,7 @@ _PROFILE_COLUMNS = (
     children.c.food_preferences,
     children.c.interests,
     children.c.date_of_birth,
+    children.c.symbol,
 )
 
 
@@ -248,6 +291,12 @@ class Children:
                 raise ChildNotFound
             before = asdict(_to_profile(row))
             changed = [field for field, value in asdict(details).items() if before[field] != value]
+            if "symbol" in changed:
+                # Here, not at the top: Groups are built on Children.
+                from kita.groups import symbol_taken_in_childs_group
+
+                if symbol_taken_in_childs_group(connection, child_id, details.symbol):
+                    raise SymbolTaken
             connection.execute(
                 update(children)
                 .where(children.c.id == child_id)

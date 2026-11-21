@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from tests.children import create_child
+from tests.children import child_fields, create_child
 from tests.groups import create_group, put_in_group
 
 
@@ -19,7 +19,7 @@ def test_an_admin_records_a_childs_date_of_birth(admin: TestClient, teacher: Tes
     assert teacher.get(f"/api/children/{mia}").json()["dateOfBirth"] is None
     changed = admin.put(
         f"/api/children/{mia}",
-        json={"firstName": "Mia", "lastName": "Müller", "dateOfBirth": "2021-07-02"},
+        json={**child_fields(mia), "dateOfBirth": "2021-07-02"},
     )
     assert changed.json()["dateOfBirth"] == "2021-07-02"
     assert "dateOfBirth" in changes(admin)[0]
@@ -29,7 +29,12 @@ def test_a_date_of_birth_cannot_be_in_the_future(admin: TestClient) -> None:
     # The test clock says 4 January 2027.
     response = admin.post(
         "/api/children",
-        json={"firstName": "Lena", "lastName": "Müller", "dateOfBirth": "2027-01-05"},
+        json={
+            "firstName": "Lena",
+            "lastName": "Müller",
+            "dateOfBirth": "2027-01-05",
+            "symbol": "sun",
+        },
     )
 
     assert response.json() == {"detail": "in_future"}

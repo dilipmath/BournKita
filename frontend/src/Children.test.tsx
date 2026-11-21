@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import App from './App'
@@ -14,6 +14,7 @@ const lena = {
   foodPreferences: 'Vegetarisch',
   interests: 'Malen, Dinosaurier',
   dateOfBirth: null,
+  symbol: 'kite',
 }
 const lenaSummary = { id: 7, firstName: 'Lena', lastName: 'Müller' }
 const mia = { id: 8, firstName: 'Mia', lastName: 'Schmidt' }
@@ -70,6 +71,7 @@ describe('child profiles', () => {
     await userEvent.type(screen.getByLabelText('Languages spoken'), 'Deutsch, Türkisch')
     await userEvent.type(screen.getByLabelText('Food preferences'), 'Vegetarisch')
     await userEvent.type(screen.getByLabelText('Interests'), 'Malen, Dinosaurier')
+    await userEvent.click(within(screen.getByRole('radiogroup', { name: 'Symbol' })).getByRole('radio', { name: 'Kite' }))
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(await screen.findByRole('heading', { name: 'Lena Müller' })).toBeInTheDocument()
@@ -196,5 +198,20 @@ describe('child profiles', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Please enter a first and a last name.')
+  })
+
+  it('says when another Child in the Group already has the chosen symbol', async () => {
+    fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': sessionAs('admin'),
+      'GET /api/children/7': { status: 200, body: { ...lena, ...noProfileLists } },
+      'PUT /api/children/7': { status: 409, body: { detail: 'symbol_taken' } },
+    })
+    renderAt('/children/7/edit', <App />)
+
+    await userEvent.click(within(await screen.findByRole('radiogroup', { name: 'Symbol' })).getByRole('radio', { name: 'Boat' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Another Child in this Group has this symbol. Please choose another.')
   })
 })

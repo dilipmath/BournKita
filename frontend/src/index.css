@@ -252,6 +252,53 @@ h1 a {
 .group-colour-teal { --group-fill: var(--g-teal); --group-accent: var(--g-teal-accent); }
 .group-colour-sand { --group-fill: var(--g-sand); --group-accent: var(--g-sand-accent); }
 
+/* Choosing a Child's Symbol: a grid of pictures, the chosen one framed. */
+.symbols {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 8px;
+  max-width: 34rem;
+}
+
+.symbols-label {
+  grid-column: 1 / -1;
+  font-weight: 600;
+}
+
+.symbols label {
+  display: grid;
+  place-items: center;
+  min-height: 56px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.symbols label:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.symbols label:has(input:focus-visible) {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.symbols input {
+  position: absolute;
+  opacity: 0;
+}
+
+.child-symbol {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* Choosing a Group's colour: a swatch beside each colour's name. */
 .colours {
   display: flex;

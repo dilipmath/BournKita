@@ -65,6 +65,7 @@ const refusals = {
   too_large: 'photoTooLarge',
   no_photo_consent: 'noPhotoConsent',
   group_name_taken: 'groupNameTaken',
+  symbol_taken: 'symbolTaken',
   not_in_group: 'notInGroup',
   backlog_changed: 'backlogChanged',
   ends_before_start: 'endsBeforeStart',
@@ -205,6 +206,9 @@ export type Gender = 'girl' | 'boy' | 'diverse'
 export const genderLabel = { girl: 'genderGirl', boy: 'genderBoy', diverse: 'genderDiverse' } as const
 // A Child as the list shows it: the name only.
 export type ChildSummary = { id: number; firstName: string; lastName: string }
+// The Symbols a Child can have, as on their coat hook; no two Children in a Group share one.
+export const childSymbols = ['apple', 'cloud', 'drop', 'fish', 'flower', 'heart', 'house', 'kite', 'leaf', 'moon', 'star', 'sun', 'boat', 'tree', 'car', 'bell', 'ball', 'bird', 'butterfly', 'snail', 'mushroom', 'umbrella', 'rainbow', 'key', 'drum', 'train', 'cherry', 'carrot', 'cat', 'shell'] as const
+export type ChildSymbol = (typeof childSymbols)[number]
 // What an Admin enters for a Child profile; gender is null when not stated.
 export type ChildDetails = {
   firstName: string
@@ -215,6 +219,7 @@ export type ChildDetails = {
   interests: string
   // YYYY-MM-DD, or null when not recorded.
   dateOfBirth: string | null
+  symbol: ChildSymbol
 }
 export type Child = ChildDetails & { id: number }
 // Each Child profile field's translation key where it differs from the field's name, e.g. for
@@ -227,6 +232,7 @@ export const childFieldLabel: Record<keyof ChildDetails, string> = {
   foodPreferences: 'foodPreferences',
   interests: 'interests',
   dateOfBirth: 'dateOfBirth',
+  symbol: 'symbol',
 }
 
 /** The Children, by first name; `search` keeps those whose name contains it, `groupId` those of

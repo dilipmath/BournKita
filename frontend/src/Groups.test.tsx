@@ -103,6 +103,23 @@ describe('Groups', () => {
     expect(await screen.findByLabelText('Group')).toHaveValue('')
   })
 
+  it('says when the Child’s symbol is taken in the Group they would join', async () => {
+    fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': sessionAs('admin'),
+      'GET /api/groups': { status: 200, body: [{ ...bees, mine: false }, { ...monkeys, mine: false }] },
+      'GET /api/children/7': { status: 200, body: { ...lena, ...noProfileLists, group: monkeys } },
+      'PUT /api/children/7/group': { status: 409, body: { detail: 'symbol_taken' } },
+    })
+    renderAt('/children/7', <App />)
+
+    const choice = await screen.findByLabelText('Group')
+    await within(choice).findByRole('option', { name: '🐝 Bees' })
+    await userEvent.selectOptions(choice, '6')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Another Child in this Group has this symbol. Please choose another.')
+  })
+
   it('shows Teachers a Child’s Group without changing it', async () => {
     fakeApi({
       'GET /api/health': health,

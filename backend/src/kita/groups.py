@@ -23,7 +23,16 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.exc import IntegrityError
 
-from kita.children import CURRENT, ChildNotFound, ChildSummary, NameRequired, TooLong, children
+from kita.children import (
+    CURRENT,
+    ChildNotFound,
+    ChildSummary,
+    ChildSymbol,
+    NameRequired,
+    SymbolTaken,
+    TooLong,
+    children,
+)
 from kita.db import metadata, transaction
 from kita.identity import AccountNotFound, users
 
@@ -141,6 +150,34 @@ def _exists(connection: Connection, group_id: int) -> bool:
     return found is not None
 
 
+def _symbol_taken(connection: Connection, group_id: int, symbol: str, child_id: int) -> bool:
+    """Whether another current Child in the Group has the Symbol. Locks the Group until the
+    transaction ends, so two changes at once cannot both take the same Symbol."""
+    connection.execute(select(groups.c.id).where(groups.c.id == group_id).with_for_update())
+    other = connection.scalar(
+        select(children.c.id)
+        .join(child_groups, child_groups.c.child_id == children.c.id)
+        .where(
+            child_groups.c.group_id == group_id,
+            children.c.symbol == symbol,
+            children.c.id != child_id,
+            CURRENT,
+        )
+        .limit(1)
+    )
+    return other is not None
+
+
+def symbol_taken_in_childs_group(
+    connection: Connection, child_id: int, symbol: ChildSymbol
+) -> bool:
+    """Whether another current Child in this Child's Group has the Symbol; False in no Group."""
+    group_id = connection.scalar(
+        select(child_groups.c.group_id).where(child_groups.c.child_id == child_id)
+    )
+    return group_id is not None and _symbol_taken(connection, group_id, symbol, child_id)
+
+
 class Groups:
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
@@ -200,13 +237,15 @@ class Groups:
         changed anything."""
         with transaction(self._engine) as connection:
             # Locked, so two moves at once happen one after the other.
-            locked = connection.scalar(
-                select(children.c.id).where(children.c.id == child_id).with_for_update()
+            symbol = connection.scalar(
+                select(children.c.symbol).where(children.c.id == child_id).with_for_update()
             )
-            if locked is None:
+            if symbol is None:
                 raise ChildNotFound
             if group_id is not None and not _exists(connection, group_id):
                 raise GroupNotFound
+            if group_id is not None and _symbol_taken(connection, group_id, symbol, child_id):
+                raise SymbolTaken
             before = connection.scalar(
                 select(child_groups.c.group_id).where(child_groups.c.child_id == child_id)
             )

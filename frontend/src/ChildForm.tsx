@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
-import { genderLabel, saveChild, type Child, type ChildDetails, type Gender, type Refusal } from './api'
+import { childSymbols, genderLabel, saveChild, type Child, type ChildDetails, type Gender, type Refusal } from './api'
+import ChildSymbol from './ChildSymbol'
 import { kitaToday } from './dates'
 
 type Problem = Refusal | 'somethingWentWrong' | null
 
-const empty: ChildDetails = { firstName: '', lastName: '', gender: null, languages: '', foodPreferences: '', interests: '', dateOfBirth: null }
+const empty: ChildDetails = { firstName: '', lastName: '', gender: null, languages: '', foodPreferences: '', interests: '', dateOfBirth: null, symbol: 'apple' }
 
 /** Creates a Child profile, or edits `child`. Admins only; shows the profile once saved. */
 export default function ChildForm({ child }: { child?: Child }) {
@@ -15,13 +16,13 @@ export default function ChildForm({ child }: { child?: Child }) {
   const [details, setDetails] = useState<ChildDetails>(() => {
     if (!child) return empty
     // Only the fields this form edits, not e.g. the profile's parents.
-    const { firstName, lastName, gender, languages, foodPreferences, interests, dateOfBirth } = child
-    return { firstName, lastName, gender, languages, foodPreferences, interests, dateOfBirth }
+    const { firstName, lastName, gender, languages, foodPreferences, interests, dateOfBirth, symbol } = child
+    return { firstName, lastName, gender, languages, foodPreferences, interests, dateOfBirth, symbol }
   })
   const [problem, setProblem] = useState<Problem>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  function field(name: Exclude<keyof ChildDetails, 'gender' | 'dateOfBirth'>) {
+  function field(name: Exclude<keyof ChildDetails, 'gender' | 'dateOfBirth' | 'symbol'>) {
     return {
       value: details[name],
       onChange: (event: { target: { value: string } }) => setDetails({ ...details, [name]: event.target.value }),
@@ -77,6 +78,25 @@ export default function ChildForm({ child }: { child?: Child }) {
           onChange={(event) => setDetails({ ...details, dateOfBirth: event.target.value || null })}
         />
       </label>
+      {/* As on the Child's coat hook; another Child in the same Group may not have it. */}
+      <div className="symbols" role="radiogroup" aria-labelledby="symbol-label">
+        <span id="symbol-label" className="symbols-label">
+          {t('symbol')}
+        </span>
+        {childSymbols.map((option) => (
+          <label key={option}>
+            <input
+              type="radio"
+              name="symbol"
+              value={option}
+              checked={details.symbol === option}
+              onChange={() => setDetails({ ...details, symbol: option })}
+            />
+            <ChildSymbol symbol={option} />
+            <span className="visually-hidden">{t(`symbol_${option}`)}</span>
+          </label>
+        ))}
+      </div>
       <label>
         {t('languagesSpoken')}
         <input maxLength={200} {...field('languages')} />
