@@ -53,12 +53,13 @@ def test_the_kita_overview_counts_each_groups_day_and_the_whole_kitas(
     body = overview.json()
     assert body["day"] == TODAY
     assert [
-        {k: g[k] for k in ("name", "icon", "expected", "here", "gone", "absent", "notYet")}
+        {k: g[k] for k in ("name", "icon", "colour", "expected", "here", "gone", "absent", "notYet")}
         for g in body["groups"]
     ] == [
         {
             "name": "Bears",
             "icon": "bear",
+            "colour": "lilac",
             "expected": 0,
             "here": 0,
             "gone": 0,
@@ -68,6 +69,7 @@ def test_the_kita_overview_counts_each_groups_day_and_the_whole_kitas(
         {
             "name": "Monkeys",
             "icon": "monkey",
+            "colour": "orange",
             "expected": 4,
             "here": 1,
             "gone": 1,

@@ -46,6 +46,10 @@ GroupIcon = Literal[
     "tree",
     "star",
 ]
+# The paper colours a Group can have, in the order new Groups get them; the app draws each, with
+# enough contrast for text in both themes.
+GroupColour = Literal["orange", "lilac", "green", "blue", "yellow", "rose", "teal", "sand"]
+GROUP_COLOURS: tuple[GroupColour, ...] = get_args(GroupColour)
 _MAX_NAME_LENGTH = 50
 
 groups = Table(
@@ -54,7 +58,9 @@ groups = Table(
     Column("id", Integer, primary_key=True),
     Column("name", String(_MAX_NAME_LENGTH), nullable=False),
     Column("icon", String(20), nullable=False),
+    Column("colour", String(20), nullable=False),
     CheckConstraint(f"icon IN {get_args(GroupIcon)}", name="icon"),
+    CheckConstraint(f"colour IN {GROUP_COLOURS}", name="colour"),
 )
 # Two Groups of one name would be told apart only by their icons.
 Index("uq_groups_name", func.lower(groups.c.name), unique=True)
@@ -86,10 +92,15 @@ group_staff = Table(
 class GroupDetails:
     name: str
     icon: GroupIcon
+    # None: a new Group gets the next colour in turn, a changed one keeps its own.
+    colour: GroupColour | None = None
 
 
 @dataclass(frozen=True)
-class Group(GroupDetails):
+class Group:
+    name: str
+    icon: GroupIcon
+    colour: GroupColour
     id: int
 
 
@@ -113,7 +124,13 @@ def _checked(details: GroupDetails) -> GroupDetails:
         raise NameRequired
     if len(name) > _MAX_NAME_LENGTH:
         raise TooLong
-    return GroupDetails(name, details.icon)
+    return GroupDetails(name, details.icon, details.colour)
+
+
+def _next_colour(connection: Connection) -> GroupColour:
+    """The colour a new Group gets when none is chosen: the Kita's colours in turn."""
+    count = connection.scalar(select(func.count()).select_from(groups)) or 0
+    return GROUP_COLOURS[count % len(GROUP_COLOURS)]
 
 
 def _exists(connection: Connection, group_id: int) -> bool:
@@ -132,31 +149,35 @@ class Groups:
         details = _checked(details)
         try:
             with transaction(self._engine) as connection:
+                colour = details.colour or _next_colour(connection)
                 group_id = connection.scalar(
                     insert(groups)
-                    .values(name=details.name, icon=details.icon)
+                    .values(name=details.name, icon=details.icon, colour=colour)
                     .returning(groups.c.id)
                 )
         except IntegrityError:
             raise GroupNameTaken from None
         assert group_id is not None
-        return Group(details.name, details.icon, group_id)
+        return Group(details.name, details.icon, colour, group_id)
 
     def update(self, group_id: int, details: GroupDetails) -> Group:
         details = _checked(details)
         try:
             with transaction(self._engine) as connection:
-                found = connection.scalar(
+                changes = {"name": details.name, "icon": details.icon}
+                if details.colour is not None:
+                    changes["colour"] = details.colour
+                colour = connection.scalar(
                     update(groups)
                     .where(groups.c.id == group_id)
-                    .values(name=details.name, icon=details.icon)
-                    .returning(groups.c.id)
+                    .values(changes)
+                    .returning(groups.c.colour)
                 )
         except IntegrityError:
             raise GroupNameTaken from None
-        if found is None:
+        if colour is None:
             raise GroupNotFound
-        return Group(details.name, details.icon, group_id)
+        return Group(details.name, details.icon, colour, group_id)
 
     def remove(self, group_id: int) -> list[int]:
         """Removes the Group; its Children and Staff members stay, in no Group. Returns the
@@ -208,7 +229,7 @@ class Groups:
                 .join(child_groups, child_groups.c.group_id == groups.c.id)
                 .where(child_groups.c.child_id == child_id)
             ).one_or_none()
-        return None if row is None else Group(row.name, row.icon, row.id)
+        return None if row is None else Group(row.name, row.icon, row.colour, row.id)
 
     def children_of(self, group_id: int) -> list[ChildSummary]:
         """The Group's Children, by first name."""
@@ -285,13 +306,13 @@ class Groups:
             row = connection.execute(select(groups).where(groups.c.id == group_id)).one_or_none()
         if row is None:
             raise GroupNotFound
-        return Group(row.name, row.icon, row.id)
+        return Group(row.name, row.icon, row.colour, row.id)
 
     def all(self) -> list[Group]:
         """All Groups, by name."""
         with transaction(self._engine) as connection:
             rows = connection.execute(select(groups).order_by(func.lower(groups.c.name))).all()
-        return [Group(row.name, row.icon, row.id) for row in rows]
+        return [Group(row.name, row.icon, row.colour, row.id) for row in rows]
 
     def staff_groups(self) -> dict[int, list[int]]:
         """The Groups each Staff member works in, by account ID; those in none are left out."""
@@ -319,4 +340,6 @@ class Groups:
                     func.lower(groups.c.name)
                 )
             ).all()
-        return [GroupForStaffMember(row.name, row.icon, row.id, row.mine) for row in rows]
+        return [
+            GroupForStaffMember(row.name, row.icon, row.colour, row.id, row.mine) for row in rows
+        ]

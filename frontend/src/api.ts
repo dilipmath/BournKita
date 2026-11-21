@@ -555,8 +555,12 @@ export const groupIcons = {
   star: '⭐',
 } as const
 export type GroupIcon = keyof typeof groupIcons
-export type GroupDetails = { name: string; icon: GroupIcon }
-export type Group = GroupDetails & { id: number }
+// The paper colours a Group can have, in the order new Groups get them.
+export const groupColours = ['orange', 'lilac', 'green', 'blue', 'yellow', 'rose', 'teal', 'sand'] as const
+export type GroupColour = (typeof groupColours)[number]
+// colour left out: a new Group gets the next colour in turn, a changed one keeps its own.
+export type GroupDetails = { name: string; icon: GroupIcon; colour?: GroupColour }
+export type Group = { name: string; icon: GroupIcon; colour: GroupColour; id: number }
 // mine: whether the logged-in Staff member works in it.
 export type ListedGroup = Group & { mine: boolean }
 

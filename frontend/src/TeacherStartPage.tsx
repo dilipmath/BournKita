@@ -19,7 +19,7 @@ function AllGroups() {
         <ul className="group-tiles">
           {groups.map((group) => (
             <li key={group.id}>
-              <Link className="group-tile" to={`/groups/${group.id}`}>
+              <Link className={`group-tile group-colour-${group.colour}`} to={`/groups/${group.id}`}>
                 <strong className="group-tile-name">
                   <GroupLabel group={group} />
                 </strong>

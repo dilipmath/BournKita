@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { groupIcons, type GroupDetails, type GroupIcon } from './api'
+import { groupColours, groupIcons, type GroupColour, type GroupDetails, type GroupIcon } from './api'
 
 type Props = {
   /** Names the form, e.g. "New Group". */
@@ -11,20 +11,25 @@ type Props = {
   onCancel?: () => void
 }
 
-/** A Group's name and icon, for a new Group or a change; Admins only. */
+/** A Group's name, icon and colour, for a new Group or a change; Admins only. A new Group without a
+ * chosen colour gets the next one in turn. */
 export default function GroupForm({ label, submitLabel, group, onSave, onCancel }: Props) {
   const { t } = useTranslation()
   const [name, setName] = useState(group?.name ?? '')
   const [icon, setIcon] = useState<GroupIcon>(group?.icon ?? 'monkey')
+  const [colour, setColour] = useState<GroupColour | undefined>(group?.colour)
   const [submitting, setSubmitting] = useState(false)
 
   async function submit(event: FormEvent) {
     event.preventDefault()
     setSubmitting(true)
-    const saved = await onSave({ name, icon })
+    const saved = await onSave(colour ? { name, icon, colour } : { name, icon })
     setSubmitting(false)
     // A new Group's form stays, empty, for the next one.
-    if (saved && !group) setName('')
+    if (saved && !group) {
+      setName('')
+      setColour(undefined)
+    }
   }
 
   return (
@@ -40,6 +45,17 @@ export default function GroupForm({ label, submitLabel, group, onSave, onCancel 
             <input type="radio" name="icon" value={option} checked={icon === option} onChange={() => setIcon(option)} />
             <span aria-hidden="true">{groupIcons[option]}</span>
             <span className="visually-hidden">{t(`icon_${option}`)}</span>
+          </label>
+        ))}
+      </fieldset>
+      {/* Each colour named in words too: it never carries the meaning alone. */}
+      <fieldset className="colours">
+        <legend>{t('colour')}</legend>
+        {groupColours.map((option) => (
+          <label key={option} className={`group-colour-${option}`}>
+            <input type="radio" name="colour" value={option} checked={colour === option} onChange={() => setColour(option)} />
+            <span className="colour-swatch" aria-hidden="true" />
+            {t(`colour_${option}`)}
           </label>
         ))}
       </fieldset>

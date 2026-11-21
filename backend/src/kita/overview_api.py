@@ -18,6 +18,7 @@ class GroupDayOut(BaseModel):
     id: int
     name: str
     icon: str
+    colour: str
     mine: bool
     expected: int
     here: int
@@ -33,6 +34,7 @@ class GroupDayOut(BaseModel):
             id=day.group.id,
             name=day.group.name,
             icon=day.group.icon,
+            colour=day.group.colour,
             mine=day.group.mine,
             expected=day.expected,
             here=day.here,

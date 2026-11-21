@@ -214,7 +214,11 @@ def _starts(event: Event, first: date, last: date) -> Iterator[date]:
 
 
 def _to_event(row: Row[Any]) -> Event:
-    group = None if row.group_id is None else Group(row.group_name, row.group_icon, row.group_id)
+    group = (
+        None
+        if row.group_id is None
+        else Group(row.group_name, row.group_icon, row.group_colour, row.group_id)
+    )
     return Event(
         row.id,
         group,
@@ -233,7 +237,10 @@ def _to_event(row: Row[Any]) -> Event:
 
 def _event_query() -> Any:
     return select(
-        events, groups.c.name.label("group_name"), groups.c.icon.label("group_icon")
+        events,
+        groups.c.name.label("group_name"),
+        groups.c.icon.label("group_icon"),
+        groups.c.colour.label("group_colour"),
     ).outerjoin(groups, groups.c.id == events.c.group_id)
 
 

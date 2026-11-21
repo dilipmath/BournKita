@@ -21,6 +21,7 @@ from kita.birthdays import Birthdays
 from kita.children import ChildSummary, NameRequired, TooLong
 from kita.groups import (
     Group,
+    GroupColour,
     GroupDetails,
     GroupForStaffMember,
     GroupIcon,
@@ -38,12 +39,19 @@ class GroupIn(BaseModel):
 
     name: str
     icon: GroupIcon
+    # Left out: a new Group gets the next colour in turn, a changed one keeps its own.
+    colour: GroupColour | None = None
 
     def details(self) -> GroupDetails:
-        return GroupDetails(self.name, self.icon)
+        return GroupDetails(self.name, self.icon, self.colour)
 
 
-class GroupOut(GroupIn):
+class GroupOut(BaseModel):
+    model_config = CAMEL_CASE
+
+    name: str
+    icon: GroupIcon
+    colour: GroupColour
     id: int
 
     @classmethod

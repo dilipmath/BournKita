@@ -12,7 +12,7 @@ export default function GroupDayTile({ group }: { group: GroupDay }) {
   const fullName = (child: { firstName: string; lastName: string }) => `${child.firstName} ${child.lastName}`
   return (
     <li>
-      <Link className="group-tile" to={`/groups/${group.id}`}>
+      <Link className={`group-tile group-colour-${group.colour}`} to={`/groups/${group.id}`}>
         <strong className="group-tile-name">
           <GroupLabel group={group} />
         </strong>

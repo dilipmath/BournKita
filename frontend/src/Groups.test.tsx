@@ -5,15 +5,15 @@ import { afterEach, describe, expect, it } from 'vitest'
 import App from './App'
 import { fakeApi, health, noProfileLists, renderAt, sessionAs } from './testing'
 
-const monkeys = { id: 5, name: 'Monkeys', icon: 'monkey' }
-const bees = { id: 6, name: 'Bees', icon: 'bee' }
-const owls = { id: 7, name: 'Owls', icon: 'owl' }
+const monkeys = { id: 5, name: 'Monkeys', icon: 'monkey', colour: 'orange' }
+const bees = { id: 6, name: 'Bees', icon: 'bee', colour: 'yellow' }
+const owls = { id: 7, name: 'Owls', icon: 'owl', colour: 'lilac' }
 const lena = { id: 7, firstName: 'Lena', lastName: 'Müller', gender: null, languages: '', foodPreferences: '', interests: '' }
 
 afterEach(() => localStorage.clear())
 
 describe('Groups', () => {
-  it('lets an Admin create a Group with a name and an icon', async () => {
+  it('lets an Admin create a Group with a name, an icon and a colour', async () => {
     let created = false
     const calls = fakeApi({
       'GET /api/health': health,
@@ -29,10 +29,11 @@ describe('Groups', () => {
     const form = await screen.findByRole('form', { name: 'New Group' })
     await userEvent.type(within(form).getByLabelText('Name'), 'Bees')
     await userEvent.click(within(form).getByRole('radio', { name: 'Bee' }))
+    await userEvent.click(within(within(form).getByRole('group', { name: 'Colour' })).getByRole('radio', { name: 'Yellow' }))
     await userEvent.click(within(form).getByRole('button', { name: 'Create Group' }))
 
     expect(await screen.findByRole('heading', { name: 'Bees', level: 3 })).toBeInTheDocument()
-    expect(calls).toContainEqual({ route: 'POST /api/groups', body: { name: 'Bees', icon: 'bee' } })
+    expect(calls).toContainEqual({ route: 'POST /api/groups', body: { name: 'Bees', icon: 'bee', colour: 'yellow' } })
   })
 
   it('lets an Admin rename a Group, and remove it after asking', async () => {
@@ -58,7 +59,7 @@ describe('Groups', () => {
     await userEvent.type(within(form).getByLabelText('Name'), 'Little Monkeys')
     await userEvent.click(within(form).getByRole('button', { name: 'Save' }))
     expect(await screen.findByRole('heading', { name: 'Little Monkeys' })).toBeInTheDocument()
-    expect(calls).toContainEqual({ route: 'PUT /api/groups/5', body: { name: 'Little Monkeys', icon: 'monkey' } })
+    expect(calls).toContainEqual({ route: 'PUT /api/groups/5', body: { name: 'Little Monkeys', icon: 'monkey', colour: 'orange' } })
 
     await userEvent.click(screen.getByRole('button', { name: 'Remove Little Monkeys' }))
     await userEvent.click(screen.getByRole('button', { name: 'Remove for good' }))

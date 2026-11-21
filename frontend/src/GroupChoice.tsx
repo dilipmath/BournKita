@@ -43,10 +43,13 @@ export default function GroupChoice({ role, openGroupId }: { role: Role; openGro
     navigate(choice === ALL_GROUPS ? '/' : `/groups/${choice}`)
   }
 
+  const shown = shownChoice(offered, offersAll, openGroupId, lastChosen)
+  const shownGroup = offered.find((group) => String(group.id) === shown)
+
   return (
-    <label className="group-choice">
+    <label className={shownGroup ? `group-choice group-colour-${shownGroup.colour}` : 'group-choice'}>
       {t('currentGroup')}
-      <select value={shownChoice(offered, offersAll, openGroupId, lastChosen)} onChange={(event) => choose(event.target.value)}>
+      <select value={shown} onChange={(event) => choose(event.target.value)}>
         {offersAll && <option value={ALL_GROUPS}>{t('allGroups')}</option>}
         {offered.map((group) => (
           <option key={group.id} value={String(group.id)}>

@@ -15,8 +15,14 @@ def test_every_staff_member_sees_the_groups_an_admin_created(
     butterflies = create_group(admin, "Butterflies", "butterfly")
 
     assert groups(teacher) == [
-        {"id": butterflies, "name": "Butterflies", "icon": "butterfly", "mine": False},
-        {"id": monkeys, "name": "Monkeys", "icon": "monkey", "mine": False},
+        {
+            "id": butterflies,
+            "name": "Butterflies",
+            "icon": "butterfly",
+            "colour": "lilac",
+            "mine": False,
+        },
+        {"id": monkeys, "name": "Monkeys", "icon": "monkey", "colour": "orange", "mine": False},
     ]
 
 
@@ -94,6 +100,7 @@ def test_a_group_dashboard_shows_only_that_groups_children(
         "id": monkeys,
         "name": "Monkeys",
         "icon": "monkey",
+        "colour": "orange",
     }
 
 

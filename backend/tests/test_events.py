@@ -55,7 +55,7 @@ def test_staff_add_events_for_a_group_or_the_whole_kita(
     ]
     assert occurrences[0]["event"] == {
         "id": trip,
-        "group": {"id": monkeys, "name": "Monkeys", "icon": "monkey"},
+        "group": {"id": monkeys, "name": "Monkeys", "icon": "monkey", "colour": "orange"},
         "title": "Trip to the farm",
         "note": "",
         "startsOn": "2027-01-11",
