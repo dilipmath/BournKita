@@ -9,7 +9,7 @@ from typing import Literal
 
 from kita.alerts import Alert, Alerts
 from kita.attendance import Attendance
-from kita.children import Children, ChildSummary
+from kita.children import Children, ChildSummary, ChildSymbol
 from kita.clock import KITA_TIME_ZONE, Clock
 from kita.contacts import Contacts
 from kita.groups import Group, Groups
@@ -37,6 +37,7 @@ class PresentChild:
     id: int
     first_name: str
     last_name: str
+    symbol: ChildSymbol
     checked_in_at: datetime
     alerts: list[Alert]
     # Parents first, then the Emergency contacts, each in their own order.
@@ -125,6 +126,7 @@ class EmergencyLists:
                     child.id,
                     child.first_name,
                     child.last_name,
+                    child.symbol,
                     days[child.id].checked_in_at,
                     alerts.get(child.id, []),
                     self._callers(child.id),

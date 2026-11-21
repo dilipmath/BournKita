@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { fetchArchive, restoreChild, type ArchivedChild, type Refusal } from './api'
+import { fetchArchive, restoreChild, type ArchivedChild, type ChildSymbol, type Refusal } from './api'
 import { fullDate } from './calendarDates'
 import { kitaDateTime } from './dates'
+import SymbolPicker from './SymbolPicker'
 
 type Restored = { id: number; name: string }
 
@@ -15,6 +16,8 @@ export default function ArchivePage() {
   const [problem, setProblem] = useState<Refusal | 'somethingWentWrong' | null>(null)
   const [restored, setRestored] = useState<Restored | null>(null)
   const [version, setVersion] = useState(0)
+  // The Child being restored with another Symbol, theirs having been taken in their Group meanwhile.
+  const [choosing, setChoosing] = useState<{ id: number; symbol: ChildSymbol } | null>(null)
 
   useEffect(() => {
     fetchArchive()
@@ -22,13 +25,18 @@ export default function ArchivePage() {
       .catch(() => setProblem('somethingWentWrong'))
   }, [version])
 
-  async function restore(child: ArchivedChild) {
+  async function restore(child: ArchivedChild, symbol?: ChildSymbol) {
     setProblem(null)
     setRestored(null)
     try {
-      const result = await restoreChild(child.id)
-      if (result === true) setRestored({ id: child.id, name: `${child.firstName} ${child.lastName}` })
-      else setProblem(result)
+      const result = await restoreChild(child.id, symbol)
+      if (result === true) {
+        setRestored({ id: child.id, name: `${child.firstName} ${child.lastName}` })
+        setChoosing(null)
+      } else {
+        setProblem(result)
+        if (result === 'symbolTaken' && choosing?.id !== child.id) setChoosing({ id: child.id, symbol: 'apple' })
+      }
     } catch {
       setProblem('somethingWentWrong')
     }
@@ -63,9 +71,18 @@ export default function ArchivePage() {
                     purged: fullDate(child.purgeOn, i18n.language),
                   })}
                 </span>
-                <button type="button" aria-label={t('restoreChild', { name })} onClick={() => void restore(child)}>
-                  {t('restore')}
-                </button>
+                {choosing?.id === child.id ? (
+                  <>
+                    <SymbolPicker value={choosing.symbol} onChange={(symbol) => setChoosing({ id: child.id, symbol })} />
+                    <button type="button" className="primary" onClick={() => void restore(child, choosing.symbol)}>
+                      {t('restoreWithSymbol', { name })}
+                    </button>
+                  </>
+                ) : (
+                  <button type="button" aria-label={t('restoreChild', { name })} onClick={() => void restore(child)}>
+                    {t('restore')}
+                  </button>
+                )}
               </li>
             )
           })}

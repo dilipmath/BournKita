@@ -233,3 +233,34 @@ def test_the_retention_period_is_set_in_the_settings(
         later(clock, admin, "2027-07-04 08:00")
         purge_due(app)
         assert archive(admin) == []
+
+
+def test_a_restored_child_keeps_their_symbol_while_it_is_free(admin: TestClient) -> None:
+    monkeys = create_group(admin)
+    lena = create_child(admin, symbol="kite")
+    put_in_group(admin, lena, monkeys)
+    admin.delete(f"/api/children/{lena}")
+
+    assert admin.post(f"/api/archive/{lena}/restore").status_code == 204
+    assert admin.get(f"/api/children/{lena}").json()["symbol"] == "kite"
+
+
+def test_a_child_whose_symbol_was_taken_meanwhile_is_restored_with_another(
+    admin: TestClient,
+) -> None:
+    monkeys = create_group(admin)
+    lena = create_child(admin, symbol="kite")
+    put_in_group(admin, lena, monkeys)
+    admin.delete(f"/api/children/{lena}")
+    mia = create_child(admin, firstName="Mia", symbol="kite")
+    put_in_group(admin, mia, monkeys)
+
+    refused = admin.post(f"/api/archive/{lena}/restore")
+    taken_too = admin.post(f"/api/archive/{lena}/restore", json={"symbol": "kite"})
+    restored = admin.post(f"/api/archive/{lena}/restore", json={"symbol": "boat"})
+
+    assert refused.status_code == 409
+    assert refused.json()["detail"] == "symbol_taken"
+    assert taken_too.status_code == 409
+    assert restored.status_code == 204
+    assert admin.get(f"/api/children/{lena}").json()["symbol"] == "boat"

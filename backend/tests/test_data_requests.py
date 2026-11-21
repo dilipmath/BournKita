@@ -56,6 +56,7 @@ def test_the_export_holds_the_parent_and_all_their_children_archived_ones_too(
     ]
     assert data["children"][0]["dateOfBirth"] == "2022-03-14"
     assert data["children"][0]["interests"] == "Malen, Dinosaurier"
+    assert data["children"][0]["symbol"] == child_fields(lena)["symbol"]
 
 
 def test_the_export_covers_every_kind_of_data_and_the_photo_files(

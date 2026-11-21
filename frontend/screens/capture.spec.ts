@@ -27,11 +27,11 @@ async function seed(api: APIRequestContext): Promise<{ group: number; lena: numb
   const group = (await post(api, '/api/groups', { name: 'Monkeys', icon: 'monkey' })).id
   await post(api, '/api/groups', { name: 'Butterflies', icon: 'butterfly' })
   const children = [
-    { firstName: 'Lena', lastName: 'Weber', dateOfBirth: '2022-03-14', languages: 'German, Turkish', foodPreferences: 'Vegetarian', interests: 'Painting, dinosaurs' },
-    { firstName: 'Mia', lastName: 'Schmidt', dateOfBirth: '2021-11-02' },
-    { firstName: 'Noah', lastName: 'Fischer', dateOfBirth: '2022-07-21' },
-    { firstName: 'Emil', lastName: 'Becker', dateOfBirth: '2021-05-30' },
-    { firstName: 'Sofia', lastName: 'Wagner', dateOfBirth: '2022-01-09' },
+    { firstName: 'Lena', lastName: 'Weber', dateOfBirth: '2022-03-14', languages: 'German, Turkish', foodPreferences: 'Vegetarian', interests: 'Painting, dinosaurs', symbol: 'kite' },
+    { firstName: 'Mia', lastName: 'Schmidt', dateOfBirth: '2021-11-02', symbol: 'boat' },
+    { firstName: 'Noah', lastName: 'Fischer', dateOfBirth: '2022-07-21', symbol: 'sun' },
+    { firstName: 'Emil', lastName: 'Becker', dateOfBirth: '2021-05-30', symbol: 'fish' },
+    { firstName: 'Sofia', lastName: 'Wagner', dateOfBirth: '2022-01-09', symbol: 'flower' },
   ]
   const ids: number[] = []
   for (const child of children) {

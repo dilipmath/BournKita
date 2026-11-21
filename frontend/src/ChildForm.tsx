@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
-import { childSymbols, genderLabel, saveChild, type Child, type ChildDetails, type Gender, type Refusal } from './api'
-import ChildSymbol from './ChildSymbol'
+import { genderLabel, saveChild, type Child, type ChildDetails, type Gender, type Refusal } from './api'
 import { kitaToday } from './dates'
+import SymbolPicker from './SymbolPicker'
 
 type Problem = Refusal | 'somethingWentWrong' | null
 
@@ -78,25 +78,7 @@ export default function ChildForm({ child }: { child?: Child }) {
           onChange={(event) => setDetails({ ...details, dateOfBirth: event.target.value || null })}
         />
       </label>
-      {/* As on the Child's coat hook; another Child in the same Group may not have it. */}
-      <div className="symbols" role="radiogroup" aria-labelledby="symbol-label">
-        <span id="symbol-label" className="symbols-label">
-          {t('symbol')}
-        </span>
-        {childSymbols.map((option) => (
-          <label key={option}>
-            <input
-              type="radio"
-              name="symbol"
-              value={option}
-              checked={details.symbol === option}
-              onChange={() => setDetails({ ...details, symbol: option })}
-            />
-            <ChildSymbol symbol={option} />
-            <span className="visually-hidden">{t(`symbol_${option}`)}</span>
-          </label>
-        ))}
-      </div>
+      <SymbolPicker value={details.symbol} onChange={(symbol) => setDetails({ ...details, symbol })} />
       <label>
         {t('languagesSpoken')}
         <input maxLength={200} {...field('languages')} />

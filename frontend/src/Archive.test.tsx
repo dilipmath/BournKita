@@ -36,6 +36,29 @@ describe('Archive', () => {
     expect(calls).toContainEqual({ route: 'POST /api/archive/7/restore', body: undefined })
   })
 
+  it('asks for another symbol when the Child’s was taken in their Group meanwhile', async () => {
+    let archived = [lena]
+    const calls = fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': sessionAs('admin'),
+      'GET /api/archive': () => ({ status: 200, body: archived }),
+      'POST /api/archive/7/restore': (body) => {
+        if (!body) return { status: 409, body: { detail: 'symbol_taken' } }
+        archived = []
+        return { status: 204 }
+      },
+    })
+    renderAt('/archive', <App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Restore Lena Müller' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Another Child in this Group has this symbol. Please choose another.')
+    await userEvent.click(within(screen.getByRole('radiogroup', { name: 'Symbol' })).getByRole('radio', { name: 'Boat' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Restore Lena Müller with this symbol' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('The profile of Lena Müller is back.')
+    expect(calls).toContainEqual({ route: 'POST /api/archive/7/restore', body: { symbol: 'boat' } })
+  })
+
   it('is for Admins only', async () => {
     fakeApi({ 'GET /api/health': health, 'GET /api/session': sessionAs('teacher') })
     renderAt('/archive', <App />)

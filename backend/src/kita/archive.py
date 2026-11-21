@@ -8,9 +8,10 @@ from datetime import date, datetime
 
 from sqlalchemy import Connection, Engine, delete, select, update
 
-from kita.children import CURRENT, ChildNotFound, children
+from kita.children import CURRENT, ChildNotFound, ChildSymbol, SymbolTaken, children
 from kita.clock import KITA_TIME_ZONE, Clock, today
 from kita.db import transaction
+from kita.groups import symbol_taken_in_childs_group
 from kita.parents import child_parents, parents
 from kita.photos import LeftoverFiles, Photos
 
@@ -52,17 +53,27 @@ class Archive:
         if archived is None:
             raise ChildNotFound
 
-    def restore(self, child_id: int) -> None:
-        """Makes the archived Child current again, with all its data; raises ChildNotFound."""
+    def restore(self, child_id: int, symbol: ChildSymbol | None = None) -> bool:
+        """Makes the archived Child current again, with all its data, and with `symbol` if given;
+        returns whether the Symbol changed. Raises ChildNotFound, or SymbolTaken when another
+        Child in the Group has taken the Symbol meanwhile: the Admin then chooses another."""
         with transaction(self._engine) as connection:
-            restored = connection.scalar(
-                update(children)
+            had: ChildSymbol | None = connection.scalar(
+                select(children.c.symbol)
                 .where(children.c.id == child_id, ~CURRENT)
-                .values(archived_at=None)
-                .returning(children.c.id)
+                .with_for_update()
             )
-        if restored is None:
-            raise ChildNotFound
+            if had is None:
+                raise ChildNotFound
+            chosen = symbol or had
+            if symbol_taken_in_childs_group(connection, child_id, chosen):
+                raise SymbolTaken
+            connection.execute(
+                update(children)
+                .where(children.c.id == child_id)
+                .values(archived_at=None, symbol=chosen)
+            )
+        return chosen != had
 
     def archived_children(self) -> list[ArchivedChild]:
         """The archived Children, most recently archived first."""

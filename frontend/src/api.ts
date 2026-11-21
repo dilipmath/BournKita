@@ -293,8 +293,13 @@ export async function fetchArchive(): Promise<ArchivedChild[] | Refusal> {
 }
 
 /** Makes an archived Child current again, with all its data. Admins only. Resolves to true once restored. */
-export async function restoreChild(id: number): Promise<true | Refusal> {
-  const response = await fetch(`/api/archive/${id}/restore`, { method: 'POST' })
+/** Restores an archived Child; `symbol` gives them another Symbol, when theirs was taken in their
+ * Group meanwhile. */
+export async function restoreChild(id: number, symbol?: ChildSymbol): Promise<true | Refusal> {
+  const response = await fetch(
+    `/api/archive/${id}/restore`,
+    symbol ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symbol }) } : { method: 'POST' },
+  )
   if (!response.ok) return refusalOf(response, 'Restoring the Child profile')
   return true
 }

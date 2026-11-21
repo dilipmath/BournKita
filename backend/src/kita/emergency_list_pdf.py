@@ -55,8 +55,34 @@ _WEEKDAYS: dict[Language, list[str]] = {
     "de": ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"],
 }
 _MONTHS: dict[Language, list[str]] = {
-    "en": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-    "de": ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+    "en": [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    ],
+    "de": [
+        "Januar",
+        "Februar",
+        "März",
+        "April",
+        "Mai",
+        "Juni",
+        "Juli",
+        "August",
+        "September",
+        "Oktober",
+        "November",
+        "Dezember",
+    ],
 }
 
 _STYLE = """
@@ -83,6 +109,7 @@ th.alerts { width: 32%%; }
 .phone { white-space: nowrap; font-weight: bold; }
 td.tick::before { content: ""; display: block; width: 4mm; height: 4mm; border: 1pt solid #000; }
 .name { font-weight: bold; }
+.symbol { font-size: 8.5pt; font-style: italic; }
 .since { font-size: 8.5pt; }
 td div + div { margin-top: 1mm; }
 """
@@ -111,28 +138,99 @@ def _alert(alert: Alert) -> str:
 def _caller(caller: Caller, words: dict[str, str]) -> str:
     relationship = words["parent"] if caller.kind == "parent" else caller.relationship
     who = f"{caller.name} ({relationship})" if relationship else caller.name
-    return f"<div>{escape(who)} <span class=\"phone\">{escape(caller.phone)}</span></div>"
+    return f'<div>{escape(who)} <span class="phone">{escape(caller.phone)}</span></div>'
 
 
-def _row(child: PresentChild, words: dict[str, str]) -> str:
+# Each Symbol's name, as the app shows it: the printed list names the picture on the coat hook.
+_SYMBOL_NAMES: dict[Language, dict[str, str]] = {
+    "en": {
+        "apple": "Apple",
+        "cloud": "Cloud",
+        "drop": "Drop",
+        "fish": "Fish",
+        "flower": "Flower",
+        "heart": "Heart",
+        "house": "House",
+        "kite": "Kite",
+        "leaf": "Leaf",
+        "moon": "Moon",
+        "star": "Star",
+        "sun": "Sun",
+        "boat": "Boat",
+        "tree": "Tree",
+        "car": "Car",
+        "bell": "Bell",
+        "ball": "Ball",
+        "bird": "Bird",
+        "butterfly": "Butterfly",
+        "snail": "Snail",
+        "mushroom": "Mushroom",
+        "umbrella": "Umbrella",
+        "rainbow": "Rainbow",
+        "key": "Key",
+        "drum": "Drum",
+        "train": "Train",
+        "cherry": "Cherry",
+        "carrot": "Carrot",
+        "cat": "Cat",
+        "shell": "Shell",
+    },
+    "de": {
+        "apple": "Apfel",
+        "cloud": "Wolke",
+        "drop": "Tropfen",
+        "fish": "Fisch",
+        "flower": "Blume",
+        "heart": "Herz",
+        "house": "Haus",
+        "kite": "Drachen",
+        "leaf": "Blatt",
+        "moon": "Mond",
+        "star": "Stern",
+        "sun": "Sonne",
+        "boat": "Boot",
+        "tree": "Baum",
+        "car": "Auto",
+        "bell": "Glocke",
+        "ball": "Ball",
+        "bird": "Vogel",
+        "butterfly": "Schmetterling",
+        "snail": "Schnecke",
+        "mushroom": "Pilz",
+        "umbrella": "Regenschirm",
+        "rainbow": "Regenbogen",
+        "key": "Schlüssel",
+        "drum": "Trommel",
+        "train": "Zug",
+        "cherry": "Kirsche",
+        "carrot": "Karotte",
+        "cat": "Katze",
+        "shell": "Muschel",
+    },
+}
+
+
+def _row(child: PresentChild, words: dict[str, str], language: Language) -> str:
     name = f"{child.first_name} {child.last_name}"
+    symbol = _SYMBOL_NAMES[language][child.symbol]
     since = words["hereSince"].format(time=_time(child.checked_in_at))
     alerts = "".join(_alert(alert) for alert in child.alerts) or "–"
     callers = "".join(_caller(caller, words) for caller in child.callers) or "–"
     return (
         '<tr><td class="tick"></td>'
-        f'<td><div class="name">{escape(name)}</div><div class="since">{since}</div></td>'
+        f'<td><div class="name">{escape(name)}</div>'
+        f'<div class="symbol">{escape(symbol)}</div><div class="since">{since}</div></td>'
         f"<td>{alerts}</td><td>{callers}</td></tr>"
     )
 
 
-def _table(group: GroupOnList, words: dict[str, str]) -> str:
+def _table(group: GroupOnList, words: dict[str, str], language: Language) -> str:
     if not group.children:
         return f"<p>{words['nobodyHere']}</p>"
-    rows = "".join(_row(child, words) for child in group.children)
+    rows = "".join(_row(child, words, language) for child in group.children)
     return (
         "<table><thead><tr><th></th>"
-        f"<th class=\"child\">{words['child']}</th><th class=\"alerts\">{words['alerts']}</th>"
+        f'<th class="child">{words["child"]}</th><th class="alerts">{words["alerts"]}</th>'
         f"<th>{words['callers']}</th>"
         f"</tr></thead><tbody>{rows}</tbody></table>"
     )
@@ -149,13 +247,13 @@ def _html(emergency_list: EmergencyList, language: Language) -> str:
         f"<p>{printed} · <b>{_how_many(total, words)}</b></p>",
     ]
     if emergency_list.group is not None:
-        parts.append(_table(emergency_list.groups[0], words))
+        parts.append(_table(emergency_list.groups[0], words, language))
     else:
         for each in emergency_list.groups:
             group = words["noGroup"] if each.group is None else each.group.name
             count = _how_many(len(each.children), words)
             parts.append(f"<h2>{escape(group)} · {count}</h2>")
-            parts.append(_table(each, words))
+            parts.append(_table(each, words, language))
     style = _STYLE % {key: words[key] for key in ("confidential", "page", "of")}
     return (
         f'<!DOCTYPE html><html lang="{language}"><head><meta charset="utf-8">'

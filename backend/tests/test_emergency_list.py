@@ -29,9 +29,9 @@ def test_a_groups_list_has_the_children_here_now_with_whom_to_call_and_their_ale
     admin: TestClient, teacher: TestClient, clock: FixedClock
 ) -> None:
     monkeys = create_group(admin)
-    lena = create_child(admin, firstName="Lena")
-    gone = create_child(admin, firstName="Gone")
-    absent = create_child(admin, firstName="Absent")
+    lena = create_child(admin, firstName="Lena", symbol="kite")
+    gone = create_child(admin, firstName="Gone", symbol="boat")
+    absent = create_child(admin, firstName="Absent", symbol="star")
     for child in (lena, gone, absent):
         put_in_group(admin, child, monkeys)
     put_in_group(admin, create_child(admin, firstName="Notyet"), monkeys)
@@ -48,7 +48,9 @@ def test_a_groups_list_has_the_children_here_now_with_whom_to_call_and_their_ale
 
     text = emergency_list(teacher, groupId=monkeys, language="en")
 
-    assert "Lena Müller" in text
+    # Each Child's Symbol by name, beside theirs, as the coat hooks show it.
+    assert "Lena Müller Kite" in text
+    assert "Drachen" in emergency_list(teacher, groupId=monkeys, language="de")
     assert "Here since 08:12" in text
     assert "Peanuts: EpiPen in the red bag" in text
     assert "Asthma" in text
@@ -68,7 +70,7 @@ def test_the_whole_kitas_list_has_every_group_and_the_children_in_none(
     create_group(admin, "Bees", "bee")
     lena = create_child(admin, firstName="Lena")
     put_in_group(admin, lena, monkeys)
-    max_ = create_child(admin, firstName="Max", lastName="Schmidt")
+    max_ = create_child(admin, firstName="Max", lastName="Schmidt", symbol="sun")
     at(clock, "2027-01-04 08:00")
     attendance(teacher, lena, "check-in")
     at(clock, "2027-01-04 08:20")
@@ -81,7 +83,7 @@ def test_the_whole_kitas_list_has_every_group_and_the_children_in_none(
     # Groups by name, those with nobody here too; then the Children in no Group.
     assert text.index("Bees · 0 Kinder da") < text.index("Monkeys · 1 Kind da")
     assert text.index("Lena Müller") < text.index("Keine Gruppe · 1 Kind da")
-    assert text.index("Keine Gruppe") < text.index("Max Schmidt Da seit 08:20")
+    assert text.index("Keine Gruppe") < text.index("Max Schmidt Sonne Da seit 08:20")
     assert "Gerade ist kein Kind eingecheckt." in text
 
 
@@ -96,9 +98,7 @@ def test_printing_the_list_is_logged_for_each_child_on_it(
     emergency_list(teacher)
 
     viewed = admin.get("/api/audit-log", params={"action": "viewed"}).json()
-    assert [(entry["childId"], entry["staffEmail"]) for entry in viewed] == [
-        (lena, TEACHER_EMAIL)
-    ]
+    assert [(entry["childId"], entry["staffEmail"]) for entry in viewed] == [(lena, TEACHER_EMAIL)]
 
 
 def test_only_staff_members_print_the_list_and_it_is_kept_in_no_cache(

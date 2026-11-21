@@ -9,11 +9,20 @@ from pydantic import BaseModel
 from kita.api_support import CAMEL_CASE, Refusals, refusals_as_http_errors
 from kita.archive import Archive, ArchivedChild
 from kita.audit_api import not_about_one_child, note_changed_fields
-from kita.children import ChildNotFound
+from kita.children import ChildNotFound, ChildSymbol, SymbolTaken
 from kita.identity import Identity
 from kita.identity_api import role_dependency
 
-_REFUSALS: Refusals = {ChildNotFound: (status.HTTP_404_NOT_FOUND, "not_found")}
+_REFUSALS: Refusals = {
+    ChildNotFound: (status.HTTP_404_NOT_FOUND, "not_found"),
+    SymbolTaken: (status.HTTP_409_CONFLICT, "symbol_taken"),
+}
+
+
+class RestoreIn(BaseModel):
+    """Another Symbol for the Child, when theirs was taken in their Group meanwhile."""
+
+    symbol: ChildSymbol | None = None
 
 
 class ArchivedChildOut(BaseModel):
@@ -46,9 +55,9 @@ def archive_router(
         return [ArchivedChildOut.of(child) for child in archive.archived_children()]
 
     @router.post("/{child_id}/restore", status_code=status.HTTP_204_NO_CONTENT)
-    def restore(child_id: int, request: Request) -> None:
+    def restore(child_id: int, request: Request, choice: RestoreIn | None = None) -> None:
         with refusals_as_http_errors(_REFUSALS):
-            archive.restore(child_id)
-        note_changed_fields(request, ["archived"])
+            new_symbol = archive.restore(child_id, choice.symbol if choice else None)
+        note_changed_fields(request, ["archived", "symbol"] if new_symbol else ["archived"])
 
     return router
