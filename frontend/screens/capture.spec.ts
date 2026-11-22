@@ -139,6 +139,8 @@ test('screenshots of the main screens', async ({ page }) => {
   await choosePassword(page, teacher.password)
   await page.getByRole('link', { name: 'Go to login' }).tap()
   await logIn(page, teacher.email, teacher.password)
+  // Logged in before going anywhere: navigating sooner can cancel the login.
+  await expect(accountMenu(page, teacher.email)).toBeVisible()
   for (const language of ['en', 'de'] as const) {
     if (language === 'de') {
       await accountMenu(page, teacher.email).tap()
