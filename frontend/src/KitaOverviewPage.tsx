@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { fetchOverview } from './api'
+import { dayOfGroups } from './dayCounts'
 import DayHeader, { StartPageSkeleton } from './DayHeader'
 import GroupDayTile from './GroupDayTile'
 import NeedsAttention from './NeedsAttention'
+import SummaryStrip from './SummaryStrip'
 import { useLiveData } from './refresh'
 import UpdatedNote from './UpdatedNote'
 
@@ -15,15 +17,21 @@ export default function KitaOverviewPage({ name }: { name: string }) {
 
   if (failed) return <p className="status status-problem">{t('somethingWentWrong')}</p>
   if (overview === null) return <StartPageSkeleton />
-  const { groups } = overview
-  // All the Groups' Children together; those in no Group are under Needs attention.
-  const sum = (part: 'here' | 'gone' | 'absent' | 'notYet') => groups.reduce((total, group) => total + group[part], 0)
+  const { groups, kita } = overview
 
   return (
     <section className="page overview">
-      <DayHeader name={name} day={overview.day} counts={{ here: sum('here'), gone: sum('gone'), absent: sum('absent'), notYet: sum('notYet') }} />
+      <DayHeader name={name} day={overview.day} />
+      {/* All the Groups' Children together; those in no Group, and Birthdays, are under Needs attention. */}
+      <SummaryStrip day={dayOfGroups(groups)} />
       <UpdatedNote updatedAt={updatedAt} stale={stale} />
-      <NeedsAttention overview={overview} />
+      <NeedsAttention
+        closesAt={kita.closesAt}
+        late={kita.stillHereAfterClosing}
+        birthdays={groups.flatMap((group) => group.birthdays)}
+        withoutGroup={kita.withoutGroup}
+        incidentsToday={kita.incidentsToday}
+      />
       {groups.length === 0 ? (
         <div className="empty-state">
           <p>{t('noGroupsYet')}</p>

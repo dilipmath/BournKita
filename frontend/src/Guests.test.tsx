@@ -45,6 +45,19 @@ describe('Guests', () => {
     expect(screen.queryByRole('button', { name: 'Emergency' })).toBeNull()
   })
 
+  it('never opens a Group’s board for a Guest, even at its address', async () => {
+    const calls = fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': sessionAs('guest'),
+      'GET /api/calendar?from=2026-12-28&to=2027-01-31': { status: 200, body: { events: [], birthdays: [], holidays: [] } },
+    })
+    renderAt('/groups/2', <App />)
+
+    expect(await screen.findByRole('button', { name: 'Menu for guest@kita.example' })).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'The Children’s name tags' })).toBeNull()
+    expect(calls.map((call) => call.route)).not.toContain('GET /api/groups/2')
+  })
+
   it('shows a Guest the Kita-wide calendar only, read-only', async () => {
     const calls = fakeApi({
       'GET /api/health': health,

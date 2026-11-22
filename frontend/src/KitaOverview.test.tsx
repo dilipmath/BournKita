@@ -51,6 +51,23 @@ describe('Kita overview', () => {
     expect(within(attention).getByRole('listitem', { name: 'Birthday today' })).toHaveTextContent('Lena Müller')
   })
 
+  it('sums up the whole Kita’s day, in counts and names only', async () => {
+    const bears = day({ id: 3, name: 'Bears', icon: 'bear', mine: false, expected: 3, here: 2, notYet: 1, alertsHere: 2 })
+    fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': sessionAs('admin'),
+      'GET /api/overview': { status: 200, body: { ...overview, groups: [overview.groups[0], bears] } },
+    })
+    renderAt('/', <App />)
+
+    const strip = await screen.findByRole('region', { name: 'Today in numbers' })
+    expect(strip).toHaveTextContent('3 of 7 Children are here')
+    expect(within(strip).getByRole('img', { name: '3 of 7 here, 1 gone home, 1 absent, 2 not here yet.' })).toBeInTheDocument()
+    // What an Alert is belongs to a Group's Today, not to a page seen over an Admin's shoulder.
+    expect(screen.queryByRole('region', { name: 'Allergies and medical conditions today' })).toBeNull()
+    expect(screen.getByRole('link', { name: /Bears/ })).toHaveTextContent('With allergies or medical conditions here: 2')
+  })
+
   it('leaves out Needs attention when nothing does', async () => {
     const quiet = { stillCheckedIn: 0, withoutGroup: [], incidentsToday: 0, closesAt: '16:30', stillHereAfterClosing: [] }
     fakeApi({

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import App from './App'
 import { fakeApi, health, renderAt, sessionAs } from './testing'
@@ -12,7 +12,7 @@ function teacherApi(own: object[], routes: Record<string, { status: number; body
   return fakeApi({
     'GET /api/health': health,
     'GET /api/session': sessionAs('teacher'),
-    'GET /api/overview/mine': { status: 200, body: { day: '2027-01-04', groups: own } },
+    'GET /api/overview/mine': { status: 200, body: { day: '2027-01-04', groups: own, closesAt: null, stillHereAfterClosing: [] } },
     ...routes,
   })
 }
@@ -32,6 +32,32 @@ describe('a Teacher’s start page', () => {
 
     expect(await screen.findByRole('link', { name: /Monkeys/ })).toHaveAttribute('href', '/groups/2')
     expect(screen.getByRole('link', { name: /Bears/ })).toHaveTextContent('0 of 2 here · 0 gone home · 0 absent · 2 not here yet')
+  })
+
+  it('sums up their Groups’ day, with what needs attention, above a card per Group', async () => {
+    const lena = { id: 7, firstName: 'Lena', lastName: 'Müller', symbol: 'kite' }
+    fakeApi({
+      'GET /api/health': health,
+      'GET /api/session': sessionAs('teacher'),
+      'GET /api/overview/mine': {
+        status: 200,
+        body: {
+          day: '2027-01-04',
+          groups: [day({ ...monkeys, colour: 'orange', birthdays: [lena] }), day({ ...bears, colour: 'lilac', here: 0, notYet: 2 })],
+          closesAt: '16:30',
+          stillHereAfterClosing: [{ id: 8, firstName: 'Mia', lastName: 'Schmidt', groupId: 2 }],
+        },
+      },
+    })
+    renderAt('/', <App />)
+
+    const strip = await screen.findByRole('region', { name: 'Today in numbers' })
+    expect(strip).toHaveTextContent('1 of 4 Children is here')
+    const attention = screen.getByRole('region', { name: 'Needs attention' })
+    const late = within(attention).getByRole('listitem', { name: 'Still here after closing time (16:30)' })
+    expect(within(late).getByRole('link', { name: 'Mia Schmidt' })).toHaveAttribute('href', '/groups/2')
+    expect(within(attention).getByRole('listitem', { name: 'Birthday today' })).toHaveTextContent('Lena Müller')
+    expect(screen.getByRole('link', { name: /Bears/ })).toHaveAttribute('href', '/groups/3')
   })
 
   it('lists all Groups, and says how to get one, when they work in none', async () => {

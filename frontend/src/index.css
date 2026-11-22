@@ -17,6 +17,8 @@
   --on-blue: #ffffff;
   --sun: #ffc93c;
   --raspberry: #c2255c;
+  /* Text and icons on raspberry (5.7:1). */
+  --on-raspberry: #ffffff;
   --green: #1f7a4d;
   --warn: #8a5a00;
   --warn-light: #fff0c7;
@@ -80,6 +82,7 @@
     --blue: #a3acff;
     --on-blue: #0f1d22;
     --raspberry: #ff86b0;
+    --on-raspberry: #0f1d22;
     --green: #72d7a0;
     --warn: #f2c66b;
     --warn-light: #3a2e10;
@@ -1163,8 +1166,12 @@ main.with-navigation {
   height: 72px;
 }
 
+.skeleton-strip {
+  height: 150px;
+}
+
 .skeleton-child {
-  height: 260px;
+  height: 184px;
 }
 
 .empty-state {
@@ -2090,7 +2097,8 @@ main.with-navigation {
   margin: 0;
 }
 
-/* The Today view on the Group dashboard: one card per Child, big buttons for the door. */
+/* The Today view on the Group dashboard: the allergy bar, the day in numbers, and the chalkboard
+   with a name tag per Child. */
 .page.dashboard {
   max-width: none;
   align-items: stretch;
@@ -2100,97 +2108,448 @@ main.with-navigation {
   margin: 0;
 }
 
-.birthday-banner {
-  margin: 0;
-  padding: 12px 16px;
-  border: 2px dashed var(--accent);
-  border-radius: 12px;
-  font-weight: 600;
+/* The allergy bar: first on the page, for whoever serves food. Raspberry, hatched, with the icon
+   and the word, so it is never colour alone. */
+.allergy-bar {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px 20px;
+  color: var(--on-raspberry);
+  background: var(--raspberry) repeating-linear-gradient(135deg, rgb(255 255 255 / 0.08) 0 14px, transparent 14px 28px);
+  border-radius: 20px;
 }
 
-.today-list {
+.allergy-bar > .icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+}
+
+.dashboard .allergy-bar h3 {
+  margin: 4px 0 0;
+  font-size: 1.15rem;
+  color: inherit;
+}
+
+.allergy-bar ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.allergy-bar li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px 4px 6px;
+  color: var(--ink);
+  background: var(--paper);
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.allergy-bar li strong {
+  color: var(--raspberry);
+}
+
+.allergy-bar-symbol {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 5px;
+  box-sizing: border-box;
+  color: var(--ink);
+  background: var(--group-fill, var(--chalk));
+  border-radius: 50%;
+}
+
+.allergy-bar-symbol .child-symbol {
+  width: 18px;
+  height: 18px;
+}
+
+/* The summary strip: a large count, a dot per Child, the other counts and today's Birthdays. */
+.summary-strip {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 36px;
+  align-items: center;
+  padding: 22px;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 20px;
+}
+
+.summary-count {
+  display: flex;
+  align-items: baseline;
   gap: 12px;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.summary-number {
+  color: var(--text);
+  font-size: 4rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-count > span:last-child {
+  max-width: 9em;
+}
+
+.summary-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Filled: here. Faded: gone home. Striped: absent. Dashed: still to come. */
+.summary-dot {
+  width: 22px;
+  height: 22px;
+  box-sizing: border-box;
+  background: var(--group-accent, var(--part-here));
+  border: 3px solid var(--group-accent, var(--part-here));
+  border-radius: 50%;
+}
+
+.summary-dot.gone {
+  opacity: 0.35;
+}
+
+.summary-dot.absent {
+  background: repeating-linear-gradient(135deg, var(--control-line) 0 3px, var(--surface) 3px 6px);
+  border-color: var(--control-line);
+}
+
+.summary-dot.notYet {
+  background: transparent;
+  border-style: dashed;
+}
+
+.summary-counts {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-2);
+}
+
+.summary-counts b {
+  margin-right: 4px;
+  color: var(--text);
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-birthdays {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: start;
+  margin: 0;
+  padding: 8px 14px;
+  color: var(--ink);
+  background: var(--warn-light);
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.summary-birthdays .icon {
+  color: var(--warn);
+}
+
+@media (max-width: 519px) {
+  .summary-strip {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+}
+
+/* The chalkboard: the rail along the top, and the tags hanging from it on strings. */
+.board {
+  padding: 22px 22px 30px;
+  color: var(--on-chalkboard);
+  background: var(--chalkboard);
+  border-radius: 26px;
+}
+
+.board::before {
+  display: block;
+  height: 8px;
+  content: '';
+  background: var(--chalkboard-3);
+  border-radius: 999px;
+}
+
+.board :focus-visible {
+  outline-color: var(--sun);
+}
+
+.board-tags {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 26px 14px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.today-child {
+.board-cell {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px 16px;
-  border: 2px solid var(--line);
-  border-left-width: 8px;
+  gap: 6px;
+  min-width: 0;
+  padding-top: 20px;
+}
+
+.board-cell::before {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 3px;
+  height: 20px;
+  margin-left: -1.5px;
+  content: '';
+  background: var(--on-chalkboard-muted);
+}
+
+/* While a form or the pick-up check is open, the cell takes the whole row. */
+.board-cell:has(form, .check-out, .tag-panel:not([hidden])) {
+  grid-column: 1 / -1;
+}
+
+.tag-hanger {
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+  margin: 0 auto;
+}
+
+/* The whole tag is the button. */
+button.board-tag {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
   border-radius: 18px;
-  background: var(--surface);
 }
 
-/* The status at a glance, by colour as well as by text. */
-.today-child.here {
-  border-left-color: var(--ok);
-}
-
-.today-child.gone {
-  border-left-color: var(--border);
-}
-
-.today-child.absent {
-  border-left-color: var(--part-absent);
-}
-
-.today-child.notYet {
-  border-left-color: var(--accent);
-  border-left-style: dashed;
-}
-
-.today-name {
+.board-tag .name-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 164px;
+  padding-top: 38px;
   font-size: 1.1rem;
-  font-weight: 700;
+  line-height: 1.2;
 }
 
-.today-name a {
-  color: var(--text);
-}
-
-.today-status {
-  margin: 0;
-}
-
-/* Each Child's Symbol, as on their coat hook, so they are recognised at a glance. */
-.today-symbol {
-  display: grid;
-  place-items: center;
-  width: 72px;
-  height: 72px;
-  color: var(--ink);
-  background: var(--chalk);
-  border: 2px solid var(--line);
-  border-radius: 18px;
-}
-
-.today-symbol .child-symbol {
+.board-tag .name-tag-symbol {
   width: 46px;
   height: 46px;
 }
 
-/* In a list, the Symbol before the name. */
-.children-list .child-symbol {
-  width: 28px;
-  height: 28px;
-  margin-right: 10px;
-  vertical-align: middle;
+.board-tag .name-tag-state {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Before checking out: who may pick up, with their photos. */
-.check-out {
+/* Not here yet: an outline only. */
+.board-cell.notYet .name-tag {
+  color: var(--on-chalkboard);
+  background: transparent;
+  box-shadow: inset 0 0 0 3px var(--on-chalkboard-muted);
+}
+
+.board-cell.notYet .tag-hole {
+  background: var(--on-chalkboard-muted);
+  box-shadow: none;
+}
+
+.board-cell.notYet .name-tag-symbol {
+  color: var(--on-chalkboard-muted);
+}
+
+/* Here: filled in the Group colour, dropped onto the rail. */
+.board-cell.here .name-tag {
+  transform: translateY(5px);
+}
+
+/* Gone home: dimmed. */
+.board-cell.gone .name-tag {
+  color: var(--on-chalkboard-muted);
+  background: var(--chalkboard-2);
+  box-shadow: none;
+}
+
+.board-cell.gone .tag-hole {
+  background: var(--chalkboard);
+  box-shadow: none;
+}
+
+/* Absent: striped, and not a button. */
+.board-cell.absent .name-tag {
+  color: var(--on-chalkboard);
+  background: repeating-linear-gradient(135deg, var(--chalkboard-2) 0 8px, var(--chalkboard) 8px 16px);
+  box-shadow: inset 0 0 0 3px var(--chalkboard-3);
+}
+
+.board-cell.absent .tag-hole {
+  background: var(--chalkboard);
+  box-shadow: none;
+}
+
+/* Motion only in answer to a tap: the tag just tapped drops as it is hung up (not one a refresh
+   moves). */
+@media (prefers-reduced-motion: no-preference) {
+  .board-cell.tapped .name-tag {
+    transition: transform 0.15s ease-out;
+  }
+}
+
+/* A Child with an Alert: a raspberry circle on the tag's corner. */
+.tag-flag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: var(--on-raspberry);
+  background: var(--raspberry);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.tag-flag .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* The allergen, written on the tag: raspberry, as the flag. */
+.tag-alert .alert-marker {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 2px 10px;
+  color: var(--on-raspberry);
+  background: var(--raspberry);
+  border: 0;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.tag-alert .icon {
+  display: none;
+}
+
+.board .birthday-mark {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Under each tag: Absent, Undo or Remove absence, and More; text buttons on the chalkboard. */
+.tag-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 4px;
+}
+
+.tag-actions > button,
+.board .tag-panel.actions > button:last-child {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 6px;
+  color: var(--on-chalkboard);
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: underline;
+}
+
+.tag-actions > button:hover {
+  background: var(--chalkboard-2);
+}
+
+/* The tag's menu, the Absence form and the pick-up check: paper on the chalkboard. */
+.board .tag-panel,
+.board form,
+.board .check-out {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 16px;
+  color: var(--text);
+  background: var(--surface);
+  border-radius: 16px;
 }
 
+.board .tag-panel[hidden] {
+  display: none;
+}
+
+.board .tag-panel.actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  background: none;
+  padding: 0;
+}
+
+.board .tag-panel a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.board .tag-panel :focus-visible,
+.board form :focus-visible,
+.board .check-out :focus-visible {
+  outline-color: var(--accent);
+}
+
+/* Phones: two columns of tags, still big enough to tap; the page never scrolls sideways. */
+@media (max-width: 519px) {
+  .board {
+    padding: 16px 12px 22px;
+  }
+
+  .board-tags {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 10px;
+  }
+}
+
+/* Before checking out: who may pick up, with their photos. */
 .check-out h4 {
   margin: 0;
 }
@@ -2217,19 +2576,17 @@ main.with-navigation {
   object-fit: cover;
 }
 
-/* On a phone, the pick-up check opens as a sheet from the bottom, over the list. */
+/* On a phone, the pick-up check opens as a sheet from the bottom, over the board. */
 @media (max-width: 700px) {
-  .check-out {
+  .board .check-out {
     position: fixed;
     inset: auto 0 0 0;
     /* Over the tab bar, which it covers while open. */
     z-index: 25;
     max-height: 80vh;
     overflow-y: auto;
-    padding: 16px;
     border-top: 2px solid var(--border);
     border-radius: 16px 16px 0 0;
-    background: var(--surface);
     box-shadow: 0 -4px 16px rgb(0 0 0 / 0.2);
   }
 }
@@ -2245,7 +2602,7 @@ main.with-navigation {
   font-weight: 700;
 }
 
-/* Check in and out: large enough to hit while holding a child's hand. */
+/* Goes home now: large enough to hit while holding a child's hand. */
 button.big {
   min-height: 64px;
   min-width: 160px;
@@ -2254,13 +2611,17 @@ button.big {
 }
 
 @media (max-width: 700px) {
-  .today-list {
-    grid-template-columns: 1fr;
-  }
-
   button.big {
     flex: 1;
   }
+}
+
+/* In a list, the Symbol before the name. */
+.children-list .child-symbol {
+  width: 28px;
+  height: 28px;
+  margin-right: 10px;
+  vertical-align: middle;
 }
 
 /* The Incident log: filters in a row that wraps, then one entry per Incident. */

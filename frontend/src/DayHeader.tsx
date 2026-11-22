@@ -1,7 +1,6 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { longDay } from './calendarDates'
-import DayBar, { type DayCounts } from './DayBar'
 import { greeting } from './greeting'
 
 type Props = {
@@ -9,20 +8,16 @@ type Props = {
   name: string
   /** The Kita's day, YYYY-MM-DD. */
   day: string
-  /** The day of the Children shown below, as a bar; left out when not given. */
-  counts?: DayCounts
 }
 
-/** The top card after login: a greeting by name, the date, and (for the Kita overview) the day of
- * all the Groups' Children together. */
-export default function DayHeader({ name, day, counts }: Props) {
+/** The top card after login: a greeting by name and the date. */
+export default function DayHeader({ name, day }: Props) {
   const { t, i18n } = useTranslation()
   const headingId = useId()
   return (
     <section className="day-header" aria-labelledby={headingId}>
       <h2 id={headingId}>{t('greetingNamed', { greeting: t(greeting()), name })}</h2>
       <p className="day-header-date">{longDay(day, i18n.language)}</p>
-      {counts && <DayBar day={counts} />}
     </section>
   )
 }
@@ -33,7 +28,8 @@ export function TodaySkeleton() {
   return (
     <section className="page dashboard" aria-label={t('loadingToday')} aria-busy="true">
       <div className="skeleton skeleton-title" />
-      <div className="today-list">
+      <div className="skeleton skeleton-strip" />
+      <div className="board-tags">
         <div className="skeleton skeleton-child" />
         <div className="skeleton skeleton-child" />
         <div className="skeleton skeleton-child" />

@@ -58,7 +58,7 @@ describe('the hero', () => {
       'GET /api/health': health,
       'GET /api/session': loggedOut,
       'POST /api/session': sessionAs('teacher'),
-      'GET /api/overview/mine': { status: 200, body: { day: '2027-01-04', groups: [] } },
+      'GET /api/overview/mine': { status: 200, body: { day: '2027-01-04', groups: [], closesAt: null, stillHereAfterClosing: [] } },
       'GET /api/groups': { status: 200, body: [] },
     })
     renderAt('/', <App />)

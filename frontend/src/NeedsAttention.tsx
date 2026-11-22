@@ -1,13 +1,16 @@
 import { useId, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import type { ChildSummary, KitaOverview } from './api'
+import type { ChildSummary, LateChild } from './api'
 import Icon, { type IconName } from './Icon'
 
-const fullName = (child: ChildSummary) => `${child.firstName} ${child.lastName}`
+// Whom a link names: Children by their full name.
+type Named = Pick<ChildSummary, 'id' | 'firstName' | 'lastName'>
+
+const fullName = (child: Named) => `${child.firstName} ${child.lastName}`
 
 /** Links to these Children, separated by commas. */
-function ChildLinks({ items, to }: { items: ChildSummary[]; to: (child: ChildSummary) => string }) {
+function ChildLinks({ items, to }: { items: Named[]; to: (child: Named) => string }) {
   return items.map((child, index) => (
     <span key={child.id}>
       {index > 0 && ', '}
@@ -31,17 +34,25 @@ function Item({ icon, title, tone, children }: ItemProps) {
   )
 }
 
+type Props = {
+  /** "HH:MM" at the Kita, null without a closing time. */
+  closesAt: string | null
+  /** Still checked in after closing time. */
+  late: LateChild[]
+  birthdays: ChildSummary[]
+  /** The whole Kita's, on the Kita overview only. */
+  withoutGroup?: ChildSummary[]
+  incidentsToday?: number
+}
+
 /** What needs seeing to today: Children still here after closing time, Children in no Group,
  * today's Incidents; and today's Birthdays, as good news. Left out when there is none. */
-export default function NeedsAttention({ overview }: { overview: KitaOverview }) {
+export default function NeedsAttention({ closesAt, late, birthdays, withoutGroup = [], incidentsToday = 0 }: Props) {
   const { t } = useTranslation()
   const headingId = useId()
-  const { kita } = overview
-  const birthdays = overview.groups.flatMap((group) => group.birthdays)
-  const late = kita.stillHereAfterClosing
-  if (late.length + kita.withoutGroup.length + kita.incidentsToday + birthdays.length === 0) return null
+  if (late.length + withoutGroup.length + incidentsToday + birthdays.length === 0) return null
   // A late Child's Group's Today view, where they are checked out; in no Group, their profile.
-  const whereLate = (child: ChildSummary) => {
+  const whereLate = (child: Named) => {
     const groupId = late.find((each) => each.id === child.id)?.groupId
     return groupId ? `/groups/${groupId}` : `/children/${child.id}`
   }
@@ -50,18 +61,18 @@ export default function NeedsAttention({ overview }: { overview: KitaOverview })
       <h3 id={headingId}>{t('needsAttention')}</h3>
       <ul>
         {late.length > 0 && (
-          <Item icon="notYet" tone="warning" title={t('stillHereAfterClosing', { time: kita.closesAt })}>
+          <Item icon="notYet" tone="warning" title={t('stillHereAfterClosing', { time: closesAt })}>
             <ChildLinks items={late} to={whereLate} />
           </Item>
         )}
-        {kita.withoutGroup.length > 0 && (
+        {withoutGroup.length > 0 && (
           <Item icon="children" tone="warning" title={t('inNoGroupTitle')}>
-            <ChildLinks items={kita.withoutGroup} to={(child) => `/children/${child.id}`} />
+            <ChildLinks items={withoutGroup} to={(child) => `/children/${child.id}`} />
           </Item>
         )}
-        {kita.incidentsToday > 0 && (
+        {incidentsToday > 0 && (
           <Item icon="incidents" tone="warning" title={t('incidentsTitle')}>
-            <Link to="/incidents">{t('incidentsToday', { count: kita.incidentsToday })}</Link>
+            <Link to="/incidents">{t('incidentsToday', { count: incidentsToday })}</Link>
           </Item>
         )}
         {birthdays.length > 0 && (

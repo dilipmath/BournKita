@@ -49,7 +49,7 @@ test('a Teacher with one Group logs in, lands on its Today view and checks a Chi
 
   const lena = page.getByRole('listitem', { name: `Lena ${lastName}` })
   await lena.getByRole('button', { name: `Check in Lena ${lastName}` }).tap()
-  await expect(lena).toContainText('Here since')
+  await expect(lena).toContainText(/Here \d\d:\d\d/)
 
   // The test stack closes at 00:00, so the Admin sees Lena under Needs attention.
   await logOut(page, email)

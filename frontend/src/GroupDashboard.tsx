@@ -1,8 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import AlertMarker from './AlertMarker'
-import ChildSymbol from './ChildSymbol'
+import AllergyBar from './AllergyBar'
+import NameTag from './NameTag'
 import {
   absenceReasonLabel,
   addAbsence,
@@ -14,9 +15,10 @@ import {
   type AbsenceReason,
   type ChildProfile,
   type GroupChild,
+  type GroupColour,
 } from './api'
 import { longDay } from './calendarDates'
-import DayBar from './DayBar'
+import SummaryStrip from './SummaryStrip'
 import { TodaySkeleton } from './DayHeader'
 import { kitaTime } from './dates'
 import GroupLabel from './GroupLabel'
@@ -28,9 +30,9 @@ import { useRefresh } from './refresh'
 import UpdatedNote from './UpdatedNote'
 import RecordPlaceholder from './RecordPlaceholder'
 import Icon from './Icon'
+import { useToast } from './toastContext'
 
 type Status = 'here' | 'gone' | 'absent' | 'notYet'
-
 
 function statusOf(child: GroupChild): Status {
   if (child.absence) return 'absent'
@@ -48,6 +50,23 @@ export default function GroupDashboard() {
   useRefresh(reload)
   // In the morning: only the Children still to come.
   const [notYetOnly, setNotYetOnly] = useState(false)
+  const toast = useToast()
+  // Undo from a toast: here, not on the tag, which may have left the list meanwhile.
+  const { problem: undoProblem, change: undoChange } = useProfileChange(reload)
+  // Steps just taken on this board, by Child: confirmed once the board shows them, with the
+  // server's time.
+  const taken = useRef(new Map<number, 'here' | 'gone'>())
+  // The tag last tapped: the only one whose drop is animated (not one a refresh moves).
+  const [lastTapped, setLastTapped] = useState<number | null>(null)
+  useEffect(() => {
+    for (const child of loaded.record?.children ?? []) {
+      const after = taken.current.get(child.id)
+      if (after === undefined || statusOf(child) !== after) continue
+      taken.current.delete(child.id)
+      const time = kitaTime(after === 'here' ? child.attendance!.checkedInAt : child.attendance!.checkedOutAt!, i18n.language)
+      toast(t(after === 'here' ? 'toastHere' : 'toastGone', { name: child.firstName, time }), () => void undoChange(() => attendanceStep(child.id, 'undo')))
+    }
+  })
   const dashboard = loaded.record
   // While loading: grey blocks in the page's shape, so nothing jumps when it comes.
   if (dashboard === undefined && !loaded.failed) return <TodaySkeleton />
@@ -62,47 +81,91 @@ export default function GroupDashboard() {
         <GroupLabel group={dashboard} />
       </h2>
       <h3>{t('todayIs', { day: longDay(dashboard.day, i18n.language) })}</h3>
-      {birthdays.length > 0 && (
-        <p className="birthday-banner">
-          <Icon name="birthday" />
-          {t('birthdayToday', { names: birthdays.map((child) => `${child.firstName} ${child.lastName}`).join(', ') })}
-        </p>
-      )}
+      <AllergyBar
+        colour={dashboard.colour}
+        items={dashboard.children.filter((child) => child.alerts.length > 0 && ['here', 'notYet'].includes(statusOf(child)))}
+      />
       {dashboard.children.length === 0 ? (
         <p>{t('noChildrenInGroup')}</p>
       ) : (
         <>
+          <SummaryStrip
+            day={{ here: count('here'), gone: count('gone'), absent: count('absent'), notYet: count('notYet') }}
+            birthdays={birthdays.map((child) => `${child.firstName} ${child.lastName}`)}
+            colour={dashboard.colour}
+          />
           <UpdatedNote updatedAt={loaded.loadedAt ?? null} stale={loaded.failed} />
-          <DayBar day={{ here: count('here'), gone: count('gone'), absent: count('absent'), notYet: count('notYet') }} />
           <button type="button" aria-pressed={notYetOnly} onClick={() => setNotYetOnly(!notYetOnly)}>
             {t('onlyNotHereYet')}
           </button>
-          <ul className="today-list">
-            {dashboard.children
-              .filter((child) => !notYetOnly || statusOf(child) === 'notYet')
-              .map((child) => (
-                <ChildToday key={child.id} child={child} day={dashboard.day} reload={reload} />
-              ))}
-          </ul>
+          <ProblemAlert problem={undoProblem} />
+          {/* The chalkboard: each Child's name tag hangs from the rail once they are here. */}
+          <div className={`board group-colour-${dashboard.colour}`}>
+            <ul className="board-tags" aria-label={t('boardOfChildren')}>
+              {dashboard.children
+                .filter((child) => !notYetOnly || statusOf(child) === 'notYet')
+                .map((child) => (
+                  <ChildToday
+                    key={child.id}
+                    child={child}
+                    day={dashboard.day}
+                    colour={dashboard.colour}
+                    reload={reload}
+                    tapped={lastTapped === child.id}
+                    onStep={(after) => {
+                      if (after === null) taken.current.delete(child.id)
+                      else {
+                        taken.current.set(child.id, after)
+                        setLastTapped(child.id)
+                      }
+                    }}
+                  />
+                ))}
+            </ul>
+          </div>
         </>
       )}
     </section>
   )
 }
 
-type ChildProps = { child: GroupChild; day: string; reload: () => void }
+type ChildProps = {
+  child: GroupChild
+  day: string
+  colour: GroupColour
+  reload: () => void
+  /** Whether this tag was the last tapped: only then is its drop animated. */
+  tapped: boolean
+  /** Tells the board about a step taken (to confirm it with a toast), or null if it was refused. */
+  onStep: (after: 'here' | 'gone' | null) => void
+}
 
-/** One Child's card in the Today view. */
-function ChildToday({ child, day, reload }: ChildProps) {
+// What a tap on a tag does, as its name says: check in, open the pick-up check, or show Undo.
+const tagAction = { notYet: 'checkInNamed', here: 'checkOutNamed', gone: 'goneHomeNamed' } as const
+
+/** One Child's name tag on the board, with what can be done for them below it. A tap on the tag
+ * does the day's next step: check in at once, or open the pick-up check before checking out. */
+function ChildToday({ child, day, colour, reload, tapped, onStep }: ChildProps) {
   const { t, i18n } = useTranslation()
   const language = i18n.language
   const { problem, change } = useProfileChange(reload)
   const [recordingAbsence, setRecordingAbsence] = useState(false)
   const [checkingOut, setCheckingOut] = useState(false)
+  const stateId = useId()
+  const alertId = useId()
+  const hasAlerts = child.alerts.length > 0
   const name = `${child.firstName} ${child.lastName}`
   const status = statusOf(child)
+  const undo = () => void change(() => attendanceStep(child.id, 'undo'))
 
-  function statusText(): string {
+  async function step(which: 'check-in' | 'check-out'): Promise<boolean> {
+    onStep(which === 'check-in' ? 'here' : 'gone')
+    const done = await change(() => attendanceStep(child.id, which))
+    if (!done) onStep(null)
+    return done
+  }
+
+  function stateText(): string {
     const { absence, attendance } = child
     switch (status) {
       case 'absent': {
@@ -112,24 +175,50 @@ function ChildToday({ child, day, reload }: ChildProps) {
       case 'notYet':
         return t('notHereYet')
       case 'gone':
-        return t('goneHomeAt', { time: kitaTime(attendance!.checkedOutAt!, language) })
+        return t('tagGone', { time: kitaTime(attendance!.checkedOutAt!, language) })
       case 'here':
-        return t('hereSince', { time: kitaTime(attendance!.checkedInAt, language) })
+        return t('tagHere', { time: kitaTime(attendance!.checkedInAt, language) })
     }
   }
 
-  return (
-    <li className={`today-child ${status}`} aria-label={name}>
-      <span className="today-symbol">
-        <ChildSymbol symbol={child.symbol} />
+  const tag = (
+    <NameTag name={`${child.firstName} ${child.lastName.charAt(0)}.`} symbol={child.symbol} colour={colour}>
+      <span className="name-tag-state" id={stateId}>
+        {stateText()}
       </span>
-      <div className="today-name">
-        <Link to={`/children/${child.id}`}>{name}</Link> <AlertMarker label={t('alertsMarker')} alerts={child.alerts} />
+      {/* Named by the allergen on the tag itself: a tablet has no hover. */}
+      {hasAlerts && (
+        <span className="tag-alert" id={alertId}>
+          <AlertMarker label={t('alertsMarker')} alerts={child.alerts} />
+        </span>
+      )}
+    </NameTag>
+  )
+
+  return (
+    <li className={`board-cell ${status}${tapped ? ' tapped' : ''}`} aria-label={name}>
+      <div className="tag-hanger">
+        {status === 'absent' ? (
+          <div className="board-tag">{tag}</div>
+        ) : (
+          <button
+            type="button"
+            className="board-tag"
+            aria-describedby={hasAlerts ? `${stateId} ${alertId}` : stateId}
+            aria-label={t(tagAction[status], { name })}
+            aria-expanded={status === 'notYet' ? undefined : checkingOut}
+            onClick={() => (status === 'notYet' ? void step('check-in') : setCheckingOut(!checkingOut))}
+          >
+            {tag}
+          </button>
+        )}
+        {/* The raspberry circle on the tag's corner; the allergen is named on the tag. */}
+        {hasAlerts && (
+          <span className="tag-flag" aria-hidden="true">
+            <Icon name="alert" />
+          </span>
+        )}
       </div>
-      <p className="today-status">
-        <Icon name={status} />
-        {statusText()}
-      </p>
       {child.birthdayToday && (
         <p className="birthday-mark">
           <Icon name="birthday" />
@@ -147,34 +236,40 @@ function ChildToday({ child, day, reload }: ChildProps) {
           }}
           onCancel={() => setRecordingAbsence(false)}
         />
-      ) : checkingOut ? (
+      ) : checkingOut && status === 'here' ? (
         <CheckOutPanel
           childId={child.id}
           name={name}
           onCheckOut={async () => {
-            if (await change(() => attendanceStep(child.id, 'check-out'))) setCheckingOut(false)
+            if (await step('check-out')) setCheckingOut(false)
           }}
           onCancel={() => setCheckingOut(false)}
         />
+      ) : checkingOut && status === 'gone' ? (
+        <div className="tag-panel actions">
+          <button
+            type="button"
+            aria-label={t('undoNamed', { name })}
+            onClick={() => {
+              setCheckingOut(false)
+              undo()
+            }}
+          >
+            {t('undo')}
+          </button>
+          <button type="button" onClick={() => setCheckingOut(false)}>
+            {t('notNow')}
+          </button>
+        </div>
       ) : (
-        <div className="actions">
+        <div className="tag-actions">
           {status === 'notYet' && (
-            <>
-              <button type="button" className="primary big" aria-label={t('checkInNamed', { name })} onClick={() => void change(() => attendanceStep(child.id, 'check-in'))}>
-                {t('checkIn')}
-              </button>
-              <button type="button" aria-label={t('absentNamed', { name })} onClick={() => setRecordingAbsence(true)}>
-                {t('absent')}
-              </button>
-            </>
-          )}
-          {status === 'here' && (
-            <button type="button" className="primary big" aria-label={t('checkOutNamed', { name })} onClick={() => setCheckingOut(true)}>
-              {t('checkOut')}
+            <button type="button" aria-label={t('absentNamed', { name })} onClick={() => setRecordingAbsence(true)}>
+              {t('absent')}
             </button>
           )}
-          {(status === 'here' || status === 'gone') && (
-            <button type="button" aria-label={t('undoNamed', { name })} onClick={() => void change(() => attendanceStep(child.id, 'undo'))}>
+          {status === 'here' && (
+            <button type="button" aria-label={t('undoNamed', { name })} onClick={undo}>
               {t('undo')}
             </button>
           )}
@@ -183,11 +278,29 @@ function ChildToday({ child, day, reload }: ChildProps) {
               {t('removeAbsence')}
             </button>
           )}
+          <TagMenu childId={child.id} name={name} />
         </div>
       )}
       <ProblemAlert problem={problem} />
-      <IncidentReport childId={child.id} name={name} />
     </li>
+  )
+}
+
+/** "More" under a name tag: the Child's profile, and reporting an Incident. */
+function TagMenu({ childId, name }: { childId: number; name: string }) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const panelId = useId()
+  return (
+    <>
+      <button type="button" aria-label={t('moreForNamed', { name })} aria-expanded={open} aria-controls={panelId} onClick={() => setOpen(!open)}>
+        {t('more')}
+      </button>
+      <div id={panelId} className="tag-panel" hidden={!open}>
+        <Link to={`/children/${childId}`}>{t('profileOfNamed', { name })}</Link>
+        <IncidentReport childId={childId} name={name} />
+      </div>
+    </>
   )
 }
 

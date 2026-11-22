@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { logInAsAdmin } from './credentials.ts'
 
-test('at the door, a Child is checked in and out by tap, and another marked absent', async ({ page }) => {
+test('at the door, a Child is checked in with one tap and undone, checked out through the pick-up check, and another marked absent', async ({ page }) => {
   const run = Date.now()
   const groupName = `Hedgehogs ${run}`
   const lastName = `Today${run}`
@@ -33,22 +33,27 @@ test('at the door, a Child is checked in and out by tap, and another marked abse
   const mia = page.getByRole('listitem', { name: `Mia ${lastName}` })
   await expect(lena).toContainText('Not here yet')
 
+  // One tap on the tag; the toast's Undo takes it back.
   await lena.getByRole('button', { name: `Check in Lena ${lastName}` }).tap()
-  await expect(lena).toContainText('Here since')
+  await expect(lena).toContainText(/Here \d\d:\d\d/)
+  await page.locator('.toast', { hasText: /^Lena is here/ }).getByRole('button', { name: 'Undo' }).tap()
+  await expect(lena).toContainText('Not here yet')
+  await lena.getByRole('button', { name: `Check in Lena ${lastName}` }).tap()
+  await expect(lena).toContainText(/Here \d\d:\d\d/)
   await mia.getByRole('button', { name: `Absent: Mia ${lastName}` }).tap()
   const absence = page.getByRole('form', { name: `Absence of Mia ${lastName}` })
   await absence.getByLabel('Reason').selectOption({ label: 'Holiday' })
   await absence.getByRole('button', { name: 'Save' }).tap()
   await expect(mia).toContainText('Absent: Holiday')
-  await expect(page.getByText('1 of 2 here · 0 gone home · 1 absent · 0 not here yet')).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Today in numbers' })).toContainText('1 of 2 Children is here')
 
   await lena.getByRole('button', { name: `Check out Lena ${lastName}` }).tap()
   await expect(lena.getByRole('region', { name: `Who may pick up Lena ${lastName}` })).toContainText('Nobody may pick up yet.')
   await lena.getByRole('button', { name: `Lena ${lastName} goes home now` }).tap()
-  await expect(lena).toContainText('Gone home at')
+  await expect(lena).toContainText(/Gone home \d\d:\d\d/)
 
   // Saved, not just shown.
   await page.reload()
-  await expect(lena).toContainText('Gone home at')
+  await expect(lena).toContainText(/Gone home \d\d:\d\d/)
   await expect(mia).toContainText('Absent: Holiday')
 })

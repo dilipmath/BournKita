@@ -2,7 +2,10 @@ import { useTranslation } from 'react-i18next'
 import { Link, Navigate } from 'react-router-dom'
 import { fetchOwnGroups } from './api'
 import GroupLabel from './GroupLabel'
+import { dayOfGroups } from './dayCounts'
 import DayHeader, { StartPageSkeleton } from './DayHeader'
+import NeedsAttention from './NeedsAttention'
+import SummaryStrip from './SummaryStrip'
 import GroupDayTile from './GroupDayTile'
 import { useLiveData } from './refresh'
 import UpdatedNote from './UpdatedNote'
@@ -40,14 +43,21 @@ export default function TeacherStartPage({ name }: { name: string }) {
 
   if (failed) return <p className="status status-problem">{t('somethingWentWrong')}</p>
   if (own === null) return <StartPageSkeleton />
-  const { day, groups } = own
+  const { day, groups, closesAt, stillHereAfterClosing } = own
   // Replaced, so Back leaves the app rather than coming back here and on again.
   if (groups.length === 1) return <Navigate to={`/groups/${groups[0].id}`} replace />
 
   return (
     <section className="page overview">
       <DayHeader name={name} day={day} />
-      {groups.length > 0 && <UpdatedNote updatedAt={updatedAt} stale={stale} />}
+      {groups.length > 0 && (
+        <>
+          {/* Birthdays are under Needs attention. */}
+          <SummaryStrip day={dayOfGroups(groups)} />
+          <UpdatedNote updatedAt={updatedAt} stale={stale} />
+          <NeedsAttention closesAt={closesAt} late={stillHereAfterClosing} birthdays={groups.flatMap((group) => group.birthdays)} />
+        </>
+      )}
       {groups.length === 0 ? (
         <AllGroups />
       ) : (

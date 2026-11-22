@@ -5,9 +5,12 @@
 //   npm run screens
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 import { fileURLToPath } from 'node:url'
-import { accountMenu, e2eAdmin, logInAsAdmin } from '../e2e/credentials.ts'
+import { accountMenu, choosePassword, e2eAdmin, logIn, logInAsAdmin } from '../e2e/credentials.ts'
+import { linkFromEmail } from '../e2e/mailpit.ts'
 
 const out = fileURLToPath(new URL('../../docs/usability/screens/', import.meta.url))
+// A Teacher in both Groups, for their start page.
+const teacher = { email: 'aylin@kita.example', password: 'a teacher long password' }
 
 async function post(api: APIRequestContext, url: string, data: object): Promise<{ id: number }> {
   const response = await api.post(url, { data })
@@ -20,12 +23,13 @@ async function put(api: APIRequestContext, url: string, data: object): Promise<v
   expect(response.ok(), `${url}: ${response.status()} ${await response.text()}`).toBe(true)
 }
 
-/** A Group with made-up Children, Parents, Alerts, Tasks and Events. Returns its and Lena's ID. */
+/** Two Groups with made-up Children, Parents, Alerts, Tasks and Events, and a Teacher invited to
+ * both. Returns the Monkeys' and Lena's ID. */
 async function seed(api: APIRequestContext): Promise<{ group: number; lena: number }> {
   // Today at the Kita (Canadian English writes dates as YYYY-MM-DD).
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date())
   const group = (await post(api, '/api/groups', { name: 'Monkeys', icon: 'monkey' })).id
-  await post(api, '/api/groups', { name: 'Butterflies', icon: 'butterfly' })
+  const butterflies = (await post(api, '/api/groups', { name: 'Butterflies', icon: 'butterfly' })).id
   const children = [
     { firstName: 'Lena', lastName: 'Weber', dateOfBirth: '2022-03-14', languages: 'German, Turkish', foodPreferences: 'Vegetarian', interests: 'Painting, dinosaurs', symbol: 'kite' },
     { firstName: 'Mia', lastName: 'Schmidt', dateOfBirth: '2021-11-02', symbol: 'boat' },
@@ -50,6 +54,11 @@ async function seed(api: APIRequestContext): Promise<{ group: number; lena: numb
   for (const child of [lena, mia, noah]) await post(api, `/api/children/${child}/attendance/check-in`, {})
   await post(api, `/api/children/${mia}/attendance/check-out`, {})
   await post(api, `/api/children/${ids[4]}/absences`, { startsOn: today, reason: 'sick' })
+  const ben = (await post(api, '/api/children', { firstName: 'Ben', lastName: 'Hoffmann', dateOfBirth: '2021-09-17', symbol: 'tree' })).id
+  await put(api, `/api/children/${ben}/group`, { groupId: butterflies })
+  await post(api, `/api/children/${ben}/attendance/check-in`, {})
+  const aylin = (await post(api, '/api/staff', { email: teacher.email, role: 'teacher' })).id
+  await put(api, `/api/staff/${aylin}/groups`, { groupIds: [group, butterflies] })
   for (const title of ['Buy craft paper', 'Call Lena’s parents about the trip', 'Plan the autumn festival']) {
     await post(api, `/api/groups/${group}/tasks`, { title })
   }
@@ -103,6 +112,7 @@ test('screenshots of the main screens', async ({ page }) => {
     await shoot(page, language, '12-start-phone', PHONE_WIDTH)
     await page.goto(`/groups/${group}`)
     await shoot(page, language, '03-group-today')
+    await shoot(page, language, '13-group-today-phone', PHONE_WIDTH)
     // Before Lena goes home: who may pick her up.
     await page.getByRole('button', { name: language === 'en' ? 'Check out Lena Weber' : 'Lena Weber wird abgeholt' }).tap()
     await expect(page.getByText('Tom Krause')).toBeVisible()
@@ -120,6 +130,25 @@ test('screenshots of the main screens', async ({ page }) => {
     await page.goto('/children')
     await page.getByRole('button', { name: 'Feedback' }).tap()
     await shoot(page, language, '08-feedback')
+  }
+
+  // A Teacher in both Groups: their start page, a card per Group. Onboarded in English.
+  await page.context().clearCookies()
+  await page.evaluate(() => localStorage.setItem('kita.language', 'en'))
+  await page.goto(await linkFromEmail(teacher.email, '/verify-email'))
+  await choosePassword(page, teacher.password)
+  await page.getByRole('link', { name: 'Go to login' }).tap()
+  await logIn(page, teacher.email, teacher.password)
+  for (const language of ['en', 'de'] as const) {
+    if (language === 'de') {
+      await accountMenu(page, teacher.email).tap()
+      await page.getByRole('button', { name: 'Deutsch' }).tap()
+      await page.keyboard.press('Escape')
+    }
+    await page.goto('/')
+    await expect(page.getByRole('link', { name: /Butterflies/ })).toBeVisible()
+    await shoot(page, language, '14-teacher-start')
+    await shoot(page, language, '15-teacher-start-phone', PHONE_WIDTH)
   }
 
   // The login page in German: logged out; the language stays as chosen.

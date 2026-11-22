@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { fakeApi, health, noProfileLists, pageContent, renderAt, sessionAs } from './testing'
+import { fakeApi, health, noProfileLists, renderAt, sessionAs } from './testing'
 
 const monkeys = { id: 2, name: 'Monkeys', icon: 'monkey' }
 const peanuts = { id: 21, kind: 'allergy', name: 'Peanuts', note: '' }
@@ -65,24 +65,106 @@ describe('Today view', () => {
     renderAt('/groups/2', <App />)
 
     expect(await screen.findByRole('heading', { name: 'Today, Monday, 4 January' })).toBeInTheDocument()
-    expect(screen.getByText('Birthday today: Lena Müller')).toBeInTheDocument()
-    expect(screen.getByText('1 of 4 here · 1 gone home · 1 absent · 1 not here yet')).toBeInTheDocument()
+    // Each tag: first name and initial, and the state in words.
+    expect(card('Lena Müller')).toHaveTextContent('Lena M.')
     expect(card('Lena Müller')).toHaveTextContent('Not here yet')
     expect(card('Lena Müller')).toHaveTextContent('Alerts: Peanuts')
-    expect(card('Mia Müller')).toHaveTextContent('Here since 08:12')
-    expect(card('Emil Schmidt')).toHaveTextContent('Gone home at 12:30')
+    // The tap says what it does; the state and the allergen are read after it.
+    expect(screen.getByRole('button', { name: 'Check in Lena Müller' })).toHaveAccessibleDescription('Not here yet Alerts: Peanuts')
+    expect(card('Mia Müller')).toHaveTextContent('Here 08:12')
+    expect(card('Emil Schmidt')).toHaveTextContent('Gone home 12:30')
     expect(card('Ida Weber')).toHaveTextContent('Absent: Sick, until Wednesday, 6 January')
-    // Only what fits each: no checking in someone absent or gone.
-    expect(within(card('Ida Weber')).queryByRole('button', { name: 'Check in Ida Weber' })).toBeNull()
+    // Only what fits each: an absent tag is not tappable, a gone one does not check in again.
+    expect(within(card('Ida Weber')).getAllByRole('button').map((button) => button.getAttribute('aria-label'))).toEqual([
+      'Remove the absence of Ida Weber',
+      'More for Ida Weber',
+    ])
     expect(within(card('Emil Schmidt')).queryByRole('button', { name: /Check/ })).toBeNull()
   })
 
-  it('checks a Child in and out with one tap each, and undoes a mistake', async () => {
+  it('sums up the day: how many are here, one dot per Child, and today’s Birthdays', async () => {
+    const sam = { ...notYet, id: 11, firstName: 'Sam', lastName: 'Kurz', attendance: { checkedInAt: '2027-01-04T07:30:00Z', checkedOutAt: null } }
+    todayApi([emil, ida, lena, mia, sam])
+    renderAt('/groups/2', <App />)
+
+    const strip = await screen.findByRole('region', { name: 'Today in numbers' })
+    expect(strip).toHaveTextContent('2 of 5 Children are here')
+    // The dots are a picture; a screen reader gets the same as a sentence.
+    expect(within(strip).getByRole('img', { name: '2 of 5 here, 1 gone home, 1 absent, 1 not here yet.' })).toBeInTheDocument()
+    expect(strip).toHaveTextContent('1 not here yet')
+    expect(strip).toHaveTextContent('1 absent')
+    expect(strip).toHaveTextContent('1 gone home')
+    expect(strip).toHaveTextContent('Birthday today: Lena Müller')
+  })
+
+  it('puts the allergy bar first: who has an Alert and is here or still to come, with the allergen', async () => {
+    const asthma = { id: 22, kind: 'condition', name: 'Asthma', note: 'Inhaler in the bag' }
+    const eggs = { id: 23, kind: 'allergy', name: 'Eggs', note: '' }
+    todayApi([
+      { ...emil, alerts: [eggs] },
+      { ...ida, alerts: [eggs] },
+      { ...lena, symbol: 'kite' },
+      { ...mia, alerts: [asthma, eggs] },
+    ])
+    renderAt('/groups/2', <App />)
+
+    const bar = await screen.findByRole('region', { name: 'Allergies and medical conditions today' })
+    expect(within(bar).getAllByRole('listitem').map((item) => item.textContent)).toEqual(['Lena Müller Peanuts', 'Mia Müller Asthma, Eggs'])
+    expect(within(bar).getByLabelText('Kite')).toBeInTheDocument()
+    // Above the board.
+    expect(bar.compareDocumentPosition(card('Lena Müller')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('checks a Child in with one tap on their name tag, and the toast’s Undo takes it back', async () => {
+    const checkedIn = { ...lena, attendance: { checkedInAt: '2027-01-04T07:48:00Z', checkedOutAt: null } } as Child
     const { calls, state } = todayApi([lena], {
       'POST /api/children/7/attendance/check-in': () => {
-        state.children = [{ ...lena, attendance: { checkedInAt: '2027-01-04T07:40:00Z', checkedOutAt: null } } as Child]
+        state.children = [checkedIn]
         return { status: 204 }
       },
+      'POST /api/children/7/attendance/undo': () => {
+        state.children = [lena]
+        return { status: 204 }
+      },
+    })
+    renderAt('/groups/2', <App />)
+
+    // The whole tag is the button.
+    await userEvent.click(await screen.findByRole('button', { name: 'Check in Lena Müller' }))
+
+    expect(await within(card('Lena Müller')).findByText('Here 08:48')).toBeInTheDocument()
+    const toast = await screen.findByText('Lena is here (08:48)')
+    // Said in the polite live region too.
+    expect(toast.closest('[aria-live="polite"]')).not.toBeNull()
+    await userEvent.click(within(toast.parentElement!).getByRole('button', { name: 'Undo' }))
+    expect(await within(card('Lena Müller')).findByText('Not here yet')).toBeInTheDocument()
+    expect(calls.map((call) => call.route)).toContain('POST /api/children/7/attendance/undo')
+  })
+
+  it('confirms a check-in with Undo even while showing only who is not here yet', async () => {
+    const { state } = todayApi([lena], {
+      'POST /api/children/7/attendance/check-in': () => {
+        state.children = [{ ...lena, attendance: { checkedInAt: '2027-01-04T07:48:00Z', checkedOutAt: null } } as Child]
+        return { status: 204 }
+      },
+      'POST /api/children/7/attendance/undo': () => {
+        state.children = [lena]
+        return { status: 204 }
+      },
+    })
+    renderAt('/groups/2', <App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Show only who is not here yet' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Check in Lena Müller' }))
+
+    // Her tag leaves the list, but the toast stays to take it back.
+    const toast = await screen.findByText('Lena is here (08:48)')
+    await userEvent.click(within(toast.parentElement!).getByRole('button', { name: 'Undo' }))
+    expect(await screen.findByRole('button', { name: 'Check in Lena Müller' })).toBeInTheDocument()
+  })
+
+  it('checks a Child out through the pick-up check, and undoes it later from their tag', async () => {
+    const { calls, state } = todayApi([{ ...lena, attendance: { checkedInAt: '2027-01-04T07:40:00Z', checkedOutAt: null } } as Child], {
       'POST /api/children/7/attendance/check-out': () => {
         state.children = [{ ...lena, attendance: { checkedInAt: '2027-01-04T07:40:00Z', checkedOutAt: '2027-01-04T14:00:00Z' } } as Child]
         return { status: 204 }
@@ -94,16 +176,18 @@ describe('Today view', () => {
     })
     renderAt('/groups/2', <App />)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Check in Lena Müller' }))
-    expect(await within(card('Lena Müller')).findByText('Here since 08:40')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Check out Lena Müller' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Check out Lena Müller' }))
+    // Not yet: first who may pick her up.
+    expect(calls.map((call) => call.route)).not.toContain('POST /api/children/7/attendance/check-out')
     await userEvent.click(await screen.findByRole('button', { name: 'Lena Müller goes home now' }))
-    expect(await within(card('Lena Müller')).findByText('Gone home at 15:00')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Undo for Lena Müller' }))
-    expect(await within(card('Lena Müller')).findByText('Here since 08:40')).toBeInTheDocument()
-    expect(calls.map((call) => call.route)).toEqual(
-      expect.arrayContaining(['POST /api/children/7/attendance/check-in', 'POST /api/children/7/attendance/check-out', 'POST /api/children/7/attendance/undo']),
-    )
+    expect(await within(card('Lena Müller')).findByText('Gone home 15:00')).toBeInTheDocument()
+    expect(await screen.findByText('Lena went home (15:00)')).toBeInTheDocument()
+
+    // Long after the toast: a tap on the tag shows Undo.
+    await userEvent.click(screen.getByRole('button', { name: 'Lena Müller has gone home: show Undo' }))
+    await userEvent.click(within(card('Lena Müller')).getByRole('button', { name: 'Undo for Lena Müller' }))
+    expect(await within(card('Lena Müller')).findByText('Here 08:40')).toBeInTheDocument()
+    expect(calls.map((call) => call.route)).toContain('POST /api/children/7/attendance/undo')
   })
 
   it('records an absence for some days, and removes one', async () => {
@@ -129,6 +213,7 @@ describe('Today view', () => {
     await userEvent.click(within(form).getByRole('button', { name: 'Save' }))
 
     expect(await within(card('Lena Müller')).findByText('Absent: Holiday, until Friday, 8 January')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Check in Lena Müller' })).toBeNull()
     expect(calls).toContainEqual({
       route: 'POST /api/children/7/absences',
       body: { startsOn: '2027-01-04', endsOn: '2027-01-08', reason: 'holiday' },
@@ -207,6 +292,18 @@ describe('Today tiles', () => {
     expect(screen.queryByRole('region', { name: 'Who may pick up Mia Müller' })).toBeNull()
   })
 
+  it('opens the Child’s profile from their tag’s menu', async () => {
+    todayApi([lena])
+    renderAt('/groups/2', <App />)
+
+    const more = await screen.findByRole('button', { name: 'More for Lena Müller' })
+    expect(screen.queryByRole('link', { name: 'Profile of Lena Müller' })).toBeNull()
+    await userEvent.click(more)
+
+    expect(more).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('link', { name: 'Profile of Lena Müller' })).toHaveAttribute('href', '/children/7')
+  })
+
   it('shows only the Children not here yet when asked', async () => {
     todayApi([emil, ida, lena, mia])
     renderAt('/groups/2', <App />)
@@ -215,9 +312,9 @@ describe('Today tiles', () => {
     await userEvent.click(filter)
 
     expect(filter).toHaveAttribute('aria-pressed', 'true')
-    expect(pageContent().getAllByRole('listitem').map((item) => item.getAttribute('aria-label'))).toEqual(['Lena Müller'])
+    expect(within(screen.getByRole('list', { name: 'The Children’s name tags' })).getAllByRole('listitem').map((item) => item.getAttribute('aria-label'))).toEqual(['Lena Müller'])
     await userEvent.click(filter)
-    expect(pageContent().getAllByRole('listitem')).toHaveLength(4)
+    expect(within(screen.getByRole('list', { name: 'The Children’s name tags' })).getAllByRole('listitem')).toHaveLength(4)
   })
 })
 

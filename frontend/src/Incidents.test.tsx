@@ -37,6 +37,8 @@ describe('Incident log', () => {
     renderAt('/groups/2', <App />)
 
     const card = await screen.findByRole('listitem', { name: 'Lena Müller' })
+    // In the tag's menu.
+    await userEvent.click(within(card).getByRole('button', { name: 'More for Lena Müller' }))
     await userEvent.click(within(card).getByRole('button', { name: 'Report incident: Lena Müller' }))
     const form = within(card).getByRole('form', { name: 'Incident of Lena Müller' })
     expect(within(form).getByLabelText('Date')).toHaveValue('2027-01-04')

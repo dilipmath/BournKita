@@ -656,9 +656,13 @@ export type KitaOverview = {
     incidentsToday: number
     // "HH:MM" at the Kita, null without a closing time; after it, who is still checked in.
     closesAt: string | null
-    stillHereAfterClosing: (ChildSummary & { groupId: number | null })[]
+    stillHereAfterClosing: LateChild[]
   }
 }
+// Still checked in after closing time: their Group, whose Today they are checked out on (null: none).
+export type LateChild = Omit<ChildSummary, 'symbol'> & { groupId: number | null }
+// Today in the Groups a Staff member works in, and who of them is still here after closing time.
+export type OwnGroupsDay = { day: string; groups: GroupDay[]; closesAt: string | null; stillHereAfterClosing: LateChild[] }
 
 /** Today at the whole Kita. Admins only. */
 export async function fetchOverview(): Promise<KitaOverview> {
@@ -668,10 +672,10 @@ export async function fetchOverview(): Promise<KitaOverview> {
 }
 
 /** Today in the Groups the logged-in Staff member works in. */
-export async function fetchOwnGroups(): Promise<{ day: string; groups: GroupDay[] }> {
+export async function fetchOwnGroups(): Promise<OwnGroupsDay> {
   const response = await fetch('/api/overview/mine')
   if (!response.ok) throw new Error(`Loading the Staff member's Groups failed: ${response.status}`)
-  return (await response.json()) as { day: string; groups: GroupDay[] }
+  return (await response.json()) as OwnGroupsDay
 }
 
 /** A Group's dashboard, or null when there is no such Group. */

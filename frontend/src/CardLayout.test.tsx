@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { screen, within } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { fakeApi, health, renderAt, sessionAs } from './testing'
@@ -20,27 +20,26 @@ describe('the page after login', () => {
     vi.useRealTimers()
   })
 
-  it('greets an Admin by name, with the date and the whole Kita’s day as a bar', async () => {
+  it('greets an Admin by name, with the date, and sums up the whole Kita’s day below', async () => {
     fakeApi({ 'GET /api/health': health, 'GET /api/session': aylin, 'GET /api/overview': { status: 200, body: { day: '2027-01-04', groups: [monkeys, bears], kita } } })
     renderAt('/', <App />)
 
     const header = await screen.findByRole('region', { name: 'Good morning, Aylin' })
     expect(header).toHaveTextContent('Monday, 4 January')
     // The Groups' Children together.
-    expect(header).toHaveTextContent('3 of 7 here · 1 gone home · 1 absent · 2 not here yet')
+    expect(screen.getByRole('region', { name: 'Today in numbers' })).toHaveTextContent('3 of 7 Children are here')
   })
 
-  it('greets a Teacher with several Groups by email without a display name, without the Kita’s bar', async () => {
+  it('greets a Teacher with several Groups by email without a display name', async () => {
     fakeApi({
       'GET /api/health': health,
       'GET /api/session': sessionAs('teacher'),
-      'GET /api/overview/mine': { status: 200, body: { day: '2027-01-04', groups: [monkeys, { ...bears, mine: true }] } },
+      'GET /api/overview/mine': { status: 200, body: { day: '2027-01-04', groups: [monkeys, { ...bears, mine: true }], closesAt: null, stillHereAfterClosing: [] } },
     })
     renderAt('/', <App />)
 
     const header = await screen.findByRole('region', { name: 'Good morning, teacher@kita.example' })
     expect(header).toHaveTextContent('Monday, 4 January')
-    expect(within(header).queryByText(/of 7 here/)).toBeNull()
     expect(screen.getByRole('link', { name: /Monkeys/ })).toBeInTheDocument()
   })
 
