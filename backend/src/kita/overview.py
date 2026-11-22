@@ -114,6 +114,18 @@ class KitaOverview:
             incidents_today=self._incidents.count_on(day),
         )
 
+    @property
+    def closes_at(self) -> time | None:
+        return self._closes_at
+
+    def late_in(self, day: date, groups: list[GroupForStaffMember]) -> list[LateChild]:
+        """Those of these Groups' Children still here after closing time today (see _late)."""
+        children = [child for group in groups for child in self._groups.children_of(group.id)]
+        days = self._attendance.days_on(day, [child.id for child in children])
+        here = {i for i, attended in days.items() if attended.checked_out_at is None}
+        by_name = sorted(children, key=lambda child: (child.first_name, child.last_name, child.id))
+        return self._late(day, by_name, here)
+
     def _late(self, day: date, everyone: list[ChildSummary], here: set[int]) -> list[LateChild]:
         """Those still here, by first name, once the Kita's closing time has passed today."""
         now = self._clock.now().astimezone(KITA_TIME_ZONE)

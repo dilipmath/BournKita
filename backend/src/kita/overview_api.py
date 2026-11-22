@@ -1,6 +1,6 @@
 """HTTP API for the start pages: the Kita overview of Admins, and a Staff member's own Groups."""
 
-from datetime import date
+from datetime import date, time
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
@@ -66,6 +66,11 @@ class LateChildOut(BaseModel):
         )
 
 
+def hh_mm(closes_at: time | None) -> str | None:
+    """A closing time as "HH:MM" at the Kita, or None without one."""
+    return None if closes_at is None else closes_at.strftime("%H:%M")
+
+
 class KitaDayOut(BaseModel):
     model_config = CAMEL_CASE
 
@@ -82,7 +87,7 @@ class KitaDayOut(BaseModel):
             still_checked_in=day.still_checked_in,
             without_group=[ChildSummaryOut.of(child) for child in day.without_group],
             incidents_today=day.incidents_today,
-            closes_at=None if day.closes_at is None else day.closes_at.strftime("%H:%M"),
+            closes_at=hh_mm(day.closes_at),
             still_here_after_closing=[
                 LateChildOut.of(late) for late in day.still_here_after_closing
             ],
@@ -90,8 +95,13 @@ class KitaDayOut(BaseModel):
 
 
 class OwnGroupsOut(BaseModel):
+    model_config = CAMEL_CASE
+
     day: date
     groups: list[GroupDayOut]
+    # "HH:MM" at the Kita, or None; after it, who of these Groups is still checked in.
+    closes_at: str | None
+    still_here_after_closing: list[LateChildOut]
 
 
 class OverviewOut(BaseModel):
@@ -122,11 +132,13 @@ def overview_router(identity: Identity, overview: KitaOverview) -> APIRouter:
         """Today in the Groups the Staff member works in: a Teacher's start page."""
         day = overview.today()
         email = staff_member_of(request).email
+        groups = overview.own_groups(email)
         return OwnGroupsOut(
             day=day,
-            groups=[
-                GroupDayOut.of(overview.group_day(group, day))
-                for group in overview.own_groups(email)
+            groups=[GroupDayOut.of(overview.group_day(group, day)) for group in groups],
+            closes_at=hh_mm(overview.closes_at),
+            still_here_after_closing=[
+                LateChildOut.of(late) for late in overview.late_in(day, groups)
             ],
         )
 

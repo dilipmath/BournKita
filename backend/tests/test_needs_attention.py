@@ -1,12 +1,13 @@
+from collections.abc import Callable
 from datetime import time
 
 import pytest
 from fastapi.testclient import TestClient
 
 from kita.settings import Settings
-from tests.accounts import TEACHER_EMAIL, log_in
+from tests.accounts import TEACHER_EMAIL, log_in, onboard
 from tests.children import create_child
-from tests.fakes import FixedClock
+from tests.fakes import CapturingMailer, FixedClock
 from tests.groups import create_group, put_in_group
 from tests.test_attendance import at
 
@@ -58,3 +59,33 @@ def test_an_empty_closing_time_in_env_means_none() -> None:
     # compose passes an unset KITA_CLOSES_AT as "".
     assert Settings(closes_at="").closes_at is None  # type: ignore[arg-type]
     assert Settings(closes_at="16:30").closes_at == time(16, 30)  # type: ignore[arg-type]
+
+
+def test_a_teacher_sees_who_of_their_own_groups_is_still_here_after_closing(
+    admin: TestClient,
+    new_client: Callable[[], TestClient],
+    mailer: CapturingMailer,
+    clock: FixedClock,
+) -> None:
+    monkeys = create_group(admin, "Monkeys", "monkey")
+    bears = create_group(admin, "Bears", "bear")
+    lena = create_child(admin)
+    ben = create_child(admin, firstName="Ben")
+    put_in_group(admin, lena, monkeys)
+    put_in_group(admin, ben, bears)
+    teacher_id, teacher = onboard(admin, new_client, mailer)
+    admin.put(f"/api/staff/{teacher_id}/groups", json={"groupIds": [monkeys]})
+    at(clock, "2027-01-04 08:00")
+    assert log_in(teacher, TEACHER_EMAIL).status_code == 200
+    for child in (lena, ben):
+        teacher.post(f"/api/children/{child}/attendance/check-in")
+
+    at(clock, "2027-01-04 16:45")
+    assert log_in(teacher, TEACHER_EMAIL).status_code == 200
+    mine = teacher.get("/api/overview/mine").json()
+
+    # Their own Groups' only: Ben is the Bears' to see to.
+    assert mine["stillHereAfterClosing"] == [
+        {"id": lena, "firstName": "Lena", "lastName": "Müller", "groupId": monkeys},
+    ]
+    assert mine["closesAt"] == "16:30"
