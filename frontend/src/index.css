@@ -57,16 +57,6 @@
   --part-gone: var(--text-2);
   --part-absent: var(--warn);
   --on-part: #ffffff;
-  /* The page before login: soft colours behind its cards, as strong as the theme allows. */
-  --tint-lime: #d8edb2;
-  --tint-peach: #ffdfcf;
-  --tint-yellow: #ffe9a9;
-  --tint-purple: #e7dcfa;
-  --tint-teal: #d6ebe8;
-  --tint-rose: #f6dbe4;
-  --tint-strength: 55%;
-  /* The hero's highlighted word: lighter than the accent, still 3:1 as large text. */
-  --accent-soft: #4c8757;
   /* Made for legibility, and served with the app: no font service. */
   font-family: 'Atkinson Hyperlegible', ui-rounded, 'SF Pro Rounded', 'Arial Rounded MT Bold', 'Segoe UI', system-ui, sans-serif;
   font-size: 17px;
@@ -111,9 +101,6 @@
     --g-sand: #4a3f2a;
     --g-sand-accent: #d9c29a;
     --on-part: #0f1d22;
-    /* Faint enough that the light text keeps its contrast. */
-    --tint-strength: 14%;
-    --accent-soft: #a5d8ae;
   }
 }
 
@@ -207,14 +194,15 @@ h1 a {
   text-decoration: none;
 }
 
-/* The sprout in a soft green tile, as in the landing design. */
+/* The sprout on a sun-yellow tile, as in the design skill's logo: as clear on chalk as on the
+   chalkboard. */
 .app-mark {
   width: 40px;
   height: 40px;
   padding: 7px;
-  stroke: var(--accent);
-  background: color-mix(in srgb, var(--tint-lime) var(--tint-strength), var(--surface));
-  border-radius: 13px;
+  stroke: #17323a;
+  background: var(--sun);
+  border-radius: 11px;
 }
 
 .header-kita {
@@ -231,14 +219,6 @@ h1 a {
   width: auto;
   max-width: 120px;
   object-fit: contain;
-}
-
-.login-welcome {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0;
-  font-weight: 600;
 }
 
 /* A Group's colour, for whatever belongs to it: --group-fill behind its text, --group-accent for
@@ -475,83 +455,6 @@ button[aria-pressed='true'] {
   border-radius: 12px;
 }
 
-/* The login page: a warm welcome beside the login card; one above the other on narrow screens. */
-.login-page {
-  display: grid;
-  /* Never wider than the screen: the column may shrink below its content's natural width. */
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
-  margin: 24px 0;
-}
-
-@media (min-width: 900px) {
-  .login-page {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    align-items: center;
-    gap: 40px;
-  }
-}
-
-.login-hero {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 28px;
-  background: color-mix(in srgb, var(--tint-lime) var(--tint-strength), var(--bg));
-  border-radius: 24px;
-}
-
-.login-hero h2 {
-  margin: 0;
-  font-size: 2rem;
-  color: var(--accent);
-}
-
-.login-tagline {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 600;
-}
-
-.login-points {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.login-points li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.login-icon {
-  flex: none;
-  width: 32px;
-  height: 32px;
-  padding: 6px;
-  stroke: var(--accent);
-  background: var(--surface);
-  border-radius: 12px;
-}
-
-.login-side {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.login-side .login {
-  max-width: none;
-  margin: 0;
-  padding: 28px;
-  border-radius: 20px;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.06);
-}
-
 /* A refused login: the message and the lockout hint, focused together. */
 .login-problem {
   display: flex;
@@ -679,710 +582,6 @@ button[aria-pressed='true'] {
 .password-field input {
   flex: 1 1 12rem;
   min-width: 0;
-}
-
-/* On a phone the login comes first: only the greeting and the tagline stay above it. */
-@media (max-width: 599px) {
-  .login-points {
-    display: none;
-  }
-
-  .login-hero {
-    padding: 16px 20px;
-  }
-
-  .login-hero h2 {
-    font-size: 1.5rem;
-  }
-}
-
-.login-help {
-  margin: 0;
-  padding: 0 8px;
-}
-
-/* The Landing page is as wide as its design; the app's other pages stay narrower. */
-main.on-landing {
-  max-width: 1160px;
-}
-
-/* In the top bar: the page's parts, then Log in. Gone on narrow screens, as in the design. */
-.landing-links {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  font-size: 0.8rem;
-  font-weight: 650;
-}
-
-.landing-links a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.landing-links a:hover {
-  text-decoration: underline;
-}
-
-/* One row on a tablet: the top bar's buttons a little smaller than the app's, still 44px to tap. */
-.on-landing .header-actions {
-  align-items: center;
-  gap: 16px;
-}
-
-.on-landing .header-actions a.button,
-.on-landing .languages button {
-  min-height: 44px;
-  padding: 0 14px;
-  font-size: 0.75rem;
-}
-
-@media (max-width: 760px) {
-  .landing-links {
-    display: none;
-  }
-}
-
-/* The hero: the promise, large, with the way to log in. */
-.landing-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 40px;
-  align-items: center;
-  padding: 48px 0 56px;
-}
-
-/* Side by side above the design's own breakpoint. */
-@media (min-width: 761px) {
-  .landing-hero {
-    grid-template-columns: minmax(0, 1.03fr) minmax(0, 0.97fr);
-    padding: 64px 0 72px;
-  }
-}
-
-.landing-eyebrow {
-  display: inline-block;
-  margin: 0;
-  padding: 6px 14px;
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--tint-lime) var(--tint-strength), var(--surface));
-  border-radius: 99px;
-}
-
-.landing-hero h2 {
-  margin: 20px 0 16px;
-  font-size: clamp(2.1rem, 5.5vw, 3.3rem);
-  font-weight: 900;
-  line-height: 1.04;
-  letter-spacing: -0.05em;
-}
-
-.landing-headline-line {
-  display: block;
-}
-
-.landing-hero h2 em {
-  font-style: normal;
-  color: var(--accent-soft);
-}
-
-.landing-hero-lead {
-  max-width: 30rem;
-  margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.8;
-}
-
-.landing-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 28px;
-}
-
-@media (max-width: 430px) {
-  .landing-actions a.button {
-    flex: 1 1 100%;
-  }
-}
-
-.landing-trust {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 24px 0 0;
-  font-size: 0.65rem;
-}
-
-.landing-trust-icon {
-  width: 32px;
-  height: 32px;
-  padding: 6px;
-  stroke: var(--accent);
-  background: color-mix(in srgb, var(--tint-peach) var(--tint-strength), var(--surface));
-  border-radius: 50%;
-}
-
-/* The sample day beside the hero: a tilted card on a soft blob, with two notes floating over it. */
-.sample-day {
-  position: relative;
-  min-width: 0;
-  padding: 18px 0 22px 15px;
-  font-size: 0.5rem;
-}
-
-.sample-blob {
-  position: absolute;
-  top: 3%;
-  left: 5%;
-  width: 90%;
-  height: 90%;
-  background: color-mix(in srgb, var(--tint-lime) var(--tint-strength), var(--bg));
-  border-radius: 48% 52% 55% 45%;
-  transform: rotate(-8deg);
-}
-
-.sample-board {
-  position: relative;
-  padding: 19px;
-  background: var(--surface);
-  border: 1px solid color-mix(in srgb, var(--border) 25%, var(--surface));
-  border-radius: 20px;
-  box-shadow: 0 20px 65px rgb(49 85 59 / 0.11);
-  transform: rotate(1deg);
-}
-
-.sample-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 17px;
-  font-size: 0.75rem;
-}
-
-.sample-example {
-  padding: 6px 10px;
-  font-size: 0.5rem;
-  font-weight: 700;
-  background: color-mix(in srgb, var(--tint-yellow) var(--tint-strength), var(--surface));
-  border-radius: 8px;
-}
-
-.sample-stats,
-.sample-groups {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 9px;
-}
-
-.sample-stats div,
-.sample-groups div {
-  --tint: var(--tint-lime);
-  padding: 12px 9px;
-  background: color-mix(in srgb, var(--tint) var(--tint-strength), var(--surface));
-  border-radius: 12px;
-}
-
-.sample-stats div:nth-child(2),
-.sample-groups div:nth-child(1) {
-  --tint: var(--tint-peach);
-}
-
-.sample-stats div:nth-child(3),
-.sample-groups div:nth-child(3) {
-  --tint: var(--tint-purple);
-}
-
-.sample-stats small,
-.sample-stats em,
-.sample-groups small {
-  display: block;
-  font-style: normal;
-}
-
-.sample-stats b {
-  display: block;
-  margin: 4px 0;
-  font-size: 1.15rem;
-}
-
-.sample-stats em {
-  color: var(--accent);
-}
-
-.sample-groups div {
-  text-align: center;
-}
-
-.sample-group-icon {
-  font-size: 1.1rem;
-}
-
-.sample-groups b {
-  display: block;
-  margin-top: 4px;
-}
-
-.sample-label {
-  margin: 19px 0 10px;
-  font-size: 0.55rem;
-  font-weight: 800;
-}
-
-.sample-person {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 20%, var(--surface));
-}
-
-.sample-person:last-child {
-  border-bottom: 0;
-}
-
-.sample-person > span:nth-child(2) {
-  flex: 1;
-}
-
-.sample-person small {
-  display: block;
-}
-
-.sample-face {
-  display: grid;
-  place-items: center;
-  width: 27px;
-  height: 27px;
-  background: color-mix(in srgb, var(--tint-peach) var(--tint-strength), var(--surface));
-  border-radius: 9px;
-}
-
-.sample-face svg {
-  width: 16px;
-  height: 16px;
-  stroke: var(--accent);
-}
-
-.sample-status {
-  padding: 5px 8px;
-  color: var(--ok);
-  background: color-mix(in srgb, var(--tint-lime) var(--tint-strength), var(--surface));
-  border-radius: 99px;
-}
-
-.sample-note {
-  position: absolute;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  padding: 11px 14px;
-  font-weight: 750;
-  background: var(--surface);
-  border-radius: 13px;
-  box-shadow: 0 8px 28px rgb(36 63 50 / 0.11);
-}
-
-.sample-note svg {
-  width: 16px;
-  height: 16px;
-  stroke: var(--accent);
-}
-
-.sample-note-top {
-  top: 3px;
-  right: -12px;
-}
-
-.sample-note-bottom {
-  bottom: 1px;
-  left: -8px;
-}
-
-@media (max-width: 760px) {
-  .sample-day {
-    margin: 0 12px;
-  }
-
-  .sample-note-top {
-    right: 0;
-  }
-}
-
-/* Below the login: what the app does, why the data is safe and how a Kita starts. */
-.landing-section {
-  margin: 0;
-  padding: 72px 0;
-}
-
-/* The design's light bands behind every other section, across the whole width. */
-.landing-band {
-  box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--tint-yellow) 12%, var(--bg));
-  clip-path: inset(0 -100vmax);
-  background: color-mix(in srgb, var(--tint-yellow) 12%, var(--bg));
-}
-
-.landing-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.landing-center .landing-lead {
-  margin-right: auto;
-  margin-left: auto;
-}
-
-.landing-section .landing-eyebrow {
-  margin-bottom: 12px;
-}
-
-.landing-section h2,
-.landing-end h2 {
-  margin: 0 0 12px;
-  font-size: clamp(1.5rem, 4vw, 2.15rem);
-  line-height: 1.13;
-  letter-spacing: -0.04em;
-}
-
-.landing-lead {
-  max-width: 30rem;
-  margin: 0 0 36px;
-  font-size: 0.75rem;
-  line-height: 1.8;
-}
-
-/* Three cards a row, two on a small tablet, one on a phone: the design's own steps. */
-.landing-features {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.landing-features li {
-  --tint: var(--tint-lime);
-  min-height: 220px;
-  padding: 25px 23px;
-  background: color-mix(in srgb, var(--tint) var(--tint-strength), var(--surface));
-  border: 1px solid color-mix(in srgb, var(--border) 15%, var(--surface));
-  border-radius: 19px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-/* The design's buttons lift a little under the pointer. */
-.landing a.button,
-.on-landing .header-actions a.button {
-  transition: transform 0.2s;
-}
-
-.landing a.button:hover,
-.on-landing .header-actions a.button:hover {
-  transform: translateY(-2px);
-}
-
-.landing-features li:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 35px rgb(45 82 48 / 0.08);
-}
-
-.landing-features li:nth-child(2) {
-  --tint: var(--tint-peach);
-}
-
-.landing-features li:nth-child(3) {
-  --tint: var(--tint-purple);
-}
-
-.landing-features li:nth-child(4) {
-  --tint: var(--tint-yellow);
-}
-
-.landing-features li:nth-child(5) {
-  --tint: var(--tint-teal);
-}
-
-.landing-features li:nth-child(6) {
-  --tint: var(--tint-rose);
-}
-
-.landing-features h3,
-.landing-steps h3 {
-  margin: 12px 0 4px;
-  font-size: 1.1rem;
-}
-
-.landing-features p,
-.landing-steps p {
-  margin: 0;
-  font-size: 0.65rem;
-  line-height: 1.75;
-}
-
-.landing-icon {
-  width: 52px;
-  height: 52px;
-  padding: 12px;
-  stroke: var(--accent);
-  background: var(--surface);
-  border-radius: 14px;
-}
-
-/* The house with its lock beside the reasons; above them on narrow screens. */
-.landing-why {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 25px;
-  align-items: center;
-}
-
-.landing-why .landing-lead {
-  margin-bottom: 22px;
-}
-
-@media (min-width: 760px) {
-  .landing-why {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 55px;
-  }
-}
-
-.landing-why-mark {
-  position: relative;
-  display: grid;
-  place-items: center;
-  min-height: 310px;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--tint-lime) var(--tint-strength), var(--surface));
-  border-radius: 28px;
-}
-
-.landing-bubble {
-  position: absolute;
-  top: 25px;
-  left: 30px;
-  width: 90px;
-  height: 90px;
-  background: color-mix(in srgb, var(--tint-peach) calc(var(--tint-strength) + 30%), var(--surface));
-  border-radius: 50%;
-}
-
-.landing-bubble-small {
-  top: auto;
-  right: 35px;
-  bottom: 22px;
-  left: auto;
-  width: 65px;
-  height: 65px;
-  background: color-mix(in srgb, var(--tint-purple) calc(var(--tint-strength) + 30%), var(--surface));
-}
-
-.landing-why-icon {
-  position: relative;
-}
-
-.landing-why-note {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  padding: 12px 16px;
-  font-size: 0.55rem;
-  font-weight: 800;
-  background: var(--surface);
-  border-radius: 12px;
-  box-shadow: 0 8px 25px rgb(37 74 53 / 0.09);
-}
-
-.landing-why-note svg {
-  width: 16px;
-  height: 16px;
-  stroke: var(--accent);
-}
-
-.landing-why-note-one {
-  bottom: 30px;
-  left: 28px;
-}
-
-.landing-why-note-two {
-  top: 30px;
-  right: 20px;
-}
-
-/* Only decorates: left out on a phone, where it would just be more to scroll past. */
-@media (max-width: 599px) {
-  .landing-why-mark {
-    display: none;
-  }
-}
-
-.landing-why-icon {
-  width: 120px;
-  height: 120px;
-  stroke: var(--accent);
-}
-
-.landing-checklist {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin: 0 0 24px;
-  font-size: 0.65rem;
-  padding: 0;
-  list-style: none;
-}
-
-.landing-checklist li {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.landing-check {
-  flex: none;
-  width: 28px;
-  height: 28px;
-  stroke: var(--ok);
-}
-
-/* Numbered by the list itself, so the number is read out with each step. */
-.landing-steps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-  gap: 16px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  counter-reset: step;
-}
-
-.landing-steps li {
-  padding: 20px;
-  text-align: center;
-  counter-increment: step;
-}
-
-.landing-steps li:nth-child(2) {
-  --tint: var(--tint-peach);
-}
-
-.landing-steps li:nth-child(3) {
-  --tint: var(--tint-purple);
-}
-
-.landing-steps li::before {
-  display: grid;
-  place-items: center;
-  width: 49px;
-  height: 49px;
-  margin: 0 auto;
-  content: counter(step, decimal-leading-zero);
-  font-weight: 800;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--tint, var(--tint-lime)) var(--tint-strength), var(--surface));
-  border-radius: 16px;
-}
-
-/* The end of the page: back up to the login. */
-.landing-end {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin: 72px 0 0;
-  padding: 56px 25px;
-  overflow: hidden;
-  text-align: center;
-  color: var(--bg);
-  background: var(--accent);
-  border-radius: 24px;
-}
-
-.landing-end::before,
-.landing-end::after {
-  position: absolute;
-  width: 190px;
-  height: 190px;
-  content: '';
-  background: rgb(255 255 255 / 0.07);
-  border-radius: 50%;
-}
-
-.landing-end::before {
-  top: -110px;
-  left: -50px;
-}
-
-.landing-end::after {
-  right: -40px;
-  bottom: -130px;
-}
-
-.landing-end h2 {
-  margin: 0;
-}
-
-.landing-end p {
-  margin: 0 0 12px;
-  font-size: 0.65rem;
-}
-
-.landing-footer-name {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 0.95rem;
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  color: var(--text);
-}
-
-.landing-footer .app-mark {
-  width: 30px;
-  height: 30px;
-  padding: 5px;
-}
-
-.landing-end-icon {
-  width: 40px;
-  height: 40px;
-  stroke: var(--bg);
-}
-
-.landing-end a.button {
-  color: var(--accent);
-  background: var(--bg);
-  border-color: var(--bg);
-  font-weight: 600;
-}
-
-.landing-end a.button:focus-visible {
-  outline: 3px solid var(--bg);
-  outline-offset: 3px;
-}
-
-.landing-footer {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  padding: 28px 0;
-  font-size: 0.55rem;
-  color: color-mix(in srgb, var(--text) 72%, var(--bg));
 }
 
 .login h2,
@@ -1914,53 +1113,8 @@ main.with-navigation {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .group-tile,
-  .landing-features li,
-  .landing a.button,
-  .on-landing .header-actions a.button {
+  .group-tile {
     transition: none;
-  }
-
-  .landing-features li:hover,
-  .landing a.button:hover,
-  .on-landing .header-actions a.button:hover {
-    transform: none;
-  }
-}
-
-/* The Landing page's links glide to their section, unless motion is unwelcome. */
-@media (prefers-reduced-motion: no-preference) {
-  html:has(main.on-landing) {
-    scroll-behavior: smooth;
-  }
-}
-
-@media (max-width: 760px) {
-  .landing-features {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .landing-section {
-    padding: 55px 0;
-  }
-}
-
-@media (max-width: 430px) {
-  .landing-features {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .landing-features li {
-    min-height: 0;
-  }
-
-  .sample-stats,
-  .sample-groups {
-    gap: 5px;
-  }
-
-  .sample-board {
-    padding: 13px;
   }
 }
 
@@ -3202,4 +2356,716 @@ button.big {
 .feedback textarea {
   width: 100%;
   min-height: 6rem;
+}
+
+/* ===== The Landing page: the cloakroom board ===== */
+
+/* As wide as its design; the chalkboard starts at the very top. */
+main.on-landing {
+  max-width: 1120px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* The chalkboard, across the whole width: behind the top bar and the hero, and the footer. */
+main.on-landing > header,
+.landing-hero,
+.landing-footer {
+  color: var(--on-chalkboard);
+  background: var(--chalkboard);
+  border-image: conic-gradient(var(--chalkboard) 0 0) fill 0 // 0 100vmax;
+}
+
+/* On the chalkboard the keyboard's focus is sun-yellow; on the login tag (paper), blue again. */
+main.on-landing > header :focus-visible,
+.landing-hero :focus-visible,
+.landing-board :focus-visible,
+.landing-footer :focus-visible {
+  outline: 3px solid var(--sun);
+  outline-offset: 3px;
+}
+
+.landing-hero .landing-login-tag :focus-visible {
+  outline-color: var(--accent);
+}
+
+main.on-landing > header {
+  padding: 18px 0 8px;
+}
+
+main.on-landing > header h1 {
+  color: var(--on-chalkboard);
+}
+
+.on-landing .header-actions {
+  align-items: center;
+  gap: 8px;
+}
+
+/* In the top bar: the page's parts, then Log in. The parts go on narrow screens. */
+.landing-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.landing-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  color: var(--on-chalkboard-muted);
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 12px;
+}
+
+.landing-links a:hover {
+  color: var(--on-chalkboard);
+  background: var(--chalkboard-2);
+}
+
+@media (max-width: 899px) {
+  .landing-links {
+    display: none;
+  }
+}
+
+/* The language choice on the chalkboard: a pill with the chosen language filled. */
+.on-landing .languages {
+  display: inline-flex;
+  padding: 2px;
+  border: 2px solid var(--chalkboard-3);
+  border-radius: 999px;
+}
+
+.on-landing .languages button {
+  min-height: 44px;
+  padding: 0 14px;
+  color: var(--on-chalkboard-muted);
+  background: none;
+  border: 0;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.on-landing .languages button[aria-pressed='true'] {
+  color: var(--chalkboard);
+  background: var(--on-chalkboard);
+}
+
+main.on-landing > header a.button.primary {
+  min-height: 44px;
+  color: #17323a;
+  background: var(--sun);
+  border-color: var(--sun);
+  font-weight: 700;
+}
+
+/* A Child's name tag: the Group's paper colour, a punched hole, the Symbol and the name. */
+.name-tag {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  padding: 34px 8px 12px;
+  color: var(--ink);
+  background: var(--group-fill);
+  border-radius: 18px;
+  box-shadow: 0 3px 0 rgb(0 0 0 / 0.16);
+  font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.tag-hole {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  background: var(--chalkboard);
+  border-radius: 50%;
+  box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.35);
+}
+
+.name-tag .name-tag-symbol {
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 6px;
+}
+
+.name-tag-name {
+  display: block;
+}
+
+/* The rail on the chalkboard, with tags hanging from it on strings. */
+.landing-rail::before,
+.landing-board::before {
+  display: block;
+  height: 8px;
+  content: '';
+  background: var(--chalkboard-3);
+  border-radius: 999px;
+}
+
+.landing-rail {
+  padding-top: 8px;
+}
+
+.landing-rail-tags {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  margin: 14px 0 0;
+  padding: 0 2%;
+  list-style: none;
+}
+
+.landing-rail-tags .name-tag {
+  width: 96px;
+  transform-origin: 50% -18px;
+  animation: tag-settle 0.9s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  animation-delay: calc(var(--i) * 110ms);
+}
+
+.landing-rail-tags .name-tag::before {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  width: 3px;
+  height: 18px;
+  margin-left: -1.5px;
+  content: '';
+  background: var(--on-chalkboard-muted);
+}
+
+.landing-rail-tags li:nth-child(odd) .name-tag {
+  margin-top: 6px;
+}
+
+.landing-rail-tags li:nth-child(3n) .name-tag {
+  margin-top: 16px;
+}
+
+/* The page's one moment of motion: the tags swing onto the rail and settle. */
+@keyframes tag-settle {
+  0% {
+    opacity: 0;
+    transform: rotate(-16deg) translateY(-10px);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-rail-tags .name-tag {
+    animation: none;
+  }
+}
+
+@media (max-width: 899px) {
+  .landing-rail-tags li:nth-child(n + 6) {
+    display: none;
+  }
+}
+
+@media (max-width: 519px) {
+  .landing-rail-tags li:nth-child(n + 5) {
+    display: none;
+  }
+
+  .landing-rail-tags .name-tag {
+    width: 78px;
+    padding-top: 30px;
+    font-size: 0.85rem;
+  }
+
+  .landing-rail-tags .name-tag-symbol {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* The hero: the promise beside the login tag; on a phone, the login right under the promise. */
+.landing-hero {
+  padding-bottom: 72px;
+}
+
+.landing-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  grid-template-areas:
+    'headline login'
+    'more login';
+  /* The promise keeps its own height; the lead follows right under it. */
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  gap: 22px 56px;
+  margin-top: 56px;
+}
+
+.landing-headline {
+  grid-area: headline;
+  max-width: 15em;
+  margin: 0;
+  font-size: clamp(2.2rem, 4.6vw, 3.6rem);
+  color: var(--on-chalkboard);
+}
+
+.landing-hero-more {
+  grid-area: more;
+}
+
+.landing-hero .landing-lead {
+  max-width: 34em;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.landing-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-chips li {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  background: var(--chalkboard-2);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 899px) {
+  .landing-hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'headline' 'login' 'more';
+    grid-template-rows: none;
+    gap: 32px;
+    margin-top: 40px;
+  }
+}
+
+/* The login card as a tag hanging on the board, its hole at the top. */
+.landing-login-tag {
+  position: relative;
+  grid-area: login;
+  color: var(--text);
+}
+
+.landing-login-tag > .tag-hole {
+  z-index: 1;
+  top: 14px;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  box-shadow: inset 0 3px 0 rgb(0 0 0 / 0.4);
+}
+
+.landing-login-tag .login {
+  max-width: none;
+  margin: 0;
+  padding: 46px 28px 28px;
+  border: 0;
+  border-radius: 24px;
+  box-shadow:
+    0 14px 0 -6px rgb(0 0 0 / 0.22),
+    0 24px 40px -18px rgb(0 0 0 / 0.5);
+}
+
+@media (max-width: 519px) {
+  .landing-login-tag .login {
+    padding: 44px 18px 22px;
+  }
+}
+
+/* The sections below the hero. */
+.landing-section {
+  padding: 88px 0;
+}
+
+.landing-section h2 {
+  max-width: 18em;
+  margin: 0;
+  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+}
+
+.landing-sub {
+  max-width: 36em;
+  margin: 14px 0 0;
+  font-size: 1.1rem;
+  color: var(--text-2);
+}
+
+@media (max-width: 519px) {
+  .landing-section {
+    padding: 64px 0;
+  }
+}
+
+/* Attendance in one tap: the demo board beside what the app does. */
+.landing-try {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  align-items: start;
+  gap: 56px;
+  margin-top: 40px;
+}
+
+@media (max-width: 899px) {
+  .landing-try {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+  }
+}
+
+.landing-board {
+  padding: 34px 24px 26px;
+  color: var(--on-chalkboard);
+  background: var(--chalkboard);
+  border-radius: 26px;
+}
+
+.landing-example {
+  display: inline-block;
+  margin: 18px 0 0;
+  padding: 2px 12px;
+  color: #17323a;
+  background: var(--sun);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.landing-board ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 519px) {
+  .landing-board ul {
+    gap: 4px 10px;
+  }
+}
+
+/* The whole tag is the button. */
+.demo-tag {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  margin-top: 18px;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 18px;
+}
+
+.demo-tag .name-tag {
+  transition:
+    transform 0.15s,
+    background 0.15s;
+}
+
+.demo-tag.notYet .name-tag {
+  color: var(--on-chalkboard);
+  background: transparent;
+  box-shadow: inset 0 0 0 3px var(--on-chalkboard-muted);
+}
+
+.demo-tag.notYet .tag-hole {
+  background: var(--on-chalkboard-muted);
+  box-shadow: none;
+}
+
+/* Hung up: dropped a little onto the rail. */
+.demo-tag.here .name-tag {
+  transform: translateY(4px);
+}
+
+.demo-tag.gone .name-tag {
+  color: var(--on-chalkboard);
+  background: var(--chalkboard-2);
+  box-shadow: inset 0 0 0 2px var(--chalkboard-3);
+}
+
+.demo-tag.gone .tag-hole {
+  background: var(--chalkboard);
+}
+
+.name-tag-state {
+  display: block;
+  margin-top: 2px;
+  font-weight: 400;
+  font-size: 0.82rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-tag .name-tag {
+    transition: none;
+  }
+}
+
+.landing-count {
+  margin: 26px 0 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.landing-count small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--on-chalkboard-muted);
+}
+
+.landing-features {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-features li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 16px;
+  padding: 20px 0;
+  border-top: 2px solid var(--line);
+}
+
+.landing-features li:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.landing-features .icon {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 10px;
+  color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 14%, var(--paper));
+  border-radius: 14px;
+}
+
+.landing-features li.landing-allergies .icon {
+  color: var(--raspberry);
+  background: color-mix(in srgb, var(--raspberry) 14%, var(--paper));
+}
+
+.landing-features h3,
+.landing-timeline h3,
+.landing-privacy h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.landing-features p,
+.landing-timeline p,
+.landing-privacy p {
+  margin: 4px 0 0;
+  color: var(--text-2);
+}
+
+/* How a day runs: a sequence, so the times are its markers. On paper, across the whole width. */
+.landing-day {
+  background: var(--paper);
+  border-image: conic-gradient(var(--paper) 0 0) fill 0 // 0 100vmax;
+}
+
+.landing-timeline {
+  position: relative;
+  margin: 44px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-timeline::before {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 111px;
+  width: 4px;
+  content: '';
+  background: repeating-linear-gradient(to bottom, var(--line) 0 10px, transparent 10px 18px);
+  border-radius: 2px;
+}
+
+.landing-timeline li {
+  display: grid;
+  grid-template-columns: 96px 36px minmax(0, 1fr);
+  align-items: start;
+  gap: 0 16px;
+  padding: 14px 0;
+}
+
+.landing-timeline time {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: right;
+  letter-spacing: -0.02em;
+}
+
+.landing-dot {
+  width: 24px;
+  height: 24px;
+  margin: 6px 0 0 6px;
+  background: var(--dot);
+  border-radius: 50%;
+  box-shadow: 0 0 0 5px var(--paper);
+}
+
+.landing-timeline p {
+  max-width: 40em;
+}
+
+@media (max-width: 899px) {
+  .landing-timeline::before {
+    left: 15px;
+  }
+
+  .landing-timeline li {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 4px 14px;
+  }
+
+  .landing-timeline time {
+    grid-column: 2;
+    font-size: 1.25rem;
+    text-align: left;
+  }
+
+  .landing-dot {
+    grid-row: 1 / 3;
+    grid-column: 1;
+    margin: 4px 0 0 6px;
+  }
+
+  .landing-timeline li > div {
+    grid-column: 2;
+  }
+}
+
+/* Who can do what: a real table, its Roles as columns. */
+.landing-roles .table-region {
+  margin: 36px 0 0;
+  border-radius: 18px;
+}
+
+.landing-roles table {
+  min-width: 620px;
+}
+
+.landing-roles thead th {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--on-chalkboard);
+  background: var(--chalkboard);
+}
+
+.landing-roles tbody th {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.landing-roles td {
+  font-weight: 700;
+}
+
+.landing-roles .yes {
+  color: var(--green);
+}
+
+.landing-roles .no {
+  font-weight: 400;
+  color: var(--text-2);
+}
+
+.landing-roles .part {
+  color: var(--blue);
+}
+
+/* Data that stays in the building: four promises, two by two. */
+.landing-privacy {
+  padding-top: 0;
+}
+
+.landing-privacy ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 56px;
+  margin: 36px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-privacy li {
+  padding: 22px 0;
+  border-top: 2px solid var(--line);
+}
+
+.landing-privacy h3 .icon {
+  color: var(--green);
+}
+
+@media (max-width: 899px) {
+  .landing-privacy ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The foot of the page: BournKita, the language and the year. */
+.landing-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 32px;
+  padding: 40px 0;
+  color: var(--on-chalkboard-muted);
+}
+
+.landing-footer-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--on-chalkboard);
+}
+
+.landing-footer .app-mark {
+  width: 32px;
+  height: 32px;
+  padding: 5px;
+}
+
+.landing-footer p {
+  margin: 0;
+}
+
+/* The page's links glide to their section, unless motion is unwelcome. */
+@media (prefers-reduced-motion: no-preference) {
+  html:has(main.on-landing) {
+    scroll-behavior: smooth;
+  }
 }

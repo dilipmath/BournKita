@@ -7,25 +7,8 @@ import HeaderMenu from './HeaderMenu'
 import LoginLink from './LoginLink'
 import { landingSectionIds } from './landingSections'
 import Icon from './Icon'
+import LanguageChoice from './LanguageChoice'
 import { GroupNavigation, MainNavigation } from './MainNavigation'
-
-const languages = [
-  { code: 'de', label: 'Deutsch' },
-  { code: 'en', label: 'English' },
-] as const
-
-function LanguageChoice() {
-  const { t, i18n } = useTranslation()
-  return (
-    <nav aria-label={t('language')} className="languages">
-      {languages.map(({ code, label }) => (
-        <button key={code} type="button" lang={code} aria-pressed={i18n.language === code} onClick={() => void i18n.changeLanguage(code)}>
-          {label}
-        </button>
-      ))}
-    </nav>
-  )
-}
 
 /** The Group whose pages are open (its Today view, Tasks or Calendar), or null. */
 function useCurrentGroupId(): number | null {
@@ -45,9 +28,10 @@ function LandingLinks() {
   return (
     <>
       <nav aria-label={t('onThisPage')} className="landing-links">
-        <a href={`#${landingSectionIds.features}`}>{t('navFeatures')}</a>
-        <a href={`#${landingSectionIds.why}`}>{t('navWhy')}</a>
-        <a href={`#${landingSectionIds.how}`}>{t('navHow')}</a>
+        <a href={`#${landingSectionIds.attendance}`}>{t('navAttendance')}</a>
+        <a href={`#${landingSectionIds.day}`}>{t('navDay')}</a>
+        <a href={`#${landingSectionIds.roles}`}>{t('navRoles')}</a>
+        <a href={`#${landingSectionIds.privacy}`}>{t('navPrivacy')}</a>
       </nav>
       <LoginLink className="button primary">{t('logIn')}</LoginLink>
     </>

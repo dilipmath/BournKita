@@ -8,7 +8,7 @@ import { fakeApi, health, renderAt, sessionAs } from './testing'
 
 const loggedOut = { status: 401, body: { detail: 'not_logged_in' } }
 
-describe('the login card', () => {
+describe('the hero', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] })
   })
@@ -17,21 +17,19 @@ describe('the login card', () => {
     await i18n.changeLanguage('en')
   })
 
-  it('greets by the time of day at the Kita and says what the app is for', async () => {
+  it('opens with the promise, and the login card in it with a greeting', async () => {
     // 07:30 at the Kita in winter.
     vi.setSystemTime(new Date('2027-01-04T06:30:00Z'))
     fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
     renderAt('/', <App />)
 
-    expect(await screen.findByRole('heading', { name: 'Good morning' })).toBeInTheDocument()
-    const about = screen.getByRole('list', { name: 'What you find here' })
-    expect(within(about).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-      'Who is here today, at a glance',
-      'Allergies, conditions and who may pick up, when they matter',
-      'On the Kita’s own server: nothing leaves the building',
-    ])
-    expect(screen.getByRole('form', { name: 'Log in' })).toBeInTheDocument()
-    expect(screen.getByText('Trouble logging in? Ask the Kita manager.')).toBeInTheDocument()
+    const hero = await screen.findByRole('region', { name: 'Every child in view, from first check-in to pick-up.' })
+    const form = within(hero).getByRole('form', { name: 'Log in' })
+    expect(within(form).getByRole('heading', { name: 'Good morning' })).toBeInTheDocument()
+    // The account decides the Role: nobody says which one they are.
+    expect(within(form).queryByRole('radio')).toBeNull()
+    expect(within(form).queryByText('I am')).toBeNull()
+    expect(within(form).getByRole('link', { name: 'Forgot your password?' })).toHaveAttribute('href', '/forgot-password')
   })
 
   it('says good evening late in the day, in German too', async () => {
@@ -40,9 +38,18 @@ describe('the login card', () => {
     await i18n.changeLanguage('de')
     renderAt('/', <App />)
 
-    expect(await screen.findByRole('heading', { name: 'Guten Abend' })).toBeInTheDocument()
-    expect(screen.getByRole('form', { name: 'Anmelden' })).toBeInTheDocument()
-    expect(screen.getByText('Probleme beim Anmelden? Fragen Sie die Kita-Leitung.')).toBeInTheDocument()
+    const hero = await screen.findByRole('region', { name: 'Alle Kinder im Blick, vom ersten Check-in bis zur Abholung.' })
+    const form = within(hero).getByRole('form', { name: 'Anmelden' })
+    expect(within(form).getByRole('heading', { name: 'Guten Abend' })).toBeInTheDocument()
+  })
+
+  it('hangs invented name tags on its rail, skipped by screen readers', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/', <App />)
+
+    await screen.findByRole('form', { name: 'Log in' })
+    // Lina hangs on the rail only, never in the demo below.
+    expect(isInaccessible(screen.getByText('Lina'))).toBe(true)
   })
 
   it('logs in from the card', async () => {
@@ -66,42 +73,36 @@ describe('the login card', () => {
   })
 })
 
-describe('the top of the Landing page', () => {
+describe('the top bar', () => {
   afterEach(async () => {
     await i18n.changeLanguage('en')
-  })
-
-  it('opens with the promise and a way to log in', async () => {
-    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
-    renderAt('/', <App />)
-
-    expect(await screen.findByRole('heading', { level: 2, name: 'Less admin. More playtime.' })).toBeInTheDocument()
-    const logIns = screen.getAllByRole('link', { name: 'Log in' })
-    // In the top bar and in the hero, both to the login card.
-    expect(logIns).toHaveLength(2)
-    for (const link of logIns) expect(link).toHaveAttribute('href', '#login')
-    expect(screen.getByRole('form', { name: 'Log in' })).toHaveAttribute('id', 'login')
   })
 
   it('puts the cursor in the email field when Log in is tapped', async () => {
     fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
     renderAt('/', <App />)
 
-    await userEvent.click((await screen.findAllByRole('link', { name: 'Log in' }))[1])
+    const logIn = await screen.findByRole('link', { name: 'Log in' })
+    expect(logIn).toHaveAttribute('href', '#login')
+    expect(screen.getByRole('form', { name: 'Log in' })).toHaveAttribute('id', 'login')
+    await userEvent.click(logIn)
     expect(screen.getByLabelText('Email address')).toHaveFocus()
   })
 
-  it('leads to each part of the page from the top bar', async () => {
+  it('leads to each part of the page', async () => {
     fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
     renderAt('/', <App />)
 
     const sections = await screen.findByRole('navigation', { name: 'On this page' })
     const links = within(sections).getAllByRole('link')
-    expect(links.map((link) => link.textContent)).toEqual(['Features', 'Why BournKita', 'How it works'])
-    for (const link of links) {
-      const target = document.getElementById(link.getAttribute('href')!.slice(1))
-      expect(target).toHaveRole('region')
-    }
+    expect(links.map((link) => link.textContent)).toEqual(['Attendance', 'A day', 'Roles', 'Privacy'])
+    const targets = links.map((link) => document.getElementById(link.getAttribute('href')!.slice(1)))
+    expect(targets.map((target) => target && within(target).getAllByRole('heading', { level: 2 })[0].textContent)).toEqual([
+      'Attendance in one tap',
+      'How a day runs',
+      'Who can do what',
+      'Data that stays in the building',
+    ])
   })
 
   it('in German too', async () => {
@@ -109,105 +110,162 @@ describe('the top of the Landing page', () => {
     await i18n.changeLanguage('de')
     renderAt('/', <App />)
 
-    expect(await screen.findByRole('heading', { level: 2, name: 'Weniger Verwaltung. Mehr Zeit zum Spielen.' })).toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: 'Anmelden' })).toHaveLength(2)
-    expect(screen.getByRole('navigation', { name: 'Auf dieser Seite' })).toBeInTheDocument()
+    const sections = await screen.findByRole('navigation', { name: 'Auf dieser Seite' })
+    expect(within(sections).getAllByRole('link').map((link) => link.textContent)).toEqual(['Anwesenheit', 'Tagesablauf', 'Rollen', 'Datenschutz'])
+    expect(screen.getByRole('link', { name: 'Anmelden' })).toBeInTheDocument()
   })
 
-  it('shows a sample day beside the promise, marked as an example and skipped by screen readers', async () => {
-    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
-    renderAt('/', <App />)
-
-    const sample = await screen.findByText('Good morning, team!')
-    expect(screen.getByText('Example')).toBeVisible()
-    // Invented Groups and Staff, never this Kita's.
-    expect(screen.getByText('Bears')).toBeInTheDocument()
-    expect(screen.getByText('Teacher A')).toBeInTheDocument()
-    expect(isInaccessible(sample)).toBe(true)
-    expect(isInaccessible(screen.getByText('Teacher A'))).toBe(true)
-  })
-
-  it('keeps the pages opened from an email without it', async () => {
+  it('keeps the pages opened from an email without the Landing page', async () => {
     fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
     renderAt('/forgot-password', <App />)
 
     expect(await screen.findByRole('heading', { level: 1, name: 'BournKita' })).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: 'On this page' })).toBeNull()
     expect(screen.queryByRole('link', { name: 'Log in' })).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Every child in view, from first check-in to pick-up.' })).toBeNull()
   })
 })
 
-describe('below the login', () => {
+describe('the Attendance demo', () => {
   afterEach(async () => {
     await i18n.changeLanguage('en')
   })
 
-  it('says what the app does for the Kita day', async () => {
-    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+  it('checks in an invented Child, says so, and takes it back, all without the server', async () => {
+    const calls = fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
     renderAt('/', <App />)
 
-    const features = await screen.findByRole('region', { name: 'One platform. All your Kita.' })
-    expect(within(features).getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)).toEqual([
-      'Today',
-      'Child profiles',
-      'Groups and Task boards',
-      'Calendar',
-      'Incidents',
-      'Staff accounts',
-    ])
+    const demo = await screen.findByRole('region', { name: 'Attendance in one tap' })
+    expect(within(demo).getByText('Example')).toBeVisible()
+    expect(within(demo).getByText('3 of 6 are here')).toBeInTheDocument()
+    const before = calls.length
+
+    await userEvent.click(within(demo).getByRole('button', { name: 'Elias Not here yet' }))
+
+    expect(within(demo).getByRole('button', { name: 'Elias Here' })).toBeInTheDocument()
+    expect(within(demo).getByText('4 of 6 are here')).toBeInTheDocument()
+    // Announced, as the real check-in is.
+    const toast = screen.getByText('Example: Elias is here')
+    expect(toast.closest('[aria-live="polite"]')).not.toBeNull()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Undo' }))
+
+    expect(within(demo).getByRole('button', { name: 'Elias Not here yet' })).toBeInTheDocument()
+    expect(within(demo).getByText('3 of 6 are here')).toBeInTheDocument()
+    expect(calls.slice(before)).toEqual([])
   })
 
-  it('shows how a Kita gets started, step by step', async () => {
-    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
-    renderAt('/', <App />)
-
-    const start = await screen.findByRole('region', { name: 'Your Kita, organized in 3 steps.' })
-    const steps = within(within(start).getByRole('list')).getAllByRole('listitem')
-    expect(steps.map((step) => within(step).getByRole('heading', { level: 3 }).textContent)).toEqual([
-      'An Admin sets up the Kita',
-      'The children are added',
-      'Every morning, mark who is here',
-    ])
-  })
-
-  it('says why the Kita’s data is safe with it', async () => {
-    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
-    renderAt('/', <App />)
-
-    const why = await screen.findByRole('region', { name: 'Made for the people who care for little people.' })
-    expect(within(why).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-      'Runs on the Kita’s own server, in the local network only',
-      'Each Role sees only what it needs; the Audit log shows who viewed or changed a Child’s data',
-      'A deleted Child profile waits in the Archive, then is purged after the Retention period',
-      'On tablets and phones, in English and German',
-    ])
-  })
-
-  it('leads back up to the login from the end of the page, in German too', async () => {
+  it('sends a Child home with the next tap, in German too', async () => {
     fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
     await i18n.changeLanguage('de')
     renderAt('/', <App />)
 
-    expect(await screen.findByRole('region', { name: 'Eine Plattform. Ihre ganze Kita.' })).toBeInTheDocument()
-    const back = screen.getByRole('link', { name: 'Zur Anmeldung' })
-    const form = screen.getByRole('form', { name: 'Anmelden' })
-    expect(back).toHaveAttribute('href', `#${form.id}`)
+    const demo = await screen.findByRole('region', { name: 'Anwesenheit mit einem Tipp' })
+    expect(within(demo).getByText('Beispiel')).toBeVisible()
+    await userEvent.click(within(demo).getByRole('button', { name: 'Mia Da' }))
+
+    expect(within(demo).getByRole('button', { name: 'Mia Abgeholt' })).toBeInTheDocument()
+    expect(screen.getByText('Beispiel: Mia ist abgeholt')).toBeInTheDocument()
+    expect(within(demo).getByText('2 von 6 sind da')).toBeInTheDocument()
+  })
+})
+
+describe('below the demo', () => {
+  afterEach(async () => {
+    await i18n.changeLanguage('en')
   })
 
-  it('ends with BournKita and the current year', async () => {
+  it('runs through a day, from arrival to pick-up', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/', <App />)
+
+    const day = await screen.findByRole('region', { name: 'How a day runs' })
+    const moments = within(within(day).getByRole('list')).getAllByRole('listitem')
+    expect(moments.map((moment) => [moment.querySelector('time')?.textContent, within(moment).getByRole('heading', { level: 3 }).textContent])).toEqual([
+      ['07:30', 'Arrival'],
+      ['09:00', 'Morning circle'],
+      ['11:45', 'Lunch'],
+      ['13:00', 'Nap'],
+      ['15:30', 'Pick-up'],
+    ])
+  })
+
+  it('shows what each Role may do, as the app allows it', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/', <App />)
+
+    const table = await screen.findByRole('table', { name: 'What each Role may do' })
+    expect(within(table).getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual(['Task', 'Admin', 'Teacher', 'Guest'])
+    const rows = within(table)
+      .getAllByRole('row')
+      .slice(1)
+      .map((row) => [within(row).getByRole('rowheader').textContent, ...within(row).getAllByRole('cell').map((cell) => cell.textContent)])
+    expect(rows).toEqual([
+      ['View Child profiles', 'Yes', 'Yes', 'No'],
+      ['Create, change and archive Child profiles', 'Yes', 'No', 'No'],
+      ['Check Children in and out', 'Yes', 'Yes', 'No'],
+      ['Report Incidents', 'Yes', 'Yes', 'No'],
+      ['Work on the Groups’ Task boards', 'Yes', 'Yes', 'No'],
+      ['Add and change Events', 'Yes', 'Yes', 'No'],
+      ['See the Calendar', 'Yes', 'Yes', 'Kita-wide only'],
+      ['Manage Groups and Staff accounts', 'Yes', 'No', 'No'],
+    ])
+  })
+
+  it('promises only what the app keeps, saying what leaves the building', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    renderAt('/', <App />)
+
+    const privacy = await screen.findByRole('region', { name: 'Data that stays in the building' })
+    expect(within(privacy).getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)).toEqual([
+      'Your Kita’s own server',
+      'No trackers',
+      'Archive with a Retention period',
+      'Audit log',
+    ])
+    const server = within(privacy).getByText(/What leaves it/)
+    expect(server).toHaveTextContent('Reminders')
+    expect(server).toHaveTextContent('encrypted weekly backup')
+  })
+
+  it('names the Roles as the app does in German', async () => {
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
+    await i18n.changeLanguage('de')
+    renderAt('/', <App />)
+
+    const table = await screen.findByRole('table', { name: 'Was jede Rolle darf' })
+    expect(within(table).getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual(['Aufgabe', 'Leitung', 'Erzieher:in', 'Gast'])
+  })
+})
+
+describe('the footer', () => {
+  afterEach(async () => {
+    vi.useRealTimers()
+    await i18n.changeLanguage('en')
+  })
+
+  it('ends with BournKita, the language and the current year', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2027-03-01T09:00:00Z'))
     fakeApi({ 'GET /api/health': health, 'GET /api/session': loggedOut })
     renderAt('/', <App />)
 
     expect(await screen.findByText('© 2027 BournKita')).toBeInTheDocument()
-    expect(screen.getByText('Made with care for little big moments.')).toBeInTheDocument()
     vi.useRealTimers()
+    // At the top and at the foot of the page.
+    const languages = screen.getAllByRole('navigation', { name: 'Language' })
+    expect(languages).toHaveLength(2)
+    await userEvent.click(within(languages[1]).getByRole('button', { name: 'Deutsch' }))
+
+    expect(await screen.findByRole('heading', { name: 'Alle Kinder im Blick, vom ersten Check-in bis zur Abholung.' })).toBeInTheDocument()
+    for (const each of screen.getAllByRole('navigation', { name: 'Sprache' })) {
+      expect(within(each).getByRole('button', { name: 'Deutsch' })).toHaveAttribute('aria-pressed', 'true')
+    }
   })
 })
 
 describe('the Kita’s name', () => {
-  it('shows the Kita’s name and logo beside BournKita, and in the welcome', async () => {
+  it('shows the Kita’s name and logo beside BournKita', async () => {
     fakeApi({
       'GET /api/health': health,
       'GET /api/session': loggedOut,
@@ -217,10 +275,7 @@ describe('the Kita’s name', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'BournKita' })).toBeInTheDocument()
     expect(await screen.findByText('Kita Sonnenschein')).toBeInTheDocument()
-    // In the header and in the welcome.
-    const logos = screen.getAllByRole('img', { name: 'Logo of Kita Sonnenschein' })
-    expect(logos.map((logo) => logo.getAttribute('src'))).toEqual(['/api/kita/logo', '/api/kita/logo'])
-    expect(screen.getByText('Welcome to Kita Sonnenschein')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Logo of Kita Sonnenschein' })).toHaveAttribute('src', '/api/kita/logo')
   })
 
   it('shows BournKita alone without one', async () => {

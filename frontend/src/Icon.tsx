@@ -101,6 +101,38 @@ const paths = {
       <path d="M10.5 13v-1.2a1.5 1.5 0 0 1 3 0V13" />
     </>
   ),
+  server: (
+    <>
+      <rect x="3.5" y="4" width="17" height="6.5" rx="2" />
+      <rect x="3.5" y="13.5" width="17" height="6.5" rx="2" />
+      <path d="M7 7.2h.01M7 16.7h.01" />
+    </>
+  ),
+  tablet: (
+    <>
+      <rect x="4" y="3" width="16" height="18" rx="3" />
+      <path d="M11 17.5h2" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
+    </>
+  ),
+  archive: (
+    <>
+      <rect x="3.5" y="4" width="17" height="5" rx="1.5" />
+      <path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4" />
+    </>
+  ),
+  log: (
+    <>
+      <rect x="5" y="4" width="14" height="17" rx="2.5" />
+      <path d="M9 4V3h6v1M8.5 13l2.5 2.5 4.5-5" />
+    </>
+  ),
+  feedback: <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-5 4v-4.2A2.5 2.5 0 0 1 4 13.5z" />,
   // BournKita's mark: a sprout.
   sprout: (
     <>

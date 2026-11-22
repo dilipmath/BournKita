@@ -21,7 +21,6 @@ test('the Landing page shows the Kita\'s name and lets the password be shown', a
 
   await expect(page.getByRole('heading', { level: 1, name: 'BournKita' })).toBeVisible()
   await expect(page.getByText('Kita Testhausen', { exact: true })).toBeVisible()
-  await expect(page.getByText('Welcome to Kita Testhausen')).toBeVisible()
   const password = page.getByLabel('Password', { exact: true })
   await password.fill('secret words')
   await expect(password).toHaveAttribute('type', 'password')
@@ -32,8 +31,8 @@ test('the Landing page shows the Kita\'s name and lets the password be shown', a
 test('Log in at the top of the Landing page leads to the login, ready to type', async ({ page }) => {
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { level: 2, name: 'Less admin. More playtime.' })).toBeVisible()
-  await page.getByRole('link', { name: 'Log in' }).last().tap()
+  await expect(page.getByRole('heading', { level: 2, name: 'Every child in view, from first check-in to pick-up.' })).toBeVisible()
+  await page.getByRole('link', { name: 'Log in' }).tap()
 
   await expect(page.getByLabel('Email address')).toBeFocused()
   await expect(page.getByLabel('Email address')).toBeInViewport()

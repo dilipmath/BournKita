@@ -97,7 +97,7 @@ export default function App() {
             {/* For whoever cannot log in, so no login needed either. */}
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="*" element={session === null && <LandingPage kita={kita} onLoggedIn={setSession} />} />
+            <Route path="*" element={session === null && <LandingPage onLoggedIn={setSession} />} />
           </Routes>
           {session && isGuest && (
             <Routes>

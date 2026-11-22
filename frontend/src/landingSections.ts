@@ -1,2 +1,2 @@
-/** The Landing page's parts that the top bar and the page's own links lead to. */
-export const landingSectionIds = { features: 'features', why: 'why', how: 'how' } as const
+/** The Landing page's parts that the top bar's links lead to. */
+export const landingSectionIds = { attendance: 'attendance', day: 'day', roles: 'roles', privacy: 'privacy' } as const

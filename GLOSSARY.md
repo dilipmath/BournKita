@@ -127,7 +127,7 @@ The app's name: what Staff members see in the header, the browser tab and the in
 _Avoid_: Kita Kids Database (the former name)
 
 **Landing page**:
-What anyone sees at the app's address before logging in: what BournKita is for, how a Kita gets started, and the login. It shows no Kita data, only invented examples.
+What anyone sees at the app's address before logging in: what BournKita is for, the login, an example of checking in to try, how a day runs, what each Role may do and how the data is kept. It shows no Kita data, only invented examples.
 _Avoid_: Login page, home page, start page (that is what a Staff member sees after logging in)
 
 **Role**:
