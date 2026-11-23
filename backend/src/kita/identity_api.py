@@ -53,7 +53,8 @@ class PasswordResetRequest(BaseModel):
 
 
 class Session(BaseModel):
-    """Who is logged in, and how long the session survives without activity."""
+    """Who is logged in, how long the session survives without activity, and how long the
+    Archive keeps a deleted Child profile (said before an Admin deletes one)."""
 
     model_config = ConfigDict(
         alias_generator=to_camel, validate_by_name=True, serialize_by_alias=True
@@ -63,6 +64,7 @@ class Session(BaseModel):
     role: Role
     display_name: str | None
     inactivity_timeout_minutes: int
+    archive_retention_months: int
 
 
 def staff_member_dependency(
@@ -178,6 +180,7 @@ def identity_router(identity: Identity, settings: Settings, clock: Clock) -> API
             role=staff_member.role,
             display_name=staff_member.display_name,
             inactivity_timeout_minutes=timeout_minutes,
+            archive_retention_months=settings.archive_retention_months,
         )
 
     @router.post("")

@@ -25,9 +25,10 @@ from kita.archive import Archive
 from kita.attendance import Attendance
 from kita.attendance_api import ATTENDANCE_REFUSALS, AbsenceIn, AbsenceOut, AttendanceStep
 from kita.audit_api import (
+    about_noted_children,
     creates_child,
-    not_about_one_child,
     note_changed_fields,
+    note_children,
     part_of_logged_view,
 )
 from kita.children import (
@@ -74,6 +75,14 @@ class ChildSummaryOut(BaseModel):
     @classmethod
     def of(cls, summary: ChildSummary) -> "ChildSummaryOut":
         return cls.model_validate(summary)
+
+
+class ListedChildOut(ChildSummaryOut):
+    """A Child in the list: their Group (None: in none) and, when asked for, their Alerts, so
+    staff see them first (None: not asked for)."""
+
+    group_id: int | None
+    alerts: list[AlertOut] | None
 
 
 class ChildIn(BaseModel):
@@ -296,17 +305,36 @@ def children_router(
     admin_only = [Depends(role_dependency(identity, "admin"))]
 
     @router.get("")
-    @not_about_one_child
+    @about_noted_children
     def list_children(
-        search: str = "", group_id: Annotated[int | None, Query(alias="groupId")] = None
-    ) -> list[ChildSummaryOut]:
-        """All current Children, or a Group's (`groupId`), searched by name."""
+        request: Request,
+        search: str = "",
+        group_id: Annotated[int | None, Query(alias="groupId")] = None,
+        with_alerts: Annotated[bool, Query(alias="withAlerts")] = False,
+    ) -> list[ListedChildOut]:
+        """All current Children, or a Group's (`groupId`), searched by name, each with their
+        Group and (`withAlerts`) their Alerts."""
         summaries = children.summaries(search)
         if group_id is not None:
             with refusals_as_http_errors(_REFUSALS):
                 in_group = {child.id for child in groups.children_of(group_id)}
             summaries = [summary for summary in summaries if summary.id in in_group]
-        return [ChildSummaryOut.of(summary) for summary in summaries]
+        child_ids = [summary.id for summary in summaries]
+        group_of = groups.groups_of_children(child_ids)
+        its_alerts = alerts.of_children(child_ids) if with_alerts else {}
+        # Names and Groups are not logged; Alerts are health data, so their views are (as on
+        # the Group dashboard).
+        note_children(request, list(its_alerts))
+        return [
+            ListedChildOut(
+                **ChildSummaryOut.of(summary).model_dump(by_alias=False),
+                group_id=group_of.get(summary.id),
+                alerts=[AlertOut.of(alert) for alert in its_alerts.get(summary.id, [])]
+                if with_alerts
+                else None,
+            )
+            for summary in summaries
+        ]
 
     @router.post("", status_code=status.HTTP_201_CREATED, dependencies=admin_only)
     @creates_child

@@ -16,7 +16,14 @@ def test_first_admin_created_by_the_setup_command_can_log_in(
     response = log_in(client)
 
     assert response.status_code == 200
-    session = {"email": EMAIL, "role": "admin", "displayName": None, "inactivityTimeoutMinutes": 30}
+    # And the Archive's Retention period, which the Admin is told before archiving a Child.
+    session = {
+        "email": EMAIL,
+        "role": "admin",
+        "displayName": None,
+        "inactivityTimeoutMinutes": 30,
+        "archiveRetentionMonths": 12,
+    }
     assert response.json() == session
     assert client.get("/api/session").json() == session
 

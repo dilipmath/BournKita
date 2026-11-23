@@ -128,3 +128,38 @@ def test_the_group_dashboard_marks_each_childs_alerts(
     # It showed Lena's health data, so the view is logged for her; Mia's name alone is not.
     viewed = admin.get("/api/audit-log", params={"action": "viewed", "staffEmail": TEACHER_EMAIL})
     assert [entry["childId"] for entry in viewed.json()] == [lena]
+
+
+def test_the_children_list_gives_each_childs_group_and_alerts_and_logs_the_alerts_seen(
+    admin: TestClient, teacher: TestClient
+) -> None:
+    monkeys = create_group(admin)
+    lena = create_child(admin)
+    mia = create_child(admin, firstName="Mia")
+    put_in_group(admin, lena, monkeys)
+    peanuts = add_alert(admin, lena, PEANUTS)
+    add_alert(admin, mia, ASTHMA)
+
+    response = teacher.get("/api/children", params={"search": "Lena", "withAlerts": "true"})
+
+    assert response.status_code == 200, response.text
+    assert [(c["firstName"], c["groupId"], c["alerts"]) for c in response.json()] == [
+        ("Lena", monkeys, [{"id": peanuts, **PEANUTS}]),
+    ]
+    # Mia's Asthma was not listed, so only Lena's Alerts were seen.
+    viewed = admin.get("/api/audit-log", params={"action": "viewed", "staffEmail": TEACHER_EMAIL})
+    assert [entry["childId"] for entry in viewed.json()] == [lena]
+
+
+def test_the_children_list_gives_alerts_only_when_asked(
+    admin: TestClient, teacher: TestClient
+) -> None:
+    lena = create_child(admin)
+    add_alert(admin, lena, PEANUTS)
+
+    listed = teacher.get("/api/children").json()
+
+    # E.g. for a form's choices: names and the Group only, so nothing health-related is seen.
+    assert [(child["groupId"], child["alerts"]) for child in listed] == [(None, None)]
+    viewed = admin.get("/api/audit-log", params={"action": "viewed", "staffEmail": TEACHER_EMAIL})
+    assert viewed.json() == []
