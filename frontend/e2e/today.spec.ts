@@ -24,6 +24,8 @@ test('at the door, a Child is checked in with one tap and undone, checked out th
     const group = page.getByLabel('Group', { exact: true })
     await group.selectOption({ label: `🦔 ${groupName}` })
     await expect(group).not.toHaveValue('')
+    // The profile is a drawer over the list: closed before going anywhere else.
+    await page.getByRole('button', { name: 'Close' }).tap()
   }
 
   await page.getByRole('link', { name: 'Home' }).tap()

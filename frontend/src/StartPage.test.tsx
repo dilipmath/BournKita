@@ -70,7 +70,7 @@ describe('a Teacher’s start page', () => {
   })
 
   it('does not redirect away from other pages', async () => {
-    teacherApi([day(monkeys)], { 'GET /api/children?search=': { status: 200, body: [] } })
+    teacherApi([day(monkeys)], { 'GET /api/children?search=&withAlerts=true': { status: 200, body: [] } })
     renderAt('/children', <App />)
 
     expect(await screen.findByRole('heading', { name: 'Children' })).toBeInTheDocument()

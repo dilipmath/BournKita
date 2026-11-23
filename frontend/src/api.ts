@@ -18,7 +18,8 @@ export async function fetchHealth(): Promise<Health> {
   return (await response.json()) as Health
 }
 
-// Who is logged in, and how long the session survives without activity.
+// Who is logged in, how long the session survives without activity, and how many months the
+// Archive keeps a deleted Child profile (the Retention period).
 // A Guest sees the Kita-wide calendar only, read-only.
 // displayName: what the app calls them, null until an Admin gives one.
 export type Session = {
@@ -26,6 +27,7 @@ export type Session = {
   role: 'admin' | 'teacher' | 'guest'
   displayName: string | null
   inactivityTimeoutMinutes: number
+  archiveRetentionMonths: number
 }
 
 /** The current session, or null when nobody is logged in. */
@@ -235,13 +237,18 @@ export const childFieldLabel: Record<keyof ChildDetails, string> = {
   symbol: 'symbol',
 }
 
+// A Child in the list: their Group (null: none) and, when asked for, their Alerts (null: not asked).
+export type ListedChild = ChildSummary & { groupId: number | null; alerts: Alert[] | null }
+
 /** The Children, by first name; `search` keeps those whose name contains it, `groupId` those of
- * that Group. */
-export async function fetchChildren(search: string, groupId: number | null = null): Promise<ChildSummary[]> {
+ * that Group. `withAlerts` also gives their Alerts: health data, so the server logs the view; ask
+ * only where they are shown. */
+export async function fetchChildren(search: string, groupId: number | null = null, withAlerts = false): Promise<ListedChild[]> {
   const inGroup = groupId === null ? '' : `&groupId=${groupId}`
-  const response = await fetch(`/api/children?search=${encodeURIComponent(search)}${inGroup}`)
+  const alerts = withAlerts ? '&withAlerts=true' : ''
+  const response = await fetch(`/api/children?search=${encodeURIComponent(search)}${inGroup}${alerts}`)
   if (!response.ok) throw new Error(`Loading the Children failed: ${response.status}`)
-  return (await response.json()) as ChildSummary[]
+  return (await response.json()) as ListedChild[]
 }
 
 // The whole profile, as its page shows it.

@@ -36,12 +36,13 @@ test('an Admin records an allergy, and it shows on the profile and the Group das
   await page.reload()
   await expect(banner).toContainText('Peanuts')
   await expect(page.getByText('Allergies: Peanuts')).toBeVisible()
+  await page.getByRole('button', { name: 'Close' }).tap()
 
   await page.getByRole('link', { name: 'Home' }).tap()
   // The profile has a Group drop-down too: pick from the start page's only once that page shows.
   // (The address changes before the new page is drawn, so waiting for it is not enough.)
   // An Admin's start page, the Kita overview: a tile for each Group.
   await page.getByRole('link', { name: new RegExp(groupName) }).tap()
-  const lena = page.getByRole('listitem').filter({ has: page.getByRole('link', { name: `Lena ${lastName}` }) })
+  const lena = page.getByRole('listitem', { name: `Lena ${lastName}` })
   await expect(lena).toContainText('Alerts: Peanuts')
 })

@@ -24,6 +24,8 @@ test('an Admin sets up a Group, and the Kita overview leads to its dashboard', a
   await expect(group.getByRole('option', { name: `🐒 ${groupName}` })).toBeAttached()
   await group.selectOption({ label: `🐒 ${groupName}` })
   await expect(group).not.toHaveValue('')
+  // The profile is a drawer over the list: closed before going anywhere else.
+  await page.getByRole('button', { name: 'Close' }).tap()
 
   await page.getByRole('link', { name: 'Administration' }).tap()
   await page.getByRole('link', { name: 'Staff accounts' }).tap()
@@ -36,7 +38,8 @@ test('an Admin sets up a Group, and the Kita overview leads to its dashboard', a
   // An Admin's start page, the Kita overview: a tile for each Group.
   await page.getByRole('link', { name: new RegExp(groupName) }).tap()
   await expect(page.getByRole('heading', { name: groupName, level: 2 })).toBeVisible()
-  await expect(page.getByRole('link', { name: `Lena ${lastName}` })).toBeVisible()
+  // Her name tag on the board.
+  await expect(page.getByRole('listitem', { name: `Lena ${lastName}` })).toBeVisible()
 
   // Its tile counts the day.
   await page.getByRole('link', { name: 'Home' }).tap()

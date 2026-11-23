@@ -114,9 +114,11 @@ export default function App() {
                 }
               />
               <Route path="/administration" element={isAdmin ? <AdministrationPage /> : adminsOnly('adminsOnlyAdministration')} />
-              <Route path="/children" element={<ChildrenPage canEdit={isAdmin} />} />
+              {/* A Child's profile opens as a drawer over the list, which stays where it was. */}
+              <Route path="/children" element={<ChildrenPage canEdit={isAdmin} />}>
+                <Route path=":id" element={<ChildProfilePage canEdit={isAdmin} retentionMonths={session.archiveRetentionMonths} />} />
+              </Route>
               <Route path="/children/new" element={isAdmin ? <ChildForm /> : adminsOnly('adminsOnlyChildren')} />
-              <Route path="/children/:id" element={<ChildProfilePage canEdit={isAdmin} />} />
               <Route path="/children/:id/edit" element={isAdmin ? <ChildEditPage /> : adminsOnly('adminsOnlyChildren')} />
               <Route path="/children/:id/parents/add" element={isAdmin ? <AddParentPage /> : adminsOnly('adminsOnlyChildren')} />
               <Route path="/parents/:id" element={<ParentPage canEdit={isAdmin} />} />

@@ -7,8 +7,13 @@ import './i18n'
 type Reply = { status: number; body?: unknown }
 type Handler = (body: unknown) => Reply
 
+// Replies every fake API gives unless a test says otherwise: the Children list behind a profile
+// drawer (opened at /children/:id), empty.
+const defaultRoutes: Record<string, Reply> = { 'GET /api/children?search=&withAlerts=true': { status: 200, body: [] } }
+
 /** Stubs fetch with a fake API: keys are "METHOD /path", values give the reply. Records calls. */
-export function fakeApi(routes: Record<string, Reply | Handler>) {
+export function fakeApi(given: Record<string, Reply | Handler>) {
+  const routes = { ...defaultRoutes, ...given }
   const calls: { route: string; body: unknown }[] = []
   vi.stubGlobal(
     'fetch',
@@ -47,7 +52,7 @@ export function renderAt(path: string, ui: ReactNode) {
 export const health = { status: 200, body: { status: 'ok', database: 'ok', time: '2027-01-04T08:00:00Z' } }
 
 export function sessionAs(role: 'admin' | 'teacher' | 'guest') {
-  return { status: 200, body: { email: `${role}@kita.example`, role, displayName: null, inactivityTimeoutMinutes: 30 } }
+  return { status: 200, body: { email: `${role}@kita.example`, role, displayName: null, inactivityTimeoutMinutes: 30, archiveRetentionMonths: 12 } }
 }
 
 // The lists a Child profile carries besides the Child's own fields, all empty.

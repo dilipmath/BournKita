@@ -120,7 +120,7 @@ describe('Parents', () => {
       'GET /api/session': sessionAs('admin'),
       'GET /api/parents/3': () => ({
         status: 200,
-        body: { ...stored, children: [{ id: 7, firstName: 'Lena', lastName: 'Müller' }, { id: 8, firstName: 'Max', lastName: 'Müller' }] },
+        body: { ...stored, children: [{ id: 7, firstName: 'Lena', lastName: 'Müller', symbol: 'kite' }, { id: 8, firstName: 'Max', lastName: 'Müller', symbol: 'boat' }] },
       }),
       'PUT /api/parents/3': (body) => {
         stored = { id: 3, ...(body as object) }
@@ -129,7 +129,10 @@ describe('Parents', () => {
     })
     renderAt('/parents/3', <App />)
 
-    expect(await screen.findByRole('link', { name: 'Max Müller' })).toHaveAttribute('href', '/children/8')
+    // Their Children as name tags, each by their Symbol.
+    const children = await screen.findByRole('region', { name: 'Children' })
+    expect(within(children).getByRole('link', { name: 'Max Müller' })).toHaveAttribute('href', '/children/8')
+    expect(within(children).getByLabelText('Boat')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('link', { name: 'Edit' }))
     await userEvent.clear(screen.getByLabelText('Phone'))
     await userEvent.type(screen.getByLabelText('Phone'), '0171 555')

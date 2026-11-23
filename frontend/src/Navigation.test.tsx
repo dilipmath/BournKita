@@ -114,7 +114,7 @@ describe('navigation', () => {
   })
 
   it('shows no Group pages outside a Group', async () => {
-    fakeApi({ 'GET /api/health': health, 'GET /api/session': sessionAs('teacher'), 'GET /api/children?search=': { status: 200, body: [] } })
+    fakeApi({ 'GET /api/health': health, 'GET /api/session': sessionAs('teacher'), 'GET /api/children?search=&withAlerts=true': { status: 200, body: [] } })
     renderAt('/children', <App />)
 
     await screen.findByRole('navigation', { name: 'Main navigation' })

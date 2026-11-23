@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import App from './App'
 import { fakeApi, health, noProfileLists, renderAt, sessionAs } from './testing'
 
-const lena = { id: 7, firstName: 'Lena', lastName: 'Müller', gender: null, languages: '', foodPreferences: '', interests: '' }
+const lena = { id: 7, firstName: 'Lena', lastName: 'Müller', gender: null, languages: '', foodPreferences: '', interests: '', symbol: 'kite' }
 const photoConsent = { photo: [{ givenOn: '2026-09-01', withdrawnOn: null }], excursion: [], dataProtection: [] }
 const photo = { id: 31, uploadedAt: '2027-01-04T08:00:00Z' }
 const anna = { id: 3, firstName: 'Anna', lastName: 'Müller', address: '', phone: '', email: '', mayPickUp: true, photoId: 40 }
@@ -46,6 +46,9 @@ describe('photos', () => {
 
     expect(await gallery()).toHaveTextContent('No photo Consent: photos are not shown or taken.')
     expect(within(await gallery()).queryByLabelText('Add photo')).toBeNull()
+    // Nor at the head of the profile: the Symbol stands in.
+    expect(screen.queryByRole('img', { name: 'Photo of Lena Müller' })).toBeNull()
+    expect(within(screen.getByRole('dialog', { name: 'Lena Müller' })).getByLabelText('Kite')).toBeInTheDocument()
   })
 
   it('lets an Admin add a photo, and delete it after asking', async () => {

@@ -34,7 +34,7 @@ describe('the Group drop-down in the top bar', () => {
 
   it('starts on the only Group a Teacher works in', async () => {
     appAs('teacher', [monkeys, butterflies])
-    renderAt('/children', <App />)
+    renderAt('/administration', <App />)
 
     const choice = await topBarChoice()
     expect(options(choice)).toEqual(['🐒 Monkeys'])
@@ -43,7 +43,7 @@ describe('the Group drop-down in the top bar', () => {
 
   it('offers Admins every Group and All Groups, and opens the chosen Group', async () => {
     appAs('admin', [monkeys, butterflies])
-    renderAt('/children', <App />)
+    renderAt('/administration', <App />)
 
     const choice = await topBarChoice()
     expect(options(choice)).toEqual(['All Groups', '🐒 Monkeys', '🦋 Butterflies'])
@@ -53,6 +53,15 @@ describe('the Group drop-down in the top bar', () => {
 
     expect(await screen.findByRole('navigation', { name: 'The Group’s pages' })).toBeInTheDocument()
     expect(await topBarChoice()).toHaveDisplayValue('🦋 Butterflies')
+  })
+
+  it('offers All Groups on the Children list even to a Teacher in one Group, since they see every Child', async () => {
+    appAs('teacher', [monkeys, butterflies])
+    renderAt('/children', <App />)
+
+    const choice = await topBarChoice()
+    expect(options(choice)).toEqual(['All Groups', '🐒 Monkeys'])
+    expect(choice).toHaveDisplayValue('All Groups')
   })
 
   it('offers All Groups to a Teacher in several Groups', async () => {

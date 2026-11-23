@@ -12,7 +12,8 @@ test('on a tablet, choosing a Group in the top bar opens its Today, and the choi
   await newGroup.getByRole('button', { name: 'Create Group' }).tap()
   await expect(page.getByRole('heading', { name: groupName })).toBeVisible()
   // The new Group is offered after the next page load.
-  await page.goto('/children')
+  // On a page of no Group's (on the Children list, the drop-down filters the list instead).
+  await page.goto('/administration')
 
   const choice = page.getByRole('combobox', { name: 'Current Group' })
   await expect(choice).toHaveValue('all')

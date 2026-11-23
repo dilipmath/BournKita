@@ -29,7 +29,7 @@ describe('Allergy and medical alerts', () => {
     ])
     expect(within(banner).queryByRole('button')).toBeNull()
     // Medical conditions are in the banner; next to the food, only what the Child must not eat.
-    const food = screen.getByText('Vegetarian').closest('dd')
+    const food = screen.getByRole('region', { name: 'Food preferences' })
     expect(food).toHaveTextContent('Allergies: Peanuts')
     expect(food).not.toHaveTextContent('Asthma')
   })
@@ -44,7 +44,7 @@ describe('Allergy and medical alerts', () => {
 
     const banner = await screen.findByRole('region', { name: 'Allergies and medical conditions' })
     expect(banner).toHaveTextContent('No allergies or medical conditions recorded.')
-    expect(screen.getByText('Vegetarian').closest('dd')).not.toHaveTextContent('Allergies')
+    expect(screen.getByRole('region', { name: 'Food preferences' })).not.toHaveTextContent('Allergies')
   })
 
   it('lets an Admin add an allergy', async () => {

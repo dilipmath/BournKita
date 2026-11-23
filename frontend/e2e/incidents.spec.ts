@@ -22,11 +22,15 @@ test('an incident reported from the Today view is in the log, where the Admin fo
   const group = page.getByLabel('Group', { exact: true })
   await group.selectOption({ label: `🐸 ${groupName}` })
   await expect(group).not.toHaveValue('')
+  // The profile is a drawer over the list: closed before going anywhere else.
+  await page.getByRole('button', { name: 'Close' }).tap()
 
   await page.getByRole('link', { name: 'Home' }).tap()
   // An Admin's start page, the Kita overview: a tile for each Group.
   await page.getByRole('link', { name: new RegExp(groupName) }).tap()
   const card = page.getByRole('listitem', { name })
+  // In the tag's menu.
+  await card.getByRole('button', { name: `More for ${name}` }).tap()
   await card.getByRole('button', { name: `Report incident: ${name}` }).tap()
   const form = card.getByRole('form', { name: `Incident of ${name}` })
   await form.getByLabel('Time (if known)').fill('10:15')

@@ -122,7 +122,7 @@ describe('header', () => {
   })
 
   it('warns when the server cannot be reached', async () => {
-    fakeApi({ 'GET /api/health': { status: 503 }, 'GET /api/session': sessionAs('teacher'), 'GET /api/children?search=': { status: 200, body: [] } })
+    fakeApi({ 'GET /api/health': { status: 503 }, 'GET /api/session': sessionAs('teacher'), 'GET /api/children?search=&withAlerts=true': { status: 200, body: [] } })
     renderAt('/children', <App />)
 
     expect(await screen.findByRole('alert')).toHaveTextContent('not reachable')
